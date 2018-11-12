@@ -22,14 +22,21 @@ import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.builder.ArtifactProvider;
+import org.apache.sling.feature.builder.HandlerContext;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BundleMappingHandlerTest {
     @Test
@@ -59,7 +66,7 @@ public class BundleMappingHandlerTest {
         f.getBundles().add(b2);
         Artifact b3 = new Artifact(ArtifactId.fromMvnId("g:b3:0"));
         f.getBundles().add(b3);
-        bmh.postProcess(() -> ap, f, ex);
+        bmh.postProcess(new TestHandlerContext(ap), f, ex);
 
         String p = System.getProperty("apiregions.idbsnver.properties");
         Properties actual = new Properties();
@@ -72,6 +79,47 @@ public class BundleMappingHandlerTest {
     }
 
     @Test
+    public void testSpecificDirectory() throws Exception {
+        Path tempDir = Files.createTempDirectory(getClass().getSimpleName());
+
+        try {
+            ArtifactProvider ap = new ArtifactProvider() {
+                @Override
+                public File provide(ArtifactId id) {
+                    switch(id.toMvnId()) {
+                    case "g:b1:1":
+                        return getResourceFile("b1/b1.jar");
+                    default: return null;
+                    }
+                }
+            };
+
+            Extension ex = new Extension(ExtensionType.JSON, "api-regions", false);
+            Feature f = new Feature(ArtifactId.fromMvnId("foo:bar:123"));
+            Artifact b1 = new Artifact(ArtifactId.fromMvnId("g:b1:1"));
+            f.getBundles().add(b1);
+
+            BundleMappingHandler bmh = new BundleMappingHandler();
+            bmh.postProcess(new TestHandlerContext(ap,
+                    Collections.singletonMap("fileStorage", tempDir.toString())), f, ex);
+
+            File expectedFile = new File(tempDir.toFile(), "idbsnver.properties");
+            assertTrue(expectedFile.exists());
+            Properties p = new Properties();
+            p.load(new FileInputStream(expectedFile));
+
+            Properties ep = new Properties();
+            ep.put("g:b1:1", "b1~1.0.0");
+            assertEquals(ep, p);
+        } finally {
+            for (File f : tempDir.toFile().listFiles()) {
+                f.delete();
+            }
+            tempDir.toFile().delete();
+        }
+    }
+
+    @Test
     public void testUnrelatedExtension() {
         BundleMappingHandler bmh = new BundleMappingHandler();
         Extension ex = new Extension(ExtensionType.JSON, "foobar", false);
@@ -81,5 +129,29 @@ public class BundleMappingHandlerTest {
 
     private File getResourceFile(String filename) {
         return new File(getClass().getClassLoader().getResource(filename).getFile());
+    }
+
+    private class TestHandlerContext implements HandlerContext {
+        private final ArtifactProvider artifactProvider;
+        private final Map<String, String> config;
+
+        private TestHandlerContext(ArtifactProvider ap, Map<String, String> cfg) {
+            artifactProvider = ap;
+            config = cfg;
+        }
+
+        public TestHandlerContext(ArtifactProvider ap) {
+            this(ap, Collections.emptyMap());
+        }
+
+        @Override
+        public ArtifactProvider getArtifactProvider() {
+            return artifactProvider;
+        }
+
+        @Override
+        public Map<String, String> getConfiguration() {
+            return config;
+        }
     }
 }

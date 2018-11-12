@@ -35,7 +35,7 @@ public class BundleMappingHandler extends AbstractHandler implements PostProcess
             return;
 
         try {
-            File idBSNFile = getDataFile("idbsnver.properties");
+            File idBSNFile = getDataFile(context, "idbsnver.properties");
             Properties map = loadProperties(idBSNFile);
 
             for (Artifact b : feature.getBundles()) {

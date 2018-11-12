@@ -45,15 +45,15 @@ public class BundleArtifactFeatureHandler extends AbstractHandler implements Pos
             return;
 
         try {
-            writeBundleToFeatureMap(feature);
-            writeFeatureToRegionAndPackageMap(feature, extension);
+            writeBundleToFeatureMap(context, feature);
+            writeFeatureToRegionAndPackageMap(context, feature, extension);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void writeBundleToFeatureMap(Feature feature) throws IOException {
-        File bundlesFile = getDataFile("bundles.properties");
+    private void writeBundleToFeatureMap(HandlerContext context, Feature feature) throws IOException {
+        File bundlesFile = getDataFile(context, "bundles.properties");
         Properties map = loadProperties(bundlesFile);
 
         for (Artifact b : feature.getBundles()) {
@@ -77,12 +77,12 @@ public class BundleArtifactFeatureHandler extends AbstractHandler implements Pos
         storeProperties(map, bundlesFile);
     }
 
-    private void writeFeatureToRegionAndPackageMap(Feature feature, Extension extension) throws IOException {
+    private void writeFeatureToRegionAndPackageMap(HandlerContext context, Feature feature, Extension extension) throws IOException {
         JsonReader jr = Json.createReader(new StringReader(extension.getJSON()));
         JsonArray ja = jr.readArray();
 
-        File featuresFile = getDataFile("features.properties");
-        File regionsFile = getDataFile("regions.properties");
+        File featuresFile = getDataFile(context, "features.properties");
+        File regionsFile = getDataFile(context, "regions.properties");
         Properties frMap = loadProperties(featuresFile);
         Properties rpMap = loadProperties(regionsFile);
 

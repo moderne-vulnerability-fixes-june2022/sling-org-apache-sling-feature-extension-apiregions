@@ -16,6 +16,8 @@
  */
 package org.apache.sling.feature.extension.apiregions;
 
+import org.apache.sling.feature.builder.HandlerContext;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -37,9 +39,16 @@ class AbstractHandler {
     static final String ORG_FEATURE_KEY = "org-feature";
 
     private static final String FILE_PREFIX = "apiregions.";
+    private static final String FILE_STORAGE_DIR_KEY = "fileStorage";
 
-    protected File getDataFile(String name) throws IOException {
-        Path p = Files.createTempFile(FILE_PREFIX, name);
+    protected File getDataFile(HandlerContext context, String name) throws IOException {
+        String stg = context.getConfiguration().get(FILE_STORAGE_DIR_KEY);
+        Path p;
+        if (stg != null) {
+            p = new File(stg, name).toPath();
+        } else {
+            p = Files.createTempFile(FILE_PREFIX, name);
+        }
         File f = p.toFile();
         f.deleteOnExit();
 

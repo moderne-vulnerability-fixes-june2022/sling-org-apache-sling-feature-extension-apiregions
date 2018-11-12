@@ -21,11 +21,15 @@ import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.builder.ArtifactProvider;
+import org.apache.sling.feature.builder.HandlerContext;
 import org.junit.Test;
 
 import java.io.FileReader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
@@ -45,7 +49,7 @@ public class BundleArtifactFeatureHandlerTest {
 
         Extension ex = new Extension(ExtensionType.JSON, "api-regions", false);
         ex.setJSON("[]");
-        bafh.postProcess(null, f, ex);
+        bafh.postProcess(new TestHandlerContextImpl(), f, ex);
 
         String p = System.getProperty("apiregions.bundles.properties");
         Properties actual = new Properties();
@@ -72,7 +76,7 @@ public class BundleArtifactFeatureHandlerTest {
                 + "\"exports\":[\"test\"],"
                 + "\"org-feature\":\"an.other:feature:123\"}]");
 
-        bafh.postProcess(null, f, ex);
+        bafh.postProcess(new TestHandlerContextImpl(), f, ex);
 
         String p = System.getProperty("apiregions.features.properties");
         Properties actual = new Properties();
@@ -107,5 +111,19 @@ public class BundleArtifactFeatureHandlerTest {
         Extension ex = new Extension(ExtensionType.JSON, "foobar", false);
         bafh.postProcess(null, null, ex);
         // Should not do anything and definitely not throw an exception
+    }
+
+    private static class TestHandlerContextImpl implements HandlerContext {
+        private final Map<String, String> cfg = new HashMap<>();
+
+        @Override
+        public ArtifactProvider getArtifactProvider() {
+            return null;
+        }
+
+        @Override
+        public Map<String, String> getConfiguration() {
+            return cfg;
+        }
     }
 }
