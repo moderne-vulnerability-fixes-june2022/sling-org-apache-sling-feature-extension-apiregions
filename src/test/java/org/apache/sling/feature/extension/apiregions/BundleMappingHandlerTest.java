@@ -16,14 +16,8 @@
  */
 package org.apache.sling.feature.extension.apiregions;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.builder.ArtifactProvider;
-import org.apache.sling.feature.builder.HandlerContext;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,12 +25,17 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.KeyValueMap;
+import org.apache.sling.feature.builder.ArtifactProvider;
+import org.apache.sling.feature.builder.HandlerContext;
+import org.junit.Test;
 
 public class BundleMappingHandlerTest {
     @Test
@@ -100,8 +99,10 @@ public class BundleMappingHandlerTest {
             f.getBundles().add(b1);
 
             BundleMappingHandler bmh = new BundleMappingHandler();
+            final KeyValueMap kvm = new KeyValueMap();
+            kvm.put("fileStorage", tempDir.toString());
             bmh.postProcess(new TestHandlerContext(ap,
-                    Collections.singletonMap("fileStorage", tempDir.toString())), f, ex);
+                    kvm), f, ex);
 
             File expectedFile = new File(tempDir.toFile(), "idbsnver.properties");
             assertTrue(expectedFile.exists());
@@ -133,15 +134,15 @@ public class BundleMappingHandlerTest {
 
     private class TestHandlerContext implements HandlerContext {
         private final ArtifactProvider artifactProvider;
-        private final Map<String, String> config;
+        private final KeyValueMap config;
 
-        private TestHandlerContext(ArtifactProvider ap, Map<String, String> cfg) {
+        private TestHandlerContext(ArtifactProvider ap, KeyValueMap cfg) {
             artifactProvider = ap;
             config = cfg;
         }
 
         public TestHandlerContext(ArtifactProvider ap) {
-            this(ap, Collections.emptyMap());
+            this(ap, new KeyValueMap());
         }
 
         @Override
@@ -150,7 +151,7 @@ public class BundleMappingHandlerTest {
         }
 
         @Override
-        public Map<String, String> getConfiguration() {
+        public KeyValueMap getConfiguration() {
             return config;
         }
     }

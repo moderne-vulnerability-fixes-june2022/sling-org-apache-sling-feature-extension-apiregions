@@ -16,23 +16,22 @@
  */
 package org.apache.sling.feature.extension.apiregions;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.FileReader;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Properties;
+
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.KeyValueMap;
 import org.apache.sling.feature.builder.ArtifactProvider;
 import org.apache.sling.feature.builder.HandlerContext;
 import org.junit.Test;
-
-import java.io.FileReader;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-
-import static org.junit.Assert.assertEquals;
 
 public class BundleArtifactFeatureHandlerTest {
     @Test
@@ -114,7 +113,7 @@ public class BundleArtifactFeatureHandlerTest {
     }
 
     private static class TestHandlerContextImpl implements HandlerContext {
-        private final Map<String, String> cfg = new HashMap<>();
+        private final KeyValueMap cfg = new KeyValueMap();
 
         @Override
         public ArtifactProvider getArtifactProvider() {
@@ -122,7 +121,7 @@ public class BundleArtifactFeatureHandlerTest {
         }
 
         @Override
-        public Map<String, String> getConfiguration() {
+        public KeyValueMap getConfiguration() {
             return cfg;
         }
     }
