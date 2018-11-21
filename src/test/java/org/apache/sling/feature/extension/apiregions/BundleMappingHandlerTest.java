@@ -25,6 +25,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.sling.feature.Artifact;
@@ -32,7 +34,6 @@ import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.KeyValueMap;
 import org.apache.sling.feature.builder.ArtifactProvider;
 import org.apache.sling.feature.builder.HandlerContext;
 import org.junit.Test;
@@ -99,7 +100,7 @@ public class BundleMappingHandlerTest {
             f.getBundles().add(b1);
 
             BundleMappingHandler bmh = new BundleMappingHandler();
-            final KeyValueMap kvm = new KeyValueMap();
+            final Map<String, String> kvm = new HashMap<>();
             kvm.put("fileStorage", tempDir.toString());
             bmh.postProcess(new TestHandlerContext(ap,
                     kvm), f, ex);
@@ -134,15 +135,15 @@ public class BundleMappingHandlerTest {
 
     private class TestHandlerContext implements HandlerContext {
         private final ArtifactProvider artifactProvider;
-        private final KeyValueMap config;
+        private final Map<String, String> config;
 
-        private TestHandlerContext(ArtifactProvider ap, KeyValueMap cfg) {
+        private TestHandlerContext(ArtifactProvider ap, Map<String, String> cfg) {
             artifactProvider = ap;
             config = cfg;
         }
 
         public TestHandlerContext(ArtifactProvider ap) {
-            this(ap, new KeyValueMap());
+            this(ap, new HashMap<>());
         }
 
         @Override
@@ -151,7 +152,7 @@ public class BundleMappingHandlerTest {
         }
 
         @Override
-        public KeyValueMap getConfiguration() {
+        public Map<String, String> getConfiguration() {
             return config;
         }
     }
