@@ -36,7 +36,6 @@ class AbstractHandler {
 
     static final String NAME_KEY = "name";
     static final String EXPORTS_KEY = "exports";
-    static final String ORG_FEATURE_KEY = "org-feature";
 
     private static final String FILE_PREFIX = "apiregions.";
     private static final String FILE_STORAGE_DIR_KEY = "fileStorage";

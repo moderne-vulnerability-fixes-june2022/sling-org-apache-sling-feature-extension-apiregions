@@ -58,10 +58,7 @@ public class BundleArtifactFeatureHandler extends AbstractHandler implements Pos
 
         for (Artifact b : feature.getBundles()) {
             String id = b.getId().toMvnId().trim();
-
-            String fid = b.getMetadata().get(ORG_FEATURE_KEY);
-            if (fid == null)
-                fid = feature.getId().toMvnId().trim();
+            String fid = feature.getId().toMvnId().trim();
 
             String m = map.getProperty(id);
             if (m != null) {
@@ -89,11 +86,7 @@ public class BundleArtifactFeatureHandler extends AbstractHandler implements Pos
         for (JsonValue jv : ja) {
             if (jv instanceof JsonObject) {
                 JsonObject jo = (JsonObject) jv;
-                String fid = null;
-                if (jo.containsKey(ORG_FEATURE_KEY))
-                    fid = jo.getString(ORG_FEATURE_KEY);
-                if (fid == null)
-                    fid = feature.getId().toMvnId();
+                String fid = feature.getId().toMvnId();
 
                 Set<String> regionSet = new HashSet<>();
                 String regions = frMap.getProperty(fid);

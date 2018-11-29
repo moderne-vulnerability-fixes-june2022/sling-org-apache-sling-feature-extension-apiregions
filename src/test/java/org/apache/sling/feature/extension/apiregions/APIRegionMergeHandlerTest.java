@@ -54,28 +54,25 @@ public class APIRegionMergeHandlerTest {
                 + "\"exports\": [\"a.b.c\",\"d.e.f\"]},"
                 + "{\"name\":\"internal\","
                 + "\"exports\":[\"xyz\"],"
-                + "\"org-feature\":\"some:feature:1\"}]");
+                + "\"some-key\":\"some-val\"}]");
 
         Extension srEx = new Extension(ExtensionType.JSON, "api-regions", false);
         srEx.setJSON("[{\"name\":\"global\","
                 + "\"exports\": [\"test\"]},"
                 + "{\"name\":\"something\","
                 + "\"exports\": [\"a.ha\"],"
-                + "\"org-feature\": \"different:feature:1\"}]");
+                + "\"my-key\": \"my-val\"}]");
 
         armh.merge(null, tf, sf, tgEx, srEx);
 
         String expectedJSON = "[{\"name\":\"global\","
-                + "\"exports\": [\"a.b.c\",\"d.e.f\"]},"
+                + "\"exports\": [\"a.b.c\",\"d.e.f\", \"test\"]},"
                 + "{\"name\":\"internal\","
                 + "\"exports\":[\"xyz\"],"
-                + "\"org-feature\":\"some:feature:1\"},"
-                + "{\"name\":\"global\","
-                + "\"org-feature\":\"y:s:2\","
-                + "\"exports\": [\"test\"]},"
+                + "\"some-key\":\"some-val\"},"
                 + "{\"name\":\"something\","
                 + "\"exports\": [\"a.ha\"],"
-                + "\"org-feature\": \"different:feature:1\"}]";
+                + "\"my-key\": \"my-val\"}]";
         JsonReader er = Json.createReader(new StringReader(expectedJSON));
         JsonReader ar = Json.createReader(new StringReader(tgEx.getJSON()));
         JsonArray ea = er.readArray();
@@ -83,6 +80,7 @@ public class APIRegionMergeHandlerTest {
 
         assertEquals(ea, aa);
     }
+
 
     @Test
     public void testRegionExportsInheritance() throws Exception {
@@ -95,24 +93,20 @@ public class APIRegionMergeHandlerTest {
         srEx.setJSON("[{\"name\":\"global\","
                 + "\"exports\": [\"a.b.c\",\"d.e.f\"]},"
                 + "{\"name\":\"deprecated\","
-                + "\"exports\":[\"klm\",\"qrs\"]},"
+                + "\"exports\":[\"klm\",\"#ignored\",\"qrs\"]},"
                 + "{\"name\":\"internal\","
                 + "\"exports\":[\"xyz\"]},"
                 + "{\"name\":\"forbidden\","
-                + "\"exports\":[\"abc\",\"klm\"]},"
-                + "{\"name\":\"internal\","
-                + "\"exports\":[\"test\"],"
-                + "\"org-feature\":\"an.other:feature:123\"}]");
+                + "\"exports\":[\"abc\",\"klm\"]}]");
 
         armh.merge(null, tf, sf, null, srEx);
 
         Extension tgEx = tf.getExtensions().iterator().next();
 
-        String expectedJSON = "[{\"name\":\"global\",\"org-feature\":\"y:s:2\",\"exports\":[\"a.b.c\",\"d.e.f\"]},"
-                + "{\"name\":\"deprecated\",\"org-feature\":\"y:s:2\",\"exports\":[\"klm\",\"qrs\"]},"
-                + "{\"name\":\"internal\",\"org-feature\":\"y:s:2\",\"exports\":[\"xyz\",\"klm\",\"qrs\"]},"
-                + "{\"name\":\"forbidden\",\"org-feature\":\"y:s:2\",\"exports\":[\"abc\",\"klm\",\"qrs\",\"xyz\"]},"
-                + "{\"name\":\"internal\",\"org-feature\":\"an.other:feature:123\",\"exports\":[\"test\"]}]";
+        String expectedJSON = "[{\"name\":\"global\",\"exports\":[\"a.b.c\",\"d.e.f\"]},"
+                + "{\"name\":\"deprecated\",\"exports\":[\"klm\",\"qrs\"]},"
+                + "{\"name\":\"internal\",\"exports\":[\"xyz\"]},"
+                + "{\"name\":\"forbidden\",\"exports\":[\"abc\",\"klm\"]}]";
         JsonReader er = Json.createReader(new StringReader(expectedJSON));
         JsonReader ar = Json.createReader(new StringReader(tgEx.getJSON()));
         JsonArray ea = er.readArray();

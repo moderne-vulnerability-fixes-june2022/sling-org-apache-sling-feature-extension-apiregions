@@ -24,13 +24,13 @@ import org.apache.sling.feature.builder.MergeHandler;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonString;
@@ -39,9 +39,7 @@ import javax.json.stream.JsonGenerator;
 
 import static org.apache.sling.feature.extension.apiregions.AbstractHandler.API_REGIONS_NAME;
 import static org.apache.sling.feature.extension.apiregions.AbstractHandler.EXPORTS_KEY;
-import static org.apache.sling.feature.extension.apiregions.AbstractHandler.GLOBAL_NAME;
 import static org.apache.sling.feature.extension.apiregions.AbstractHandler.NAME_KEY;
-import static org.apache.sling.feature.extension.apiregions.AbstractHandler.ORG_FEATURE_KEY;
 
 public class APIRegionMergeHandler implements MergeHandler {
     @Override
@@ -59,6 +57,32 @@ public class APIRegionMergeHandler implements MergeHandler {
         JsonReader srcJR = Json.createReader(new StringReader(sourceEx.getJSON()));
         JsonArray srcJA = srcJR.readArray();
 
+        Map<String, Map<String, Object>> srcRegions = new LinkedHashMap<>();
+        for (int i=0; i < srcJA.size(); i++) {
+            String regionName = null;
+            Map<String, Object> region = new LinkedHashMap<>();
+            JsonObject jo = srcJA.getJsonObject(i);
+            for (Map.Entry<String, JsonValue> entry : jo.entrySet()) {
+                Object val;
+                switch (entry.getKey()) {
+                case EXPORTS_KEY:
+                    val = readJsonArray((JsonArray) entry.getValue());
+                    break;
+                default:
+                    val = ((JsonString) entry.getValue()).getString();
+                    if (NAME_KEY.equals(entry.getKey())) {
+                        regionName = val.toString();
+                    }
+                    break;
+                }
+                region.put(entry.getKey(), val);
+            }
+            if (regionName == null) {
+                throw new IllegalStateException("No region name specified: " + sourceEx.getJSON());
+            }
+            srcRegions.put(regionName, region);
+        }
+
         JsonArray tgtJA;
         if (targetEx != null) {
             JsonReader tgtJR = Json.createReader(new StringReader(targetEx.getJSON()));
@@ -74,45 +98,51 @@ public class APIRegionMergeHandler implements MergeHandler {
         JsonGenerator gen = Json.createGenerator(sw);
         gen.writeStartArray();
         for (JsonValue jv : tgtJA) {
-            gen.write(jv);
-        }
-
-        Map<String, List<String>> inheritedPackages = new LinkedHashMap<>(); // keep the insertion order
-        for (int i=0; i < srcJA.size(); i++) {
-            gen.writeStartObject();
-            JsonObject jo = srcJA.getJsonObject(i);
-            boolean exportsWritten = false;
-            if (!jo.containsKey(ORG_FEATURE_KEY)) {
-                gen.write(ORG_FEATURE_KEY, source.getId().toMvnId());
-
-                List<String> exports = new ArrayList<>();
-                if (jo.containsKey(EXPORTS_KEY)) {
-                    JsonArray ja = jo.getJsonArray(EXPORTS_KEY);
-                    for (JsonValue jv : ja) {
-                        if (jv instanceof JsonString) {
-                            exports.add(((JsonString) jv).getString());
+            if (jv instanceof JsonObject) {
+                JsonObject jo = (JsonObject) jv;
+                Map<String, Object> srcRegion = srcRegions.remove(jo.getString(NAME_KEY));
+                if (srcRegion != null) {
+                    gen.writeStartObject();
+                    for (Map.Entry<String, JsonValue> entry : jo.entrySet()) {
+                        Object sp = srcRegion.get(entry.getKey());
+                        if (EXPORTS_KEY.equals(entry.getKey()) && sp instanceof List) {
+                            List<String> tgtPkgs = readJsonArray((JsonArray) entry.getValue());
+                            @SuppressWarnings("unchecked")
+                            List<String> srcPkgs = (List<String>) sp;
+                            for (String srcPkg : srcPkgs) {
+                                if (!tgtPkgs.contains(srcPkg)) {
+                                    tgtPkgs.add(srcPkg);
+                                }
+                            }
+                            gen.writeStartArray(entry.getKey());
+                            for (String p : tgtPkgs) {
+                                gen.write(p);
+                            }
+                            gen.writeEnd();
+                        } else {
+                            gen.write(entry.getKey(), entry.getValue());
                         }
                     }
-                }
-
-                String name = jo.getString(NAME_KEY);
-                if (!GLOBAL_NAME.equals(name)) {
-                    ArrayList<String> localExports = new ArrayList<>(exports);
-                    for (Map.Entry<String, List<String>> entry : inheritedPackages.entrySet()) {
-                        entry.getValue().stream().filter(p -> !exports.contains(p)).forEach(exports::add);
-                    }
-                    inheritedPackages.put(name, localExports);
-
-                    JsonArrayBuilder eab = Json.createArrayBuilder();
-                    exports.stream().forEach(e -> eab.add(e));
-                    gen.write(EXPORTS_KEY, eab.build());
-                    exportsWritten = true;
+                    gen.writeEnd();
+                } else {
+                    gen.write(jv);
                 }
             }
-            for (Map.Entry<String, JsonValue> entry : jo.entrySet()) {
-                if (EXPORTS_KEY.equals(entry.getKey()) && exportsWritten)
-                    continue;
-                gen.write(entry.getKey(), entry.getValue());
+        }
+
+        // If there are any remaining regions in the src extension, process them now
+        for (Map<String, Object> region : srcRegions.values()) {
+            gen.writeStartObject();
+            for (Map.Entry<String, Object> entry : region.entrySet()) {
+                if (entry.getValue() instanceof Collection) {
+                    gen.writeStartArray(entry.getKey());
+                    for (Object o : (Collection<?>) entry.getValue()) {
+                        gen.write(o.toString());
+                    }
+                    gen.writeEnd();
+                } else {
+                    gen.write(entry.getKey(), entry.getValue().toString());
+                }
             }
             gen.writeEnd();
         }
@@ -121,5 +151,18 @@ public class APIRegionMergeHandler implements MergeHandler {
         gen.close();
 
         targetEx.setJSON(sw.toString());
+    }
+
+    private static List<String> readJsonArray(JsonArray jsonArray) {
+        List<String> l = new ArrayList<>();
+        for (JsonValue jv : jsonArray) {
+            if (jv instanceof JsonString) {
+                String pkg = ((JsonString) jv).getString();
+                if (!pkg.startsWith("#")) { // ignore comment lines
+                    l.add(pkg);
+                }
+            }
+        }
+        return l;
     }
 }

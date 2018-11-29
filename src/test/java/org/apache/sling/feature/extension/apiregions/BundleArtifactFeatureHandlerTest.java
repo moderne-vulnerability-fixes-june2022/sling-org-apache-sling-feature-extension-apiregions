@@ -16,15 +16,6 @@
  */
 package org.apache.sling.feature.extension.apiregions;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.FileReader;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Extension;
@@ -33,6 +24,15 @@ import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.builder.ArtifactProvider;
 import org.apache.sling.feature.builder.HandlerContext;
 import org.junit.Test;
+
+import java.io.FileReader;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+
+import static org.junit.Assert.assertEquals;
 
 public class BundleArtifactFeatureHandlerTest {
     @Test
@@ -43,7 +43,6 @@ public class BundleArtifactFeatureHandlerTest {
         Artifact b1 = new Artifact(ArtifactId.fromMvnId("org.sling:b1:1"));
         Artifact b2 = new Artifact(ArtifactId.fromMvnId("org.sling:b2:1"));
         Artifact b3a = new Artifact(ArtifactId.fromMvnId("org.sling:b3:1"));
-        b3a.getMetadata().put("org-feature", "some.other:feature:123");
         Artifact b3b = new Artifact(ArtifactId.fromMvnId("org.sling:b3:1"));
         f.getBundles().addAll(Arrays.asList(b1, b2, b3a, b3b));
 
@@ -58,7 +57,7 @@ public class BundleArtifactFeatureHandlerTest {
         Properties expected = new Properties();
         expected.put("org.sling:b1:1", "org.sling:something:1.2.3:slingosgifeature:myclassifier");
         expected.put("org.sling:b2:1", "org.sling:something:1.2.3:slingosgifeature:myclassifier");
-        expected.put("org.sling:b3:1", "some.other:feature:123,org.sling:something:1.2.3:slingosgifeature:myclassifier");
+        expected.put("org.sling:b3:1", "org.sling:something:1.2.3:slingosgifeature:myclassifier");
         assertEquals(expected, actual);
     }
 
@@ -73,8 +72,7 @@ public class BundleArtifactFeatureHandlerTest {
                 + "{\"name\":\"internal\","
                 + "\"exports\":[\"xyz\"]},"
                 + "{\"name\":\"global\","
-                + "\"exports\":[\"test\"],"
-                + "\"org-feature\":\"an.other:feature:123\"}]");
+                + "\"exports\":[\"test\"]}]");
 
         bafh.postProcess(new TestHandlerContextImpl(), f, ex);
 
@@ -83,7 +81,6 @@ public class BundleArtifactFeatureHandlerTest {
         actual.load(new FileReader(p));
 
         Properties expected = new Properties();
-        expected.put("an.other:feature:123", "global");
         expected.put("org.sling:something:1.2.3", "internal,global");
 
         String[] al = ((String) actual.remove("org.sling:something:1.2.3")).split(",");
