@@ -16,18 +16,27 @@
  */
 package org.apache.sling.feature.extension.apiregions;
 
+import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.builder.HandlerContext;
 import org.apache.sling.feature.builder.MergeHandler;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -53,6 +62,8 @@ public class APIRegionMergeHandler implements MergeHandler {
             return;
         if (targetEx != null && !targetEx.getName().equals(API_REGIONS_NAME))
             return;
+
+        storeBundleOrigins(context, source, target);
 
         JsonReader srcJR = Json.createReader(new StringReader(sourceEx.getJSON()));
         JsonArray srcJA = srcJR.readArray();
@@ -82,6 +93,8 @@ public class APIRegionMergeHandler implements MergeHandler {
             }
             srcRegions.put(regionName, region);
         }
+
+        storeRegionOrigins(context, source, target, srcRegions.keySet());
 
         JsonArray tgtJA;
         if (targetEx != null) {
@@ -151,6 +164,71 @@ public class APIRegionMergeHandler implements MergeHandler {
         gen.close();
 
         targetEx.setJSON(sw.toString());
+    }
+
+    private void storeRegionOrigins(HandlerContext context, Feature source, Feature target, Set<String> regions) {
+        try {
+            File f = getFeatureDataFile(context, target, "regionOrigins.properties");
+
+            Properties p = new Properties();
+            if (f.isFile()) {
+                try (FileInputStream fis = new FileInputStream(f)) {
+                    p.load(fis);
+                }
+            }
+
+            String fid = source.getId().toMvnId();
+            p.put(fid, regions.stream().collect(Collectors.joining(",")));
+
+            try (FileOutputStream fos = new FileOutputStream(f)) {
+                p.store(fos, "Mapping from feature ID to regions that the feature is a member of");
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Problem storing region origin information", e);
+        }
+    }
+
+    private void storeBundleOrigins(HandlerContext context, Feature source, Feature target) {
+        try {
+            File f = getFeatureDataFile(context, target, "bundleOrigins.properties");
+
+            String featureId = source.getId().toMvnId();
+            Properties p = new Properties();
+            if (f.isFile()) {
+                try (FileInputStream fis = new FileInputStream(f)) {
+                    p.load(fis);
+                }
+            }
+
+            for (Artifact b : source.getBundles()) {
+                String bundleId = b.getId().toMvnId();
+                String org = p.getProperty(bundleId);
+                String newVal;
+                if (org != null) {
+                    List<String> l = Arrays.asList(org.split(","));
+                    if (!l.contains(featureId))
+                        newVal = org + "," + featureId;
+                    else
+                        newVal = org;
+                } else {
+                    newVal = featureId;
+                }
+                p.setProperty(bundleId, newVal);
+            }
+
+            try (FileOutputStream fos = new FileOutputStream(f)) {
+                p.store(fos, "Mapping from bundle artifact IDs to features that contained the bundle.");
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Problem storing bundle origin information", e);
+        }
+    }
+
+    private File getFeatureDataFile(HandlerContext context, Feature target, String fileName) throws IOException {
+        String featureName = target.getId().toMvnId().replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
+        File f = AbstractHandler.getDataFile(context, featureName, fileName);
+        f.getParentFile().mkdirs();
+        return f;
     }
 
     private static List<String> readJsonArray(JsonArray jsonArray) {
