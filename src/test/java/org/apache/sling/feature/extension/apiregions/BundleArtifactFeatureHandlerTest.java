@@ -50,7 +50,7 @@ public class BundleArtifactFeatureHandlerTest {
         ex.setJSON("[]");
         bafh.postProcess(new TestHandlerContextImpl(), f, ex);
 
-        String p = System.getProperty("apiregions.bundles.properties");
+        String p = System.getProperty("sling.feature.apiregions.resource.bundles.properties");
         Properties actual = new Properties();
         actual.load(new FileReader(p));
 
@@ -76,7 +76,7 @@ public class BundleArtifactFeatureHandlerTest {
 
         bafh.postProcess(new TestHandlerContextImpl(), f, ex);
 
-        String p = System.getProperty("apiregions.features.properties");
+        String p = System.getProperty("sling.feature.apiregions.resource.features.properties");
         Properties actual = new Properties();
         actual.load(new FileReader(p));
 
@@ -88,7 +88,7 @@ public class BundleArtifactFeatureHandlerTest {
         assertEquals(new HashSet<>(Arrays.asList(el)), new HashSet<>(Arrays.asList(al)));
         assertEquals(expected, actual);
 
-        String p2 = System.getProperty("apiregions.regions.properties");
+        String p2 = System.getProperty("sling.feature.apiregions.resource.regions.properties");
         Properties actual2 = new Properties();
         actual2.load(new FileReader(p2));
 

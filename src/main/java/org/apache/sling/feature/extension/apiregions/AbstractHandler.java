@@ -41,6 +41,8 @@ class AbstractHandler {
     static final String FILE_PREFIX = "apiregions.";
     static final String FILE_STORAGE_DIR_KEY = "fileStorage";
 
+    static final String PROPERTIES_RESOURCE_PREFIX = "sling.feature.apiregions.resource.";
+
     protected static File getFeatureDataFile(HandlerContext context, Feature target, String fileName) throws IOException {
         String featureName = target.getId().toMvnId().replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
         File f = AbstractHandler.getDataFile(context, featureName, fileName);
@@ -68,7 +70,7 @@ class AbstractHandler {
         }
 
         // The feature launcher runtime picks the data file up from this system property
-        System.setProperty(FILE_PREFIX + name, f.getCanonicalPath());
+        System.setProperty(PROPERTIES_RESOURCE_PREFIX + name, f.getCanonicalPath());
         return f;
     }
 

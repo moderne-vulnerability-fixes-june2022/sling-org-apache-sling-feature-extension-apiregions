@@ -68,7 +68,7 @@ public class BundleMappingHandlerTest {
         f.getBundles().add(b3);
         bmh.postProcess(new TestHandlerContext(ap), f, ex);
 
-        String p = System.getProperty("apiregions.idbsnver.properties");
+        String p = System.getProperty("sling.feature.apiregions.resource.idbsnver.properties");
         Properties actual = new Properties();
         actual.load(new FileReader(p));
 
