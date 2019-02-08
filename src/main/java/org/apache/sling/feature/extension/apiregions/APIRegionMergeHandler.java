@@ -168,7 +168,7 @@ public class APIRegionMergeHandler implements MergeHandler {
 
     private void storeRegionOrigins(HandlerContext context, Feature source, Feature target, Set<String> regions) {
         try {
-            File f = getFeatureDataFile(context, target, "regionOrigins.properties");
+            File f = AbstractHandler.getFeatureDataFile(context, target, "regionOrigins.properties");
 
             Properties p = new Properties();
             if (f.isFile()) {
@@ -190,7 +190,7 @@ public class APIRegionMergeHandler implements MergeHandler {
 
     private void storeBundleOrigins(HandlerContext context, Feature source, Feature target) {
         try {
-            File f = getFeatureDataFile(context, target, "bundleOrigins.properties");
+            File f = AbstractHandler.getFeatureDataFile(context, target, "bundleOrigins.properties");
 
             String featureId = source.getId().toMvnId();
             Properties p = new Properties();
@@ -222,13 +222,6 @@ public class APIRegionMergeHandler implements MergeHandler {
         } catch (IOException e) {
             throw new IllegalStateException("Problem storing bundle origin information", e);
         }
-    }
-
-    private File getFeatureDataFile(HandlerContext context, Feature target, String fileName) throws IOException {
-        String featureName = target.getId().toMvnId().replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
-        File f = AbstractHandler.getDataFile(context, featureName, fileName);
-        f.getParentFile().mkdirs();
-        return f;
     }
 
     private static List<String> readJsonArray(JsonArray jsonArray) {

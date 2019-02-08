@@ -16,8 +16,14 @@
  */
 package org.apache.sling.feature.extension.apiregions;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.builder.ArtifactProvider;
+import org.apache.sling.feature.builder.HandlerContext;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,14 +35,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.builder.ArtifactProvider;
-import org.apache.sling.feature.builder.HandlerContext;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BundleMappingHandlerTest {
     @Test
@@ -105,7 +105,7 @@ public class BundleMappingHandlerTest {
             bmh.postProcess(new TestHandlerContext(ap,
                     kvm), f, ex);
 
-            File expectedFile = new File(tempDir.toFile(), "idbsnver.properties");
+            File expectedFile = new File(tempDir.toFile(), "foo_bar_123/idbsnver.properties");
             assertTrue(expectedFile.exists());
             Properties p = new Properties();
             p.load(new FileInputStream(expectedFile));

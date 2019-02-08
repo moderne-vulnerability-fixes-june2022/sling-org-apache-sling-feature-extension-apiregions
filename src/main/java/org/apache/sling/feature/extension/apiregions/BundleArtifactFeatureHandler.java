@@ -53,7 +53,7 @@ public class BundleArtifactFeatureHandler extends AbstractHandler implements Pos
     }
 
     private void writeBundleToFeatureMap(HandlerContext context, Feature feature) throws IOException {
-        File bundlesFile = getDataFile(context, "bundles.properties");
+        File bundlesFile = getFeatureDataFile(context, feature, "bundles.properties");
         Properties map = loadProperties(bundlesFile);
 
         for (Artifact b : feature.getBundles()) {
@@ -78,8 +78,8 @@ public class BundleArtifactFeatureHandler extends AbstractHandler implements Pos
         JsonReader jr = Json.createReader(new StringReader(extension.getJSON()));
         JsonArray ja = jr.readArray();
 
-        File featuresFile = getDataFile(context, "features.properties");
-        File regionsFile = getDataFile(context, "regions.properties");
+        File featuresFile = getFeatureDataFile(context, feature, "features.properties");
+        File regionsFile = getFeatureDataFile(context, feature, "regions.properties");
         Properties frMap = loadProperties(featuresFile);
         Properties rpMap = loadProperties(regionsFile);
 
