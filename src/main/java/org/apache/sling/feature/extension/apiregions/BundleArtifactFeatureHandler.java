@@ -75,45 +75,46 @@ public class BundleArtifactFeatureHandler extends AbstractHandler implements Pos
     }
 
     private void writeFeatureToRegionAndPackageMap(HandlerContext context, Feature feature, Extension extension) throws IOException {
-        JsonReader jr = Json.createReader(new StringReader(extension.getJSON()));
-        JsonArray ja = jr.readArray();
+        try (JsonReader jr = Json.createReader(new StringReader(extension.getJSON()))) {
+            JsonArray ja = jr.readArray();
 
-        File featuresFile = getFeatureDataFile(context, feature, "features.properties");
-        File regionsFile = getFeatureDataFile(context, feature, "regions.properties");
-        Properties frMap = loadProperties(featuresFile);
-        Properties rpMap = loadProperties(regionsFile);
+            File featuresFile = getFeatureDataFile(context, feature, "features.properties");
+            File regionsFile = getFeatureDataFile(context, feature, "regions.properties");
+            Properties frMap = loadProperties(featuresFile);
+            Properties rpMap = loadProperties(regionsFile);
 
-        for (JsonValue jv : ja) {
-            if (jv instanceof JsonObject) {
-                JsonObject jo = (JsonObject) jv;
-                String fid = feature.getId().toMvnId();
+            for (JsonValue jv : ja) {
+                if (jv instanceof JsonObject) {
+                    JsonObject jo = (JsonObject) jv;
+                    String fid = feature.getId().toMvnId();
 
-                Set<String> regionSet = new HashSet<>();
-                String regions = frMap.getProperty(fid);
-                if (regions != null) {
-                    regionSet.addAll(Arrays.asList(regions.split(",")));
-                }
-                String region = jo.getString(NAME_KEY);
-                regionSet.add(region);
-
-                frMap.put(fid, regionSet.stream().collect(Collectors.joining(",")));
-
-                Set<String> packageSet = new HashSet<>();
-                String packages = rpMap.getProperty(region);
-                if (packages != null) {
-                    packageSet.addAll(Arrays.asList(packages.split(",")));
-                }
-                if (jo.containsKey(EXPORTS_KEY)) {
-                    JsonArray eja = jo.getJsonArray(EXPORTS_KEY);
-                    for (int i=0; i < eja.size(); i++) {
-                        packageSet.add(eja.getString(i));
+                    Set<String> regionSet = new HashSet<>();
+                    String regions = frMap.getProperty(fid);
+                    if (regions != null) {
+                        regionSet.addAll(Arrays.asList(regions.split(",")));
                     }
-                }
-                rpMap.put(region, packageSet.stream().collect(Collectors.joining(",")));
-            }
-        }
+                    String region = jo.getString(NAME_KEY);
+                    regionSet.add(region);
 
-        storeProperties(frMap, featuresFile);
-        storeProperties(rpMap, regionsFile);
+                    frMap.put(fid, regionSet.stream().collect(Collectors.joining(",")));
+
+                    Set<String> packageSet = new HashSet<>();
+                    String packages = rpMap.getProperty(region);
+                    if (packages != null) {
+                        packageSet.addAll(Arrays.asList(packages.split(",")));
+                    }
+                    if (jo.containsKey(EXPORTS_KEY)) {
+                        JsonArray eja = jo.getJsonArray(EXPORTS_KEY);
+                        for (int i=0; i < eja.size(); i++) {
+                            packageSet.add(eja.getString(i));
+                        }
+                    }
+                    rpMap.put(region, packageSet.stream().collect(Collectors.joining(",")));
+                }
+            }
+
+            storeProperties(frMap, featuresFile);
+            storeProperties(rpMap, regionsFile);
+        }
     }
 }

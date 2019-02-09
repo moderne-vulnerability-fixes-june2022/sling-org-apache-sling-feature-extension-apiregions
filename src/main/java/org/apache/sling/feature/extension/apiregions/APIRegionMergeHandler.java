@@ -65,105 +65,107 @@ public class APIRegionMergeHandler implements MergeHandler {
 
         storeBundleOrigins(context, source, target);
 
-        JsonReader srcJR = Json.createReader(new StringReader(sourceEx.getJSON()));
-        JsonArray srcJA = srcJR.readArray();
+        try (JsonReader srcJR = Json.createReader(new StringReader(sourceEx.getJSON()))) {
+            JsonArray srcJA = srcJR.readArray();
 
-        Map<String, Map<String, Object>> srcRegions = new LinkedHashMap<>();
-        for (int i=0; i < srcJA.size(); i++) {
-            String regionName = null;
-            Map<String, Object> region = new LinkedHashMap<>();
-            JsonObject jo = srcJA.getJsonObject(i);
-            for (Map.Entry<String, JsonValue> entry : jo.entrySet()) {
-                Object val;
-                switch (entry.getKey()) {
-                case EXPORTS_KEY:
-                    val = readJsonArray((JsonArray) entry.getValue());
-                    break;
-                default:
-                    val = ((JsonString) entry.getValue()).getString();
-                    if (NAME_KEY.equals(entry.getKey())) {
-                        regionName = val.toString();
-                    }
-                    break;
-                }
-                region.put(entry.getKey(), val);
-            }
-            if (regionName == null) {
-                throw new IllegalStateException("No region name specified: " + sourceEx.getJSON());
-            }
-            srcRegions.put(regionName, region);
-        }
-
-        storeRegionOrigins(context, source, target, srcRegions.keySet());
-
-        JsonArray tgtJA;
-        if (targetEx != null) {
-            JsonReader tgtJR = Json.createReader(new StringReader(targetEx.getJSON()));
-            tgtJA = tgtJR.readArray();
-        } else {
-            targetEx = new Extension(sourceEx.getType(), sourceEx.getName(), sourceEx.isRequired());
-            target.getExtensions().add(targetEx);
-
-            tgtJA = Json.createArrayBuilder().build();
-        }
-
-        StringWriter sw = new StringWriter();
-        JsonGenerator gen = Json.createGenerator(sw);
-        gen.writeStartArray();
-        for (JsonValue jv : tgtJA) {
-            if (jv instanceof JsonObject) {
-                JsonObject jo = (JsonObject) jv;
-                Map<String, Object> srcRegion = srcRegions.remove(jo.getString(NAME_KEY));
-                if (srcRegion != null) {
-                    gen.writeStartObject();
-                    for (Map.Entry<String, JsonValue> entry : jo.entrySet()) {
-                        Object sp = srcRegion.get(entry.getKey());
-                        if (EXPORTS_KEY.equals(entry.getKey()) && sp instanceof List) {
-                            List<String> tgtPkgs = readJsonArray((JsonArray) entry.getValue());
-                            @SuppressWarnings("unchecked")
-                            List<String> srcPkgs = (List<String>) sp;
-                            for (String srcPkg : srcPkgs) {
-                                if (!tgtPkgs.contains(srcPkg)) {
-                                    tgtPkgs.add(srcPkg);
-                                }
-                            }
-                            gen.writeStartArray(entry.getKey());
-                            for (String p : tgtPkgs) {
-                                gen.write(p);
-                            }
-                            gen.writeEnd();
-                        } else {
-                            gen.write(entry.getKey(), entry.getValue());
+            Map<String, Map<String, Object>> srcRegions = new LinkedHashMap<>();
+            for (int i=0; i < srcJA.size(); i++) {
+                String regionName = null;
+                Map<String, Object> region = new LinkedHashMap<>();
+                JsonObject jo = srcJA.getJsonObject(i);
+                for (Map.Entry<String, JsonValue> entry : jo.entrySet()) {
+                    Object val;
+                    switch (entry.getKey()) {
+                    case EXPORTS_KEY:
+                        val = readJsonArray((JsonArray) entry.getValue());
+                        break;
+                    default:
+                        val = ((JsonString) entry.getValue()).getString();
+                        if (NAME_KEY.equals(entry.getKey())) {
+                            regionName = val.toString();
                         }
+                        break;
                     }
-                    gen.writeEnd();
-                } else {
-                    gen.write(jv);
+                    region.put(entry.getKey(), val);
                 }
+                if (regionName == null) {
+                    throw new IllegalStateException("No region name specified: " + sourceEx.getJSON());
+                }
+                srcRegions.put(regionName, region);
             }
-        }
 
-        // If there are any remaining regions in the src extension, process them now
-        for (Map<String, Object> region : srcRegions.values()) {
-            gen.writeStartObject();
-            for (Map.Entry<String, Object> entry : region.entrySet()) {
-                if (entry.getValue() instanceof Collection) {
-                    gen.writeStartArray(entry.getKey());
-                    for (Object o : (Collection<?>) entry.getValue()) {
-                        gen.write(o.toString());
+            storeRegionOrigins(context, source, target, srcRegions.keySet());
+
+            JsonArray tgtJA;
+            if (targetEx != null) {
+                try (JsonReader tgtJR = Json.createReader(new StringReader(targetEx.getJSON()))) {
+                    tgtJA = tgtJR.readArray();
+                }
+            } else {
+                targetEx = new Extension(sourceEx.getType(), sourceEx.getName(), sourceEx.isRequired());
+                target.getExtensions().add(targetEx);
+
+                tgtJA = Json.createArrayBuilder().build();
+            }
+
+            StringWriter sw = new StringWriter();
+            JsonGenerator gen = Json.createGenerator(sw);
+            gen.writeStartArray();
+            for (JsonValue jv : tgtJA) {
+                if (jv instanceof JsonObject) {
+                    JsonObject jo = (JsonObject) jv;
+                    Map<String, Object> srcRegion = srcRegions.remove(jo.getString(NAME_KEY));
+                    if (srcRegion != null) {
+                        gen.writeStartObject();
+                        for (Map.Entry<String, JsonValue> entry : jo.entrySet()) {
+                            Object sp = srcRegion.get(entry.getKey());
+                            if (EXPORTS_KEY.equals(entry.getKey()) && sp instanceof List) {
+                                List<String> tgtPkgs = readJsonArray((JsonArray) entry.getValue());
+                                @SuppressWarnings("unchecked")
+                                List<String> srcPkgs = (List<String>) sp;
+                                for (String srcPkg : srcPkgs) {
+                                    if (!tgtPkgs.contains(srcPkg)) {
+                                        tgtPkgs.add(srcPkg);
+                                    }
+                                }
+                                gen.writeStartArray(entry.getKey());
+                                for (String p : tgtPkgs) {
+                                    gen.write(p);
+                                }
+                                gen.writeEnd();
+                            } else {
+                                gen.write(entry.getKey(), entry.getValue());
+                            }
+                        }
+                        gen.writeEnd();
+                    } else {
+                        gen.write(jv);
                     }
-                    gen.writeEnd();
-                } else {
-                    gen.write(entry.getKey(), entry.getValue().toString());
                 }
             }
+
+            // If there are any remaining regions in the src extension, process them now
+            for (Map<String, Object> region : srcRegions.values()) {
+                gen.writeStartObject();
+                for (Map.Entry<String, Object> entry : region.entrySet()) {
+                    if (entry.getValue() instanceof Collection) {
+                        gen.writeStartArray(entry.getKey());
+                        for (Object o : (Collection<?>) entry.getValue()) {
+                            gen.write(o.toString());
+                        }
+                        gen.writeEnd();
+                    } else {
+                        gen.write(entry.getKey(), entry.getValue().toString());
+                    }
+                }
+                gen.writeEnd();
+            }
+
             gen.writeEnd();
+            gen.close();
+
+            targetEx.setJSON(sw.toString());
         }
-
-        gen.writeEnd();
-        gen.close();
-
-        targetEx.setJSON(sw.toString());
     }
 
     private void storeRegionOrigins(HandlerContext context, Feature source, Feature target, Set<String> regions) {
