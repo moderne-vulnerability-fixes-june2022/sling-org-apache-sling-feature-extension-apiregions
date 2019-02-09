@@ -23,6 +23,8 @@ PostProcessHandlers are called when a feature contains an `api-regions` section.
 * `features.properties`: maps features to regions. A feature can be in more than one region.
 * `regions.properties`: maps regions to packages. A region can expose more than one package.
 
-The location of the files created by the `BundleArtifactFeatureHandler` handler is stored in a system property with name `apiregions.` + filename. So to obtain the file name of the `bundles.properties` file, make the following call:
+The location of the files created by the `BundleArtifactFeatureHandler` handler is stored in a system property with name `sling.feature.apiregions.resource.` + filename. So to obtain the file name of the `bundles.properties` file, make the following call:
 
-    System.getProperty("apiregions.bundles.properties")
+    System.getProperty("sling.feature.apiregions.resource.bundles.properties")
+
+These properties are read by the https://github.com/apache/sling-org-apache-sling-feature-apiregions component for runtime enforcement of the API Regions.
