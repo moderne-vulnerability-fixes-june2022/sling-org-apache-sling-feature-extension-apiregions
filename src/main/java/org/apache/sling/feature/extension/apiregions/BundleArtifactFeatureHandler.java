@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -88,7 +89,8 @@ public class BundleArtifactFeatureHandler extends AbstractHandler implements Pos
                     JsonObject jo = (JsonObject) jv;
                     String fid = feature.getId().toMvnId();
 
-                    Set<String> regionSet = new HashSet<>();
+                    // Regions are ordered, so need to use a linked hash set
+                    Set<String> regionSet = new LinkedHashSet<>();
                     String regions = frMap.getProperty(fid);
                     if (regions != null) {
                         regionSet.addAll(Arrays.asList(regions.split(",")));

@@ -103,6 +103,32 @@ public class BundleArtifactFeatureHandlerTest {
     }
 
     @Test
+    public void testRegionOrdering() throws Exception {
+        BundleArtifactFeatureHandler bafh = new BundleArtifactFeatureHandler();
+
+        Feature f = new Feature(ArtifactId.fromMvnId("org.sling:somethingelse:1.0.0"));
+        Extension ex = new Extension(ExtensionType.JSON, "api-regions", false);
+        ex.setJSON("[{\"name\":\"global\","
+                + "\"exports\": []},"
+                + "{\"name\":\"internal\","
+                + "\"exports\":[]},"
+                + "{\"name\":\"private\","
+                + "\"exports\":[]},"
+                + "{\"name\":\"forbidden\","
+                + "\"exports\":[]}]");
+
+        bafh.postProcess(new TestHandlerContextImpl(), f, ex);
+
+        String p = System.getProperty("sling.feature.apiregions.resource.features.properties");
+        Properties actual = new Properties();
+        actual.load(new FileReader(p));
+
+        Properties expected = new Properties();
+        expected.put("org.sling:somethingelse:1.0.0", "global,internal,private,forbidden");
+        assertEquals(expected, actual);
+    }
+
+    @Test
     public void testUnrelatedExtension() {
         BundleArtifactFeatureHandler bafh = new BundleArtifactFeatureHandler();
         Extension ex = new Extension(ExtensionType.JSON, "foobar", false);
