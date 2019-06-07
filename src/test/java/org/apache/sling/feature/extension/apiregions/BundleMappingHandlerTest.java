@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -43,7 +44,7 @@ public class BundleMappingHandlerTest {
     public void testHandler() throws IOException {
         ArtifactProvider ap = new ArtifactProvider() {
             @Override
-            public File provide(ArtifactId id) {
+            public URL provide(ArtifactId id) {
                 switch(id.toMvnId()) {
                 case "g:b1:1":
                     return getResourceFile("b1/b1.jar");
@@ -85,7 +86,7 @@ public class BundleMappingHandlerTest {
         try {
             ArtifactProvider ap = new ArtifactProvider() {
                 @Override
-                public File provide(ArtifactId id) {
+                public URL provide(ArtifactId id) {
                     switch(id.toMvnId()) {
                     case "g:b1:1":
                         return getResourceFile("b1/b1.jar");
@@ -129,8 +130,8 @@ public class BundleMappingHandlerTest {
         // Should not do anything and definitely not throw an exception
     }
 
-    private File getResourceFile(String filename) {
-        return new File(getClass().getClassLoader().getResource(filename).getFile());
+    private URL getResourceFile(String filename) {
+        return getClass().getClassLoader().getResource(filename);
     }
 
     private class TestHandlerContext implements HandlerContext {

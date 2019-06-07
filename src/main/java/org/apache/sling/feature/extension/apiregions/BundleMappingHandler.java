@@ -25,6 +25,8 @@ import org.osgi.framework.Constants;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.JarURLConnection;
+import java.net.URL;
 import java.util.Properties;
 import java.util.jar.JarFile;
 
@@ -39,9 +41,9 @@ public class BundleMappingHandler extends AbstractHandler implements PostProcess
             Properties map = loadProperties(idBSNFile);
 
             for (Artifact b : feature.getBundles()) {
-                File f = context.getArtifactProvider().provide(b.getId());
+                URL f = context.getArtifactProvider().provide(b.getId());
 
-                try (JarFile jf = new JarFile(f)) {
+                try (JarFile jf = ((JarURLConnection) (f.getProtocol().equals("jar") ? f : new URL("jar:" + f + "!/")).openConnection()).getJarFile()) {
                     String bsn = jf.getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
                     if (bsn == null)
                         continue;
