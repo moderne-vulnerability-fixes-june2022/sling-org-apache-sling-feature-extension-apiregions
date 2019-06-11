@@ -21,6 +21,7 @@ import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.builder.HandlerContext;
 import org.apache.sling.feature.builder.PostProcessHandler;
+import org.apache.sling.feature.io.IOUtils;
 import org.osgi.framework.Constants;
 
 import java.io.File;
@@ -43,7 +44,7 @@ public class BundleMappingHandler extends AbstractHandler implements PostProcess
             for (Artifact b : feature.getBundles()) {
                 URL f = context.getArtifactProvider().provide(b.getId());
 
-                try (JarFile jf = ((JarURLConnection) (f.getProtocol().equals("jar") ? f : new URL("jar:" + f + "!/")).openConnection()).getJarFile()) {
+                try (JarFile jf = IOUtils.getJarFileFromURL(f, true, null)) {
                     String bsn = jf.getManifest().getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
                     if (bsn == null)
                         continue;
