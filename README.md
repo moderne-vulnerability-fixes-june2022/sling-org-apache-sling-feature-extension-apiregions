@@ -4,7 +4,9 @@
 
 # Apache Sling API Regions extension
 
-This component contains extensions relating to the API Regions component.
+This component contains extensions relating to the API Regions component. For more information about API Regions see
+https://github.com/apache/sling-org-apache-sling-feature/blob/master/apicontroller.md
+
 The following extensions are registered via the ServiceLoader mechanism:
 
 ## `org.apache.sling.feature.builder.MergeHandler`
