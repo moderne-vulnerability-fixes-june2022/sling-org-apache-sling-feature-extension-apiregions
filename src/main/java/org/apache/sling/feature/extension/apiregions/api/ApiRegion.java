@@ -16,9 +16,10 @@
  */
 package org.apache.sling.feature.extension.apiregions.api;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,7 +27,7 @@ import java.util.Map;
  */
 public class ApiRegion {
 
-    private final Collection<ApiExport> exports = new HashSet<>();
+    private final List<ApiExport> exports = new ArrayList<>();
 
     private final Map<String, String> properties = new HashMap<>();
 
