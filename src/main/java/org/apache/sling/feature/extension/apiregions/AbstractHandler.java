@@ -16,9 +16,6 @@
  */
 package org.apache.sling.feature.extension.apiregions;
 
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.builder.HandlerContext;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -31,8 +28,10 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.Properties;
 
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.builder.HandlerContext;
+
 class AbstractHandler {
-    static final String API_REGIONS_NAME = "api-regions";
     static final String GLOBAL_NAME = "global";
 
     static final String NAME_KEY = "name";

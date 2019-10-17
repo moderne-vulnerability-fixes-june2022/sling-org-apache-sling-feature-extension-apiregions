@@ -16,16 +16,9 @@
  */
 package org.apache.sling.feature.extension.apiregions;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.builder.HandlerContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,9 +34,20 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonReader;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionState;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.builder.HandlerContext;
+import org.apache.sling.feature.extension.apiregions.api.ApiExport;
+import org.apache.sling.feature.extension.apiregions.api.ApiRegion;
+import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 public class APIRegionMergeHandlerTest {
     private Path tempDir;
@@ -66,9 +70,9 @@ public class APIRegionMergeHandlerTest {
     public void testCanMerge() {
         APIRegionMergeHandler armh = new APIRegionMergeHandler();
 
-        Extension ex = new Extension(ExtensionType.JSON, "api-regions", false);
+        Extension ex = new Extension(ExtensionType.JSON, "api-regions", ExtensionState.OPTIONAL);
         assertTrue(armh.canMerge(ex));
-        assertFalse(armh.canMerge(new Extension(ExtensionType.JSON, "foo", false)));
+        assertFalse(armh.canMerge(new Extension(ExtensionType.JSON, "foo", ExtensionState.OPTIONAL)));
     }
 
     @Test
@@ -78,14 +82,14 @@ public class APIRegionMergeHandlerTest {
         Feature tf = new Feature(ArtifactId.fromMvnId("x:t:1"));
         Feature sf = new Feature(ArtifactId.fromMvnId("y:s:2"));
 
-        Extension tgEx = new Extension(ExtensionType.JSON, "api-regions", false);
+        Extension tgEx = new Extension(ExtensionType.JSON, "api-regions", ExtensionState.OPTIONAL);
         tgEx.setJSON("[{\"name\":\"global\","
                 + "\"exports\": [\"a.b.c\",\"d.e.f\"]},"
                 + "{\"name\":\"internal\","
                 + "\"exports\":[\"xyz\"],"
                 + "\"some-key\":\"some-val\"}]");
 
-        Extension srEx = new Extension(ExtensionType.JSON, "api-regions", false);
+        Extension srEx = new Extension(ExtensionType.JSON, "api-regions", ExtensionState.OPTIONAL);
         srEx.setJSON("[{\"name\":\"global\","
                 + "\"exports\": [\"test\"]},"
                 + "{\"name\":\"something\","
@@ -95,20 +99,29 @@ public class APIRegionMergeHandlerTest {
         HandlerContext hc = Mockito.mock(HandlerContext.class);
         armh.merge(hc, tf, sf, tgEx, srEx);
 
-        String expectedJSON = "[{\"name\":\"global\","
-                + "\"exports\": [\"a.b.c\",\"d.e.f\", \"test\"]},"
-                + "{\"name\":\"internal\","
-                + "\"exports\":[\"xyz\"],"
-                + "\"some-key\":\"some-val\"},"
-                + "{\"name\":\"something\","
-                + "\"exports\": [\"a.ha\"],"
-                + "\"my-key\": \"my-val\"}]";
-        JsonReader er = Json.createReader(new StringReader(expectedJSON));
-        JsonReader ar = Json.createReader(new StringReader(tgEx.getJSON()));
-        JsonArray ea = er.readArray();
-        JsonArray aa = ar.readArray();
+        ApiRegions expected = new ApiRegions();
+        ApiRegion global = new ApiRegion();
+        global.setName("global");
+        global.getExports().add(new ApiExport("a.b.c"));
+        global.getExports().add(new ApiExport("d.e.f"));
+        global.getExports().add(new ApiExport("test"));
+        expected.getRegions().add(global);
 
-        assertEquals(ea, aa);
+        ApiRegion internal = new ApiRegion();
+        internal.setName("internal");
+        internal.getExports().add(new ApiExport("xyz"));
+        internal.getProperties().put("some-key", "some-val");
+        expected.getRegions().add(internal);
+
+        ApiRegion something = new ApiRegion();
+        something.setName("something");
+        something.getExports().add(new ApiExport("a.ha"));
+        something.getProperties().put("my-key", "my-val");
+        expected.getRegions().add(something);
+
+        ApiRegions created = ApiRegions.parse((JsonArray) tgEx.getJSONStructure());
+
+        assertEquals(expected, created);
     }
 
 
@@ -119,7 +132,7 @@ public class APIRegionMergeHandlerTest {
         Feature tf = new Feature(ArtifactId.fromMvnId("x:t:1"));
         Feature sf = new Feature(ArtifactId.fromMvnId("y:s:2"));
 
-        Extension srEx = new Extension(ExtensionType.JSON, "api-regions", false);
+        Extension srEx = new Extension(ExtensionType.JSON, "api-regions", ExtensionState.OPTIONAL);
         srEx.setJSON("[{\"name\":\"global\","
                 + "\"exports\": [\"a.b.c\",\"d.e.f\"]},"
                 + "{\"name\":\"deprecated\","
@@ -157,7 +170,7 @@ public class APIRegionMergeHandlerTest {
 
         Feature tf = new Feature(ArtifactId.fromMvnId("g:t:1"));
         Feature sf1 = new Feature(ArtifactId.fromMvnId("g:s1:1"));
-        Extension sf1Ex = new Extension(ExtensionType.JSON, "api-regions", false);
+        Extension sf1Ex = new Extension(ExtensionType.JSON, "api-regions", ExtensionState.OPTIONAL);
         sf1Ex.setJSON("[]");
 
         sf1.getBundles().add(new Artifact(ArtifactId.fromMvnId("a:b1:1")));
@@ -166,7 +179,7 @@ public class APIRegionMergeHandlerTest {
         armh.merge(hc, tf, sf1, null, sf1Ex);
 
         Feature sf2 = new Feature(ArtifactId.fromMvnId("g:s2:1"));
-        Extension sf2Ex = new Extension(ExtensionType.JSON, "api-regions", false);
+        Extension sf2Ex = new Extension(ExtensionType.JSON, "api-regions", ExtensionState.OPTIONAL);
         sf2Ex.setJSON("[]");
 
         sf2.getBundles().add(new Artifact(ArtifactId.fromMvnId("a:b2:1")));
@@ -176,7 +189,7 @@ public class APIRegionMergeHandlerTest {
         armh.merge(hc, tf, sf2, tf.getExtensions().getByName("api-regions"), sf2Ex);
 
         Feature sf3 = new Feature(ArtifactId.fromMvnId("g:s3:1"));
-        Extension sf3Ex = new Extension(ExtensionType.JSON, "api-regions", false);
+        Extension sf3Ex = new Extension(ExtensionType.JSON, "api-regions", ExtensionState.OPTIONAL);
         sf3Ex.setJSON("[]");
 
         sf3.getBundles().add(new Artifact(ArtifactId.fromMvnId("a:b2:1")));
@@ -204,7 +217,7 @@ public class APIRegionMergeHandlerTest {
         Feature tf = new Feature(ArtifactId.fromMvnId("x:t:1"));
         Feature sf1 = new Feature(ArtifactId.fromMvnId("y:s:2"));
 
-        Extension sr1Ex = new Extension(ExtensionType.JSON, "api-regions", false);
+        Extension sr1Ex = new Extension(ExtensionType.JSON, "api-regions", ExtensionState.OPTIONAL);
         sr1Ex.setJSON("[{\"name\":\"global\","
                 + "\"exports\": [\"a.b.c\",\"d.e.f\"]},"
                 + "{\"name\":\"deprecated\","
@@ -218,7 +231,7 @@ public class APIRegionMergeHandlerTest {
 
         Feature sf2 = new Feature(ArtifactId.fromMvnId("z:s:1"));
 
-        Extension sr2Ex = new Extension(ExtensionType.JSON, "api-regions", false);
+        Extension sr2Ex = new Extension(ExtensionType.JSON, "api-regions", ExtensionState.OPTIONAL);
         sr2Ex.setJSON("[{\"name\":\"global\","
                 + "\"exports\": [\"g.h.i\"]},"
                 + "{\"name\":\"internal\","

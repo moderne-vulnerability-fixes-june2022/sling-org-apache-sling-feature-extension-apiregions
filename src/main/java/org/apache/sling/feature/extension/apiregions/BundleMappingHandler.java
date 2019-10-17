@@ -16,25 +16,25 @@
  */
 package org.apache.sling.feature.extension.apiregions;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Properties;
+import java.util.jar.JarFile;
+
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.builder.HandlerContext;
 import org.apache.sling.feature.builder.PostProcessHandler;
+import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
 import org.apache.sling.feature.io.IOUtils;
 import org.osgi.framework.Constants;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.JarURLConnection;
-import java.net.URL;
-import java.util.Properties;
-import java.util.jar.JarFile;
 
 public class BundleMappingHandler extends AbstractHandler implements PostProcessHandler {
     @Override
     public void postProcess(HandlerContext context, Feature feature, Extension extension) {
-        if (!API_REGIONS_NAME.equals(extension.getName()))
+        if (!ApiRegions.EXTENSION_NAME.equals(extension.getName()))
             return;
 
         try {

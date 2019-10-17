@@ -16,12 +16,6 @@
  */
 package org.apache.sling.feature.extension.apiregions;
 
-import org.apache.sling.feature.Artifact;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.builder.HandlerContext;
-import org.apache.sling.feature.builder.PostProcessHandler;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
@@ -39,10 +33,17 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
 
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.builder.HandlerContext;
+import org.apache.sling.feature.builder.PostProcessHandler;
+import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
+
 public class BundleArtifactFeatureHandler extends AbstractHandler implements PostProcessHandler {
     @Override
     public void postProcess(HandlerContext context, Feature feature, Extension extension) {
-        if (!API_REGIONS_NAME.equals(extension.getName()))
+        if (!ApiRegions.EXTENSION_NAME.equals(extension.getName()))
             return;
 
         try {
