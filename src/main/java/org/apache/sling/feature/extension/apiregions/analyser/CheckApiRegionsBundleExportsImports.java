@@ -37,15 +37,20 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import javax.json.JsonArray;
+import javax.json.stream.JsonParsingException;
+
 import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.Extensions;
 import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.analyser.task.AnalyserTask;
 import org.apache.sling.feature.analyser.task.AnalyserTaskContext;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
 import org.apache.sling.feature.scanner.BundleDescriptor;
 import org.apache.sling.feature.scanner.PackageInfo;
 import org.osgi.framework.Version;
 
-public class CheckApiRegionsBundleExportsImports extends AbstractApiRegionsAnalyserTask {
+public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
 
     private static final String FILE_STORAGE_CONFIG_KEY = "fileStorage";
     private static final String IGNORE_API_REGIONS_CONFIG_KEY = "ignoreAPIRegions";
@@ -118,7 +123,7 @@ public class CheckApiRegionsBundleExportsImports extends AbstractApiRegionsAnaly
     }
 
     @Override
-    protected void execute(ApiRegions apiRegions, AnalyserTaskContext ctx) throws Exception {
+    public void execute(final AnalyserTaskContext ctx) throws Exception {
         boolean ignoreAPIRegions = ctx.getConfiguration().getOrDefault(
                 IGNORE_API_REGIONS_CONFIG_KEY, "false").equalsIgnoreCase("true");
 
@@ -145,13 +150,29 @@ public class CheckApiRegionsBundleExportsImports extends AbstractApiRegionsAnaly
 
         Map<String, Set<String>> bundleToOriginalFeatures;
         Map<String, Set<String>> featureToOriginalRegions;
+        ApiRegions apiRegions = new ApiRegions(); // Empty API Regions;
+
         if (ignoreAPIRegions) {
-            apiRegions = new ApiRegions(); // Empty API Regions
             bundleToOriginalFeatures = Collections.emptyMap();
             featureToOriginalRegions = Collections.emptyMap();
         } else {
             bundleToOriginalFeatures = readBundleOrigins(ctx);
             featureToOriginalRegions = readRegionOrigins(ctx);
+            Feature feature = ctx.getFeature();
+
+            // extract and check the api-regions
+
+            Extensions extensions = feature.getExtensions();
+            Extension apiRegionsExtension = extensions.getByName(ApiRegions.EXTENSION_NAME);
+            if (apiRegionsExtension != null && apiRegionsExtension.getJSONStructure() != null) {
+                try {
+                    apiRegions = ApiRegions.parse((JsonArray) apiRegionsExtension.getJSONStructure());
+                } catch (IllegalStateException | IllegalArgumentException | JsonParsingException e) {
+                    ctx.reportError("API Regions '" + apiRegionsExtension.getJSON()
+                            + "' does not represent a valid JSON 'api-regions': " + e.getMessage());
+                    return;
+                }
+            }
         }
 
         for(final Map.Entry<Integer, List<BundleDescriptor>> entry : bundlesMap.entrySet()) {
@@ -351,7 +372,8 @@ public class CheckApiRegionsBundleExportsImports extends AbstractApiRegionsAnaly
 
                 for (String region : getBundleRegions(info, bundleToOriginalFeatures, featureToOriginalRegions)) {
                     if (!NO_REGION.equals(region) &&
-                            apiRegions.getRegionByName(region).getExportByName(pck.getName()) == null)
+                            (apiRegions.getRegionByName(region) == null
+                                    || apiRegions.getRegionByName(region).getExportByName(pck.getName()) == null))
                         continue;
 
                     Set<String> regions = candidates.get(info);
