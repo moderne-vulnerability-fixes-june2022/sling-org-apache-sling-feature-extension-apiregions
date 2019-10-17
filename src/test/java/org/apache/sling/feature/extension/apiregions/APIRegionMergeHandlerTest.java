@@ -76,7 +76,7 @@ public class APIRegionMergeHandlerTest {
     }
 
     @Test
-    public void testAPIRegionMerging() {
+    public void testAPIRegionMerging() throws Exception {
         APIRegionMergeHandler armh = new APIRegionMergeHandler();
 
         Feature tf = new Feature(ArtifactId.fromMvnId("x:t:1"));

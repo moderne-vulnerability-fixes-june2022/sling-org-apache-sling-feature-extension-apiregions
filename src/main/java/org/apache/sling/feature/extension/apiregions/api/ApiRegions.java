@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
+import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
@@ -116,8 +117,9 @@ public class ApiRegions {
      * Convert regions into json
      *
      * @return The json array
+     * @throws IOException If generating the JSON fails
      */
-    public JsonArray toJSONArray() {
+    public JsonArray toJSONArray() throws IOException {
         final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 
         for (final ApiRegion region : this.getRegions()) {
@@ -156,15 +158,14 @@ public class ApiRegions {
      * Convert regions into json
      *
      * @return The json array as a string
+     * @throws IOException If generating the JSON fails
      */
-    public String toJSON() {
+    public String toJSON() throws IOException {
         final JsonArray array = this.toJSONArray();
         try (final StringWriter stringWriter = new StringWriter();
                 final JsonWriter writer = Json.createWriter(stringWriter)) {
             writer.writeArray(array);
             return stringWriter.toString();
-        } catch (final IOException e) {
-            throw new IllegalStateException(e);
         }
     }
 
@@ -173,8 +174,9 @@ public class ApiRegions {
      *
      * @param json The json as a string
      * @return The api regions
+     * @throws IOException If the json could not be parsed
      */
-    public static ApiRegions parse(final String json) {
+    public static ApiRegions parse(final String json) throws IOException {
         try (final JsonReader reader = Json.createReader(new StringReader(json))) {
             return parse(reader.readArray());
         }
@@ -185,54 +187,58 @@ public class ApiRegions {
      *
      * @param json The json
      * @return The api regions
+     * @throws IOException If the json could not be parsed
      */
-    public static ApiRegions parse(final JsonArray json) {
-        final ApiRegions regions = new ApiRegions();
+    public static ApiRegions parse(final JsonArray json) throws IOException {
+        try {
+            final ApiRegions regions = new ApiRegions();
 
-        for (final JsonValue value : json) {
-            if (value.getValueType() != ValueType.OBJECT) {
-                throw new IllegalArgumentException("Illegal api regions json " + json);
-            }
-            final ApiRegion region = new ApiRegion();
+            for (final JsonValue value : json) {
+                if (value.getValueType() != ValueType.OBJECT) {
+                    throw new IOException("Illegal api regions json " + json);
+                }
+                final ApiRegion region = new ApiRegion();
 
-            final JsonObject obj = (JsonObject) value;
-            region.setName(obj.getString(NAME_KEY));
+                final JsonObject obj = (JsonObject) value;
+                region.setName(obj.getString(NAME_KEY));
 
-            for(final Map.Entry<String, JsonValue> entry : obj.entrySet()) {
-                if ( NAME_KEY.equals(entry.getKey()) ) {
-                    region.setName(obj.getString(NAME_KEY));
-                } else if (entry.getKey().equals(EXPORTS_KEY)) {
-                    for (final JsonValue e : (JsonArray)entry.getValue()) {
-                        if (e.getValueType() == ValueType.STRING) {
-                            final String name = ((JsonString) e).getString();
-                            if (!name.startsWith("#")) {
+                for (final Map.Entry<String, JsonValue> entry : obj.entrySet()) {
+                    if (NAME_KEY.equals(entry.getKey())) {
+                        region.setName(obj.getString(NAME_KEY));
+                    } else if (entry.getKey().equals(EXPORTS_KEY)) {
+                        for (final JsonValue e : (JsonArray) entry.getValue()) {
+                            if (e.getValueType() == ValueType.STRING) {
+                                final String name = ((JsonString) e).getString();
+                                if (!name.startsWith("#")) {
+                                    final ApiExport export = new ApiExport();
+                                    region.getExports().add(export);
+
+                                    export.setName(name);
+                                }
+                            } else if (e.getValueType() == ValueType.OBJECT) {
+                                final JsonObject expObj = (JsonObject) e;
                                 final ApiExport export = new ApiExport();
                                 region.getExports().add(export);
 
-                                export.setName(name);
-                            }
-                        } else if (e.getValueType() == ValueType.OBJECT) {
-                            final JsonObject expObj = (JsonObject) e;
-                            final ApiExport export = new ApiExport();
-                            region.getExports().add(export);
-
-                            export.setName(expObj.getString(NAME_KEY));
-                            export.setToggle(expObj.getString(TOGGLE_KEY, null));
-                            if (expObj.containsKey(PREVIOUS_KEY)) {
-                                export.setPrevious(ArtifactId.parse(expObj.getString(PREVIOUS_KEY)));
+                                export.setName(expObj.getString(NAME_KEY));
+                                export.setToggle(expObj.getString(TOGGLE_KEY, null));
+                                if (expObj.containsKey(PREVIOUS_KEY)) {
+                                    export.setPrevious(ArtifactId.parse(expObj.getString(PREVIOUS_KEY)));
+                                }
                             }
                         }
+                    } else {
+                        region.getProperties().put(entry.getKey(), ((JsonString) entry.getValue()).getString());
                     }
-                } else {
-                    region.getProperties().put(entry.getKey(), ((JsonString) entry.getValue()).getString());
+                }
+                if (!regions.addUniqueRegion(region)) {
+                    throw new IOException("Region " + region.getName() + " is defined twice");
                 }
             }
-            if (!regions.addUniqueRegion(region)) {
-                throw new IllegalArgumentException("Region " + region.getName() + " is defined twice");
-            }
-
+            return regions;
+        } catch (final JsonException | IllegalArgumentException e) {
+            throw new IOException(e);
         }
-        return regions;
     }
 
     @Override

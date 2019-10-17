@@ -16,8 +16,9 @@
  */
 package org.apache.sling.feature.extension.apiregions.analyser;
 
+import java.io.IOException;
+
 import javax.json.JsonArray;
-import javax.json.stream.JsonParsingException;
 
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Extensions;
@@ -57,7 +58,7 @@ public abstract class AbstractApiRegionsAnalyserTask implements AnalyserTask {
         ApiRegions apiRegions;
         try {
             apiRegions = ApiRegions.parse((JsonArray) apiRegionsExtension.getJSONStructure());
-        } catch (IllegalStateException | IllegalArgumentException | JsonParsingException e) {
+        } catch (IOException e) {
             ctx.reportError("API Regions '"
                     + apiRegionsExtension.getJSON()
                     + "' does not represent a valid JSON 'api-regions': "

@@ -16,11 +16,11 @@
  */
 package org.apache.sling.feature.extension.apiregions.analyser;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.json.JsonArray;
-import javax.json.stream.JsonParsingException;
 
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Extensions;
@@ -100,7 +100,7 @@ public class CheckApiRegionsOrder implements AnalyserTask {
                     return;
                 }
             }
-        } catch (final IllegalStateException | IllegalArgumentException | JsonParsingException e) {
+        } catch (final IOException e) {
             ctx.reportError("Invalid api regions");
         }
     }

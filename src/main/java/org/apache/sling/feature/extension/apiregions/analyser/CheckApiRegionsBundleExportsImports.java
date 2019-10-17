@@ -38,7 +38,6 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import javax.json.JsonArray;
-import javax.json.stream.JsonParsingException;
 
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Extensions;
@@ -167,7 +166,7 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
             if (apiRegionsExtension != null && apiRegionsExtension.getJSONStructure() != null) {
                 try {
                     apiRegions = ApiRegions.parse((JsonArray) apiRegionsExtension.getJSONStructure());
-                } catch (IllegalStateException | IllegalArgumentException | JsonParsingException e) {
+                } catch (IOException e) {
                     ctx.reportError("API Regions '" + apiRegionsExtension.getJSON()
                             + "' does not represent a valid JSON 'api-regions': " + e.getMessage());
                     return;

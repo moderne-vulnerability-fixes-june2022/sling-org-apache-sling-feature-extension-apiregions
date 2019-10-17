@@ -55,36 +55,41 @@ public class APIRegionMergeHandler implements MergeHandler {
 
         storeBundleOrigins(context, source, target);
 
-        final ApiRegions srcRegions = ApiRegions.parse((JsonArray) sourceEx.getJSONStructure());
+        try {
+            final ApiRegions srcRegions = ApiRegions.parse((JsonArray) sourceEx.getJSONStructure());
 
-        storeRegionOrigins(context, source, target, srcRegions);
+            storeRegionOrigins(context, source, target, srcRegions);
 
-        final ApiRegions targetRegions;
-        if (targetEx != null) {
-            targetRegions = ApiRegions.parse((JsonArray) targetEx.getJSONStructure());
-        } else {
-            targetEx = new Extension(sourceEx.getType(), sourceEx.getName(), sourceEx.getState());
-            target.getExtensions().add(targetEx);
+            final ApiRegions targetRegions;
+            if (targetEx != null) {
+                targetRegions = ApiRegions.parse((JsonArray) targetEx.getJSONStructure());
+            } else {
+                targetEx = new Extension(sourceEx.getType(), sourceEx.getName(), sourceEx.getState());
+                target.getExtensions().add(targetEx);
 
-            targetRegions = new ApiRegions();
-        }
+                targetRegions = new ApiRegions();
+            }
 
-        for (final ApiRegion targetRegion : targetRegions.getRegions()) {
-            final ApiRegion sourceRegion = srcRegions.getRegionByName(targetRegion.getName());
-            if (sourceRegion != null) {
-                srcRegions.getRegions().remove(sourceRegion);
-                for (final ApiExport srcExp : sourceRegion.getExports()) {
-                    if (targetRegion.getExportByName(srcExp.getName()) == null) {
-                        targetRegion.getExports().add(srcExp);
+            for (final ApiRegion targetRegion : targetRegions.getRegions()) {
+                final ApiRegion sourceRegion = srcRegions.getRegionByName(targetRegion.getName());
+                if (sourceRegion != null) {
+                    srcRegions.getRegions().remove(sourceRegion);
+                    for (final ApiExport srcExp : sourceRegion.getExports()) {
+                        if (targetRegion.getExportByName(srcExp.getName()) == null) {
+                            targetRegion.getExports().add(srcExp);
+                        }
                     }
                 }
             }
+
+            // If there are any remaining regions in the src extension, process them now
+            targetRegions.getRegions().addAll(srcRegions.getRegions());
+
+            targetEx.setJSONStructure(targetRegions.toJSONArray());
+
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
         }
-
-        // If there are any remaining regions in the src extension, process them now
-        targetRegions.getRegions().addAll(srcRegions.getRegions());
-
-        targetEx.setJSONStructure(targetRegions.toJSONArray());
     }
 
     private void storeRegionOrigins(HandlerContext context, Feature source, Feature target, ApiRegions regions) {
