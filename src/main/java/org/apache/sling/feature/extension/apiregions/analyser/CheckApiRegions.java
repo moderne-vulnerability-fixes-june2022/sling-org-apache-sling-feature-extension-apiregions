@@ -48,7 +48,7 @@ public class CheckApiRegions extends AbstractApiRegionsAnalyserTask {
             for (PackageInfo packageInfo : bundleDescriptor.getExportedPackages()) {
                 String exportedPackage = packageInfo.getName();
                 // use the Sieve technique: remove bundle exported packages from the api-regions
-                for (final ApiRegion region : apiRegions.getRegions()) {
+                for (final ApiRegion region : apiRegions.listRegions()) {
                     ApiExport export = region.getExportByName(exportedPackage);
                     if (export != null) {
                         region.getExports().remove(export);
@@ -58,7 +58,7 @@ public class CheckApiRegions extends AbstractApiRegionsAnalyserTask {
         }
 
         boolean isEmpty = true;
-        for (final ApiRegion region : apiRegions.getRegions()) {
+        for (final ApiRegion region : apiRegions.listRegions()) {
             if (!region.getExports().isEmpty()) {
                 isEmpty = false;
                 break;
@@ -67,7 +67,7 @@ public class CheckApiRegions extends AbstractApiRegionsAnalyserTask {
         // final evaluation: if the Sieve is not empty, not all declared packages are exported by bundles of the same feature
         if (!isEmpty) {
             // track a single error for each region
-            for (ApiRegion region : apiRegions.getRegions()) {
+            for (ApiRegion region : apiRegions.listRegions()) {
                 if (!region.getExports().isEmpty()) {
                     Formatter formatter = new Formatter();
                     formatter.format("Region '%s' defined in feature '%s' declares %s package%s which %s not exported by any bundle:%n",

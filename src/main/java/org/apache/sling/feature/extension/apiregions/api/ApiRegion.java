@@ -18,6 +18,7 @@ package org.apache.sling.feature.extension.apiregions.api;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,20 +32,59 @@ public class ApiRegion {
 
     private final Map<String, String> properties = new HashMap<>();
 
-    private volatile String name;
+    private final String name;
 
+    private volatile ApiRegion parent;
+
+    private volatile ApiRegion child;
+
+    /**
+     * Create a new named region
+     *
+     * @param name The name
+     */
+    public ApiRegion(final String name) {
+        this.name = name;
+    }
+
+    /**
+     * Get the name of the region
+     *
+     * @return The region name
+     */
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
+    /**
+     * Modifiable collection of exports for this region
+     *
+     * @return The collection of exports
+     */
     public Collection<ApiExport> getExports() {
         return this.exports;
     }
 
+    /**
+     * Unmodifiable collection of exports for this region and all parents.
+     *
+     * @return The collection of exports
+     */
+    public Collection<ApiExport> getAllExports() {
+        final List<ApiExport> list = new ArrayList<>();
+        if (parent != null) {
+            list.addAll(parent.getAllExports());
+        }
+        list.addAll(this.exports);
+        return Collections.unmodifiableCollection(list);
+    }
+
+    /**
+     * Get an export by name
+     *
+     * @param name package name
+     * @return The export or {@code null}
+     */
     public ApiExport getExportByName(final String name) {
         for (final ApiExport e : this.exports) {
             if (e.getName().equals(name)) {
@@ -54,8 +94,39 @@ public class ApiRegion {
         return null;
     }
 
+    /**
+     * Get additional properties
+     * 
+     * @return Modifiable map of properties
+     */
     public Map<String, String> getProperties() {
         return this.properties;
+    }
+
+    /**
+     * Get the parent region
+     * 
+     * @return The parent region or {@code null}
+     */
+    public ApiRegion getParent() {
+        return this.parent;
+    }
+
+    /**
+     * Get the child region
+     * 
+     * @return The child region or {@code null}
+     */
+    public ApiRegion getChild() {
+        return this.child;
+    }
+
+    void setParent(final ApiRegion region) {
+        this.parent = region;
+    }
+
+    void setChild(final ApiRegion region) {
+        this.child = region;
     }
 
     @Override

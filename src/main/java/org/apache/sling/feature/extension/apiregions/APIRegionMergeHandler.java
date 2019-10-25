@@ -70,10 +70,10 @@ public class APIRegionMergeHandler implements MergeHandler {
                 targetRegions = new ApiRegions();
             }
 
-            for (final ApiRegion targetRegion : targetRegions.getRegions()) {
+            for (final ApiRegion targetRegion : targetRegions.listRegions()) {
                 final ApiRegion sourceRegion = srcRegions.getRegionByName(targetRegion.getName());
                 if (sourceRegion != null) {
-                    srcRegions.getRegions().remove(sourceRegion);
+                    srcRegions.remove(sourceRegion);
                     for (final ApiExport srcExp : sourceRegion.getExports()) {
                         if (targetRegion.getExportByName(srcExp.getName()) == null) {
                             targetRegion.getExports().add(srcExp);
@@ -83,7 +83,11 @@ public class APIRegionMergeHandler implements MergeHandler {
             }
 
             // If there are any remaining regions in the src extension, process them now
-            targetRegions.getRegions().addAll(srcRegions.getRegions());
+            for (final ApiRegion r : srcRegions.listRegions()) {
+                if (!targetRegions.addUniqueRegion(r)) {
+                    throw new IllegalStateException("Duplicate region " + r.getName());
+                }
+            }
 
             targetEx.setJSONStructure(targetRegions.toJSONArray());
 
@@ -104,7 +108,7 @@ public class APIRegionMergeHandler implements MergeHandler {
             }
 
             String fid = source.getId().toMvnId();
-            p.put(fid, regions.getRegions().stream().map(region -> region.getName()).collect(Collectors.joining(",")));
+            p.put(fid, regions.listRegions().stream().map(region -> region.getName()).collect(Collectors.joining(",")));
 
             try (FileOutputStream fos = new FileOutputStream(f)) {
                 p.store(fos, "Mapping from feature ID to regions that the feature is a member of");

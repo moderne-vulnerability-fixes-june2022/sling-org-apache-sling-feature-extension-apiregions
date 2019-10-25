@@ -56,8 +56,25 @@ public class ApiRegions {
 
     private final List<ApiRegion> regions = new ArrayList<>();
 
-    public List<ApiRegion> getRegions() {
-        return this.regions;
+    /**
+     * Return the list of regions
+     *
+     * @return Unmodifiable list of regions, might be empty
+     */
+    public List<ApiRegion> listRegions() {
+        return Collections.unmodifiableList(this.regions);
+    }
+
+    /**
+     * Get the root regions. The root is the region which does not have a parent
+     *
+     * @return The root region or {@code null}
+     */
+    public ApiRegion getRoot() {
+        if (this.regions.isEmpty()) {
+            return null;
+        }
+        return this.regions.get(0);
     }
 
     /**
@@ -76,9 +93,38 @@ public class ApiRegions {
             }
         }
         if (!found) {
+            final ApiRegion parent = this.regions.isEmpty() ? null : this.regions.get(this.regions.size() - 1);
             this.regions.add(region);
+            region.setParent(parent);
+            region.setChild(null);
+            if (parent != null) {
+                parent.setChild(region);
+            }
         }
         return !found;
+    }
+
+    /**
+     * Remove the region
+     *
+     * @param region Region to remove
+     * @return {@code true} if the region got removed.
+     */
+    public boolean remove(final ApiRegion region) {
+        boolean result = this.regions.remove(region);
+        if (result) {
+            final ApiRegion parent = region.getParent();
+            final ApiRegion child = region.getChild();
+            if (parent != null) {
+                parent.setChild(child);
+                region.setParent(null);
+            }
+            if (child != null) {
+                child.setParent(parent);
+                region.setChild(null);
+            }
+        }
+        return result;
     }
 
     /**
@@ -122,7 +168,7 @@ public class ApiRegions {
     public JsonArray toJSONArray() throws IOException {
         final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 
-        for (final ApiRegion region : this.getRegions()) {
+        for (final ApiRegion region : this.regions) {
             final JsonObjectBuilder regionBuilder = Json.createObjectBuilder();
             regionBuilder.add(NAME_KEY, region.getName());
 
@@ -197,14 +243,13 @@ public class ApiRegions {
                 if (value.getValueType() != ValueType.OBJECT) {
                     throw new IOException("Illegal api regions json " + json);
                 }
-                final ApiRegion region = new ApiRegion();
-
                 final JsonObject obj = (JsonObject) value;
-                region.setName(obj.getString(NAME_KEY));
+
+                final ApiRegion region = new ApiRegion(obj.getString(NAME_KEY));
 
                 for (final Map.Entry<String, JsonValue> entry : obj.entrySet()) {
                     if (NAME_KEY.equals(entry.getKey())) {
-                        region.setName(obj.getString(NAME_KEY));
+                        continue; // already set
                     } else if (entry.getKey().equals(EXPORTS_KEY)) {
                         for (final JsonValue e : (JsonArray) entry.getValue()) {
                             if (e.getValueType() == ValueType.STRING) {

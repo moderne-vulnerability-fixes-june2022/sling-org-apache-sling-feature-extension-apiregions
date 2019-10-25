@@ -86,7 +86,7 @@ public class CheckApiRegionsOrder implements AnalyserTask {
         try {
             int regionIdx = 0;
             ApiRegions apiRegions = ApiRegions.parse((JsonArray) apiRegionsExtension.getJSONStructure());
-            for (final ApiRegion region : apiRegions.getRegions()) {
+            for (final ApiRegion region : apiRegions.listRegions()) {
                 String name = region.getName();
                 if (!prescribedOrder.contains(name)) {
                     reportError(ctx, "Region found with undeclared name: " + name);

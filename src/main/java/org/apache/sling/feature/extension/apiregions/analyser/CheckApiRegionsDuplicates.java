@@ -40,9 +40,9 @@ public class CheckApiRegionsDuplicates extends AbstractApiRegionsAnalyserTask {
 
     @Override
     protected void execute(ApiRegions apiRegions, AnalyserTaskContext ctx) throws Exception {
-        for (int i = 0; i < apiRegions.getRegions().size(); i++) {
-            ApiRegion sourceRegion = apiRegions.getRegions().get(i);
-            List<ApiRegion> targetRegions = apiRegions.getRegions().subList(i + 1, apiRegions.getRegions().size());
+        for (int i = 0; i < apiRegions.listRegions().size(); i++) {
+            ApiRegion sourceRegion = apiRegions.listRegions().get(i);
+            List<ApiRegion> targetRegions = apiRegions.listRegions().subList(i + 1, apiRegions.listRegions().size());
 
             for (ApiRegion targetRegion : targetRegions) {
                 if (sourceRegion.equals(targetRegion)) {

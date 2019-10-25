@@ -38,9 +38,9 @@ public class CheckApiRegionsDependencies extends AbstractApiRegionsAnalyserTask 
 
     @Override
     protected void execute(ApiRegions apiRegions, AnalyserTaskContext ctx) throws Exception {
-        for (int i = 0; i < apiRegions.getRegions().size(); i++) {
-            for (int j = i + 1; j < apiRegions.getRegions().size(); j++) {
-                execute(ctx, apiRegions, apiRegions.getRegions().get(i), apiRegions.getRegions().get(j));
+        for (int i = 0; i < apiRegions.listRegions().size(); i++) {
+            for (int j = i + 1; j < apiRegions.listRegions().size(); j++) {
+                execute(ctx, apiRegions, apiRegions.listRegions().get(i), apiRegions.listRegions().get(j));
             }
         }
     }

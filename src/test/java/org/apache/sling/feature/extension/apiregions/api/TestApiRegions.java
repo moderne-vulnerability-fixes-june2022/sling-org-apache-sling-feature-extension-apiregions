@@ -17,7 +17,10 @@
 package org.apache.sling.feature.extension.apiregions.api;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -50,16 +53,87 @@ public class TestApiRegions {
         final ApiRegions regions = ApiRegions.parse(json);
         assertNotNull(regions);
 
-        assertEquals(2, regions.getRegions().size());
+        assertEquals(2, regions.listRegions().size());
 
-        final ApiRegion global = regions.getRegions().get(0);
+        final ApiRegion global = regions.listRegions().get(0);
         assertEquals("global", global.getName());
 
         assertEquals(2, global.getExports().size());
 
-        final ApiRegion internal = regions.getRegions().get(1);
+        final ApiRegion internal = regions.listRegions().get(1);
         assertEquals("internal", internal.getName());
 
         assertEquals(1, internal.getExports().size());
+    }
+
+    @Test
+    public void testOrdering() throws Exception {
+        final ApiRegions regions = new ApiRegions();
+        final ApiRegion one = new ApiRegion("one");
+        final ApiRegion two = new ApiRegion("two");
+        final ApiRegion three = new ApiRegion("three");
+
+        final ApiRegion duplicate = new ApiRegion("two");
+        final ApiRegion other = new ApiRegion("other");
+
+        assertTrue(regions.addUniqueRegion(one));
+        assertTrue(regions.addUniqueRegion(two));
+        assertTrue(regions.addUniqueRegion(three));
+
+        assertFalse(regions.addUniqueRegion(duplicate));
+
+        assertEquals(3, regions.listRegions().size());
+
+        assertNull(one.getParent());
+        assertEquals(two, one.getChild());
+        assertEquals(one, two.getParent());
+        assertEquals(three, two.getChild());
+        assertEquals(two, three.getParent());
+        assertNull(three.getChild());
+
+        assertFalse(regions.remove(other));
+        assertTrue(regions.remove(two));
+
+        assertEquals(2, regions.listRegions().size());
+        assertNull(one.getParent());
+        assertEquals(three, one.getChild());
+        assertEquals(one, three.getParent());
+        assertNull(three.getChild());
+    }
+
+    @Test
+    public void testExports() throws Exception {
+        final ApiRegions regions = new ApiRegions();
+
+        final ApiRegion one = new ApiRegion("one");
+        one.getExports().add(new ApiExport("a"));
+
+        final ApiRegion two = new ApiRegion("two");
+        two.getExports().add(new ApiExport("b"));
+
+        final ApiRegion three = new ApiRegion("three");
+        three.getExports().add(new ApiExport("c"));
+
+        assertTrue(regions.addUniqueRegion(one));
+        assertTrue(regions.addUniqueRegion(two));
+        assertTrue(regions.addUniqueRegion(three));
+
+        assertEquals(1, one.getAllExports().size());
+        assertTrue(one.getAllExports().contains(new ApiExport("a")));
+        assertEquals(1, one.getExports().size());
+        assertTrue(one.getExports().contains(new ApiExport("a")));
+
+        assertEquals(2, two.getAllExports().size());
+        assertTrue(two.getAllExports().contains(new ApiExport("a")));
+        assertTrue(two.getAllExports().contains(new ApiExport("b")));
+        assertEquals(1, two.getExports().size());
+        assertTrue(two.getExports().contains(new ApiExport("b")));
+
+        assertEquals(3, three.getAllExports().size());
+        assertTrue(three.getAllExports().contains(new ApiExport("a")));
+        assertTrue(three.getAllExports().contains(new ApiExport("b")));
+        assertTrue(three.getAllExports().contains(new ApiExport("c")));
+        assertEquals(1, three.getExports().size());
+        assertTrue(three.getExports().contains(new ApiExport("c")));
     }
 }
