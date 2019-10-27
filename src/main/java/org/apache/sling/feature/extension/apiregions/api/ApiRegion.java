@@ -57,12 +57,43 @@ public class ApiRegion {
     }
 
     /**
-     * Modifiable collection of exports for this region
+     * Add the export. The export is only added if there isn't already a export with
+     * the same name
+     *
+     * @param export The export to add
+     * @return {@code true} if the export could be added, {@code false} otherwise
+     */
+    public boolean add(final ApiExport export) {
+        boolean found = false;
+        for (final ApiExport c : this.exports) {
+            if (c.getName().equals(export.getName())) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            this.exports.add(export);
+        }
+        return !found;
+    }
+
+    /**
+     * Remove the export
+     *
+     * @param export export to remove
+     * @return {@code true} if the export got removed.
+     */
+    public boolean remove(final ApiExport export) {
+        return this.exports.remove(export);
+    }
+
+    /**
+     * Unmodifiable collection of exports for this region
      *
      * @return The collection of exports
      */
-    public Collection<ApiExport> getExports() {
-        return this.exports;
+    public Collection<ApiExport> listExports() {
+        return Collections.unmodifiableCollection(this.exports);
     }
 
     /**
@@ -70,10 +101,10 @@ public class ApiRegion {
      *
      * @return The collection of exports
      */
-    public Collection<ApiExport> getAllExports() {
+    public Collection<ApiExport> listAllExports() {
         final List<ApiExport> list = new ArrayList<>();
         if (parent != null) {
-            list.addAll(parent.getAllExports());
+            list.addAll(parent.listAllExports());
         }
         list.addAll(this.exports);
         return Collections.unmodifiableCollection(list);
@@ -96,7 +127,7 @@ public class ApiRegion {
 
     /**
      * Get additional properties
-     * 
+     *
      * @return Modifiable map of properties
      */
     public Map<String, String> getProperties() {
@@ -105,7 +136,7 @@ public class ApiRegion {
 
     /**
      * Get the parent region
-     * 
+     *
      * @return The parent region or {@code null}
      */
     public ApiRegion getParent() {
@@ -114,7 +145,7 @@ public class ApiRegion {
 
     /**
      * Get the child region
-     * 
+     *
      * @return The child region or {@code null}
      */
     public ApiRegion getChild() {

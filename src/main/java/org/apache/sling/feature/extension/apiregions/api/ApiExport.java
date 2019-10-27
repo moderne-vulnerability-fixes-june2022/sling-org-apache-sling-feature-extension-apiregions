@@ -16,6 +16,9 @@
  */
 package org.apache.sling.feature.extension.apiregions.api;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.sling.feature.ArtifactId;
 
 /**
@@ -23,47 +26,81 @@ import org.apache.sling.feature.ArtifactId;
  */
 public class ApiExport {
 
-    private volatile String name;
+    private final String name;
 
     private volatile String toggle;
 
     private volatile ArtifactId previous;
 
-    public ApiExport() {
-        // default
-    }
+    private final Map<String, String> properties = new HashMap<>();
 
+    /**
+     * Create a new export
+     *
+     * @param name Package name for the export
+     */
     public ApiExport(final String name) {
         this.name = name;
     }
 
+    /**
+     * Get the package name
+     *
+     * @return The package name
+     */
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
+    /**
+     * Get the optional toggle information
+     *
+     * @return The toggle info or {@code null}
+     */
     public String getToggle() {
         return toggle;
     }
 
+    /**
+     * Set the toggle info.
+     * 
+     * @param toggle The toggle info
+     */
     public void setToggle(String toggle) {
         this.toggle = toggle;
     }
 
+    /**
+     * Get the previous version of this api
+     * 
+     * @return The previous version or {@code null}
+     */
     public ArtifactId getPrevious() {
         return previous;
     }
 
+    /**
+     * Set the previous version
+     * 
+     * @param previous Previus version
+     */
     public void setPrevious(ArtifactId previous) {
         this.previous = previous;
     }
 
+    /**
+     * Get additional properties
+     *
+     * @return Modifiable map of properties
+     */
+    public Map<String, String> getProperties() {
+        return this.properties;
+    }
+
     @Override
     public String toString() {
-        return "ApiExport [name=" + name + ", toggle=" + toggle + ", previous=" + previous + "]";
+        return "ApiExport [name=" + name + ", toggle=" + toggle + ", previous=" + previous + ", properties="
+                + properties + "]";
     }
 
     @Override
@@ -72,6 +109,7 @@ public class ApiExport {
         int result = 1;
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((previous == null) ? 0 : previous.hashCode());
+        result = prime * result + ((properties == null) ? 0 : properties.hashCode());
         result = prime * result + ((toggle == null) ? 0 : toggle.hashCode());
         return result;
     }
@@ -94,6 +132,11 @@ public class ApiExport {
             if (other.previous != null)
                 return false;
         } else if (!previous.equals(other.previous))
+            return false;
+        if (properties == null) {
+            if (other.properties != null)
+                return false;
+        } else if (!properties.equals(other.properties))
             return false;
         if (toggle == null) {
             if (other.toggle != null)

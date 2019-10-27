@@ -101,20 +101,20 @@ public class APIRegionMergeHandlerTest {
 
         ApiRegions expected = new ApiRegions();
         ApiRegion global = new ApiRegion("global");
-        global.getExports().add(new ApiExport("a.b.c"));
-        global.getExports().add(new ApiExport("d.e.f"));
-        global.getExports().add(new ApiExport("test"));
-        expected.addUniqueRegion(global);
+        global.add(new ApiExport("a.b.c"));
+        global.add(new ApiExport("d.e.f"));
+        global.add(new ApiExport("test"));
+        expected.add(global);
 
         ApiRegion internal = new ApiRegion("internal");
-        internal.getExports().add(new ApiExport("xyz"));
+        internal.add(new ApiExport("xyz"));
         internal.getProperties().put("some-key", "some-val");
-        expected.addUniqueRegion(internal);
+        expected.add(internal);
 
         ApiRegion something = new ApiRegion("something");
-        something.getExports().add(new ApiExport("a.ha"));
+        something.add(new ApiExport("a.ha"));
         something.getProperties().put("my-key", "my-val");
-        expected.addUniqueRegion(something);
+        expected.add(something);
 
         ApiRegions created = ApiRegions.parse((JsonArray) tgEx.getJSONStructure());
 

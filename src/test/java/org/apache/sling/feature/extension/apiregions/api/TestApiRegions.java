@@ -58,12 +58,12 @@ public class TestApiRegions {
         final ApiRegion global = regions.listRegions().get(0);
         assertEquals("global", global.getName());
 
-        assertEquals(2, global.getExports().size());
+        assertEquals(2, global.listExports().size());
 
         final ApiRegion internal = regions.listRegions().get(1);
         assertEquals("internal", internal.getName());
 
-        assertEquals(1, internal.getExports().size());
+        assertEquals(1, internal.listExports().size());
     }
 
     @Test
@@ -76,11 +76,11 @@ public class TestApiRegions {
         final ApiRegion duplicate = new ApiRegion("two");
         final ApiRegion other = new ApiRegion("other");
 
-        assertTrue(regions.addUniqueRegion(one));
-        assertTrue(regions.addUniqueRegion(two));
-        assertTrue(regions.addUniqueRegion(three));
+        assertTrue(regions.add(one));
+        assertTrue(regions.add(two));
+        assertTrue(regions.add(three));
 
-        assertFalse(regions.addUniqueRegion(duplicate));
+        assertFalse(regions.add(duplicate));
 
         assertEquals(3, regions.listRegions().size());
 
@@ -106,34 +106,34 @@ public class TestApiRegions {
         final ApiRegions regions = new ApiRegions();
 
         final ApiRegion one = new ApiRegion("one");
-        one.getExports().add(new ApiExport("a"));
+        one.add(new ApiExport("a"));
 
         final ApiRegion two = new ApiRegion("two");
-        two.getExports().add(new ApiExport("b"));
+        two.add(new ApiExport("b"));
 
         final ApiRegion three = new ApiRegion("three");
-        three.getExports().add(new ApiExport("c"));
+        three.add(new ApiExport("c"));
 
-        assertTrue(regions.addUniqueRegion(one));
-        assertTrue(regions.addUniqueRegion(two));
-        assertTrue(regions.addUniqueRegion(three));
+        assertTrue(regions.add(one));
+        assertTrue(regions.add(two));
+        assertTrue(regions.add(three));
 
-        assertEquals(1, one.getAllExports().size());
-        assertTrue(one.getAllExports().contains(new ApiExport("a")));
-        assertEquals(1, one.getExports().size());
-        assertTrue(one.getExports().contains(new ApiExport("a")));
+        assertEquals(1, one.listAllExports().size());
+        assertTrue(one.listAllExports().contains(new ApiExport("a")));
+        assertEquals(1, one.listExports().size());
+        assertTrue(one.listExports().contains(new ApiExport("a")));
 
-        assertEquals(2, two.getAllExports().size());
-        assertTrue(two.getAllExports().contains(new ApiExport("a")));
-        assertTrue(two.getAllExports().contains(new ApiExport("b")));
-        assertEquals(1, two.getExports().size());
-        assertTrue(two.getExports().contains(new ApiExport("b")));
+        assertEquals(2, two.listAllExports().size());
+        assertTrue(two.listAllExports().contains(new ApiExport("a")));
+        assertTrue(two.listAllExports().contains(new ApiExport("b")));
+        assertEquals(1, two.listExports().size());
+        assertTrue(two.listExports().contains(new ApiExport("b")));
 
-        assertEquals(3, three.getAllExports().size());
-        assertTrue(three.getAllExports().contains(new ApiExport("a")));
-        assertTrue(three.getAllExports().contains(new ApiExport("b")));
-        assertTrue(three.getAllExports().contains(new ApiExport("c")));
-        assertEquals(1, three.getExports().size());
-        assertTrue(three.getExports().contains(new ApiExport("c")));
+        assertEquals(3, three.listAllExports().size());
+        assertTrue(three.listAllExports().contains(new ApiExport("a")));
+        assertTrue(three.listAllExports().contains(new ApiExport("b")));
+        assertTrue(three.listAllExports().contains(new ApiExport("c")));
+        assertEquals(1, three.listExports().size());
+        assertTrue(three.listExports().contains(new ApiExport("c")));
     }
 }

@@ -84,7 +84,7 @@ public class ApiRegions {
      * @param region The region to add
      * @return {@code true} if the region could be added, {@code false} otherwise
      */
-    public boolean addUniqueRegion(final ApiRegion region) {
+    public boolean add(final ApiRegion region) {
         boolean found = false;
         for (final ApiRegion c : this.regions) {
             if (c.getName().equals(region.getName())) {
@@ -172,17 +172,22 @@ public class ApiRegions {
             final JsonObjectBuilder regionBuilder = Json.createObjectBuilder();
             regionBuilder.add(NAME_KEY, region.getName());
 
-            if (!region.getExports().isEmpty()) {
+            if (!region.listExports().isEmpty()) {
                 final JsonArrayBuilder expArrayBuilder = Json.createArrayBuilder();
-                for (final ApiExport exp : region.getExports()) {
-                    if (exp.getToggle() == null) {
+                for (final ApiExport exp : region.listExports()) {
+                    if (exp.getToggle() == null && exp.getPrevious() == null && exp.getProperties().isEmpty()) {
                         expArrayBuilder.add(exp.getName());
                     } else {
                         final JsonObjectBuilder expBuilder = Json.createObjectBuilder();
                         expBuilder.add(NAME_KEY, exp.getName());
-                        expBuilder.add(TOGGLE_KEY, exp.getToggle());
+                        if (exp.getToggle() != null) {
+                            expBuilder.add(TOGGLE_KEY, exp.getToggle());
+                        }
                         if (exp.getPrevious() != null) {
                             expBuilder.add(PREVIOUS_KEY, exp.getPrevious().toMvnId());
+                        }
+                        for (final Map.Entry<String, String> entry : exp.getProperties().entrySet()) {
+                            expBuilder.add(entry.getKey(), entry.getValue());
                         }
                         expArrayBuilder.add(expBuilder);
                     }
@@ -255,20 +260,30 @@ public class ApiRegions {
                             if (e.getValueType() == ValueType.STRING) {
                                 final String name = ((JsonString) e).getString();
                                 if (!name.startsWith("#")) {
-                                    final ApiExport export = new ApiExport();
-                                    region.getExports().add(export);
-
-                                    export.setName(name);
+                                    final ApiExport export = new ApiExport(name);
+                                    if (!region.add(export)) {
+                                        throw new IOException("Export " + export.getName()
+                                                + " is defined twice in region " + region.getName());
+                                    }
                                 }
                             } else if (e.getValueType() == ValueType.OBJECT) {
                                 final JsonObject expObj = (JsonObject) e;
-                                final ApiExport export = new ApiExport();
-                                region.getExports().add(export);
+                                final ApiExport export = new ApiExport(expObj.getString(NAME_KEY));
+                                if (!region.add(export)) {
+                                    throw new IOException("Export " + export.getName() + " is defined twice in region "
+                                            + region.getName());
+                                }
 
-                                export.setName(expObj.getString(NAME_KEY));
-                                export.setToggle(expObj.getString(TOGGLE_KEY, null));
-                                if (expObj.containsKey(PREVIOUS_KEY)) {
-                                    export.setPrevious(ArtifactId.parse(expObj.getString(PREVIOUS_KEY)));
+                                for (final String key : expObj.keySet()) {
+                                    if (NAME_KEY.equals(key)) {
+                                        continue; // already set
+                                    } else if (TOGGLE_KEY.equals(key)) {
+                                        export.setToggle(expObj.getString(key));
+                                    } else if (PREVIOUS_KEY.equals(key)) {
+                                        export.setPrevious(ArtifactId.parse(expObj.getString(key)));
+                                    } else {
+                                        export.getProperties().put(key, expObj.getString(key));
+                                    }
                                 }
                             }
                         }
@@ -276,7 +291,7 @@ public class ApiRegions {
                         region.getProperties().put(entry.getKey(), ((JsonString) entry.getValue()).getString());
                     }
                 }
-                if (!regions.addUniqueRegion(region)) {
+                if (!regions.add(region)) {
                     throw new IOException("Region " + region.getName() + " is defined twice");
                 }
             }

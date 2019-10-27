@@ -51,7 +51,7 @@ public class CheckApiRegions extends AbstractApiRegionsAnalyserTask {
                 for (final ApiRegion region : apiRegions.listRegions()) {
                     ApiExport export = region.getExportByName(exportedPackage);
                     if (export != null) {
-                        region.getExports().remove(export);
+                        region.remove(export);
                     }
                 }
             }
@@ -59,7 +59,7 @@ public class CheckApiRegions extends AbstractApiRegionsAnalyserTask {
 
         boolean isEmpty = true;
         for (final ApiRegion region : apiRegions.listRegions()) {
-            if (!region.getExports().isEmpty()) {
+            if (!region.listExports().isEmpty()) {
                 isEmpty = false;
                 break;
             }
@@ -68,14 +68,14 @@ public class CheckApiRegions extends AbstractApiRegionsAnalyserTask {
         if (!isEmpty) {
             // track a single error for each region
             for (ApiRegion region : apiRegions.listRegions()) {
-                if (!region.getExports().isEmpty()) {
+                if (!region.listExports().isEmpty()) {
                     Formatter formatter = new Formatter();
                     formatter.format("Region '%s' defined in feature '%s' declares %s package%s which %s not exported by any bundle:%n",
                             region.getName(),
                                      ctx.getFeature().getId(),
-                            region.getExports().size(), getExtension(region.getExports(), "", "s"),
-                            getExtension(region.getExports(), "is", "are"));
-                    region.getExports().forEach(api -> formatter.format(" * %s%n", api.getName()));
+                            region.listExports().size(), getExtension(region.listExports(), "", "s"),
+                            getExtension(region.listExports(), "is", "are"));
+                    region.listExports().forEach(api -> formatter.format(" * %s%n", api.getName()));
 
                     ctx.reportError(formatter.toString());
 

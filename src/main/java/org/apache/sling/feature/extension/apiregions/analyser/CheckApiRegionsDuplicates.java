@@ -69,7 +69,7 @@ public class CheckApiRegionsDuplicates extends AbstractApiRegionsAnalyserTask {
     private static Set<String> calculateIntersection(ApiRegion source, ApiRegion target) {
         final Set<String> intersection = new HashSet<>();
 
-        for (ApiExport packageName : source.getExports()) {
+        for (ApiExport packageName : source.listExports()) {
             if (target.getExportByName(packageName.getName()) != null) {
                 intersection.add(packageName.getName());
             }

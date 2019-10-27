@@ -74,9 +74,9 @@ public class APIRegionMergeHandler implements MergeHandler {
                 final ApiRegion sourceRegion = srcRegions.getRegionByName(targetRegion.getName());
                 if (sourceRegion != null) {
                     srcRegions.remove(sourceRegion);
-                    for (final ApiExport srcExp : sourceRegion.getExports()) {
+                    for (final ApiExport srcExp : sourceRegion.listExports()) {
                         if (targetRegion.getExportByName(srcExp.getName()) == null) {
-                            targetRegion.getExports().add(srcExp);
+                            targetRegion.add(srcExp);
                         }
                     }
                 }
@@ -84,7 +84,7 @@ public class APIRegionMergeHandler implements MergeHandler {
 
             // If there are any remaining regions in the src extension, process them now
             for (final ApiRegion r : srcRegions.listRegions()) {
-                if (!targetRegions.addUniqueRegion(r)) {
+                if (!targetRegions.add(r)) {
                     throw new IllegalStateException("Duplicate region " + r.getName());
                 }
             }
