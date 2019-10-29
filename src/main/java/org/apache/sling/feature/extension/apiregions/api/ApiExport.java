@@ -24,7 +24,7 @@ import org.apache.sling.feature.ArtifactId;
 /**
  * Describes an exported package.
  */
-public class ApiExport {
+public class ApiExport implements Comparable<ApiExport> {
 
     private final String name;
 
@@ -63,7 +63,7 @@ public class ApiExport {
 
     /**
      * Set the toggle info.
-     * 
+     *
      * @param toggle The toggle info
      */
     public void setToggle(String toggle) {
@@ -72,7 +72,7 @@ public class ApiExport {
 
     /**
      * Get the previous version of this api
-     * 
+     *
      * @return The previous version or {@code null}
      */
     public ArtifactId getPrevious() {
@@ -81,7 +81,7 @@ public class ApiExport {
 
     /**
      * Set the previous version
-     * 
+     *
      * @param previous Previus version
      */
     public void setPrevious(ArtifactId previous) {
@@ -95,6 +95,11 @@ public class ApiExport {
      */
     public Map<String, String> getProperties() {
         return this.properties;
+    }
+
+    @Override
+    public int compareTo(final ApiExport o) {
+        return this.name.compareTo(o.name);
     }
 
     @Override

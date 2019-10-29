@@ -78,6 +78,15 @@ public class ApiRegions {
     }
 
     /**
+     * Check if any region exists
+     *
+     * @return {@code true} if it has any region
+     */
+    public boolean isEmpty() {
+        return this.regions.isEmpty();
+    }
+
+    /**
      * Add the region. The region is only added if there isn't already a region with
      * the same name
      *

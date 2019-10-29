@@ -28,6 +28,9 @@ import java.util.Map;
  */
 public class ApiRegion {
 
+    /** Name of the global region. */
+    public static final String GLOBAL = "global";
+
     private final List<ApiExport> exports = new ArrayList<>();
 
     private final Map<String, String> properties = new HashMap<>();
@@ -85,6 +88,15 @@ public class ApiRegion {
      */
     public boolean remove(final ApiExport export) {
         return this.exports.remove(export);
+    }
+
+    /**
+     * Check if the region has exports
+     *
+     * @return {@code true} if it has any export
+     */
+    public boolean isEmpty() {
+        return this.exports.isEmpty();
     }
 
     /**
