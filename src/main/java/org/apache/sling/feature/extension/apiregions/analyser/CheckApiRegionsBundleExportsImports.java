@@ -209,12 +209,20 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
 
                                     // Record the exporting and importing regions for diagnostics
                                     exportingRegions.addAll(exRegions);
-                                    importingRegions.addAll(imRegions);
+
+                                    Set<String> regions = new HashSet<>();
+                                    for (String region : imRegions) {
+                                        for (ApiRegion r = apiRegions.getRegionByName(region); r != null; r = r.getParent()) {
+                                            regions.add(r.getName());
+                                        }
+                                    }
+
+                                    importingRegions.addAll(regions);
 
                                     // Only keep the regions that also export the package
-                                    imRegions.retainAll(exRegions);
+                                    regions.retainAll(exRegions);
 
-                                    if (!imRegions.isEmpty()) {
+                                    if (!regions.isEmpty()) {
                                         // there is an overlapping region
                                         matchingCandidates.add(bd);
                                     }
