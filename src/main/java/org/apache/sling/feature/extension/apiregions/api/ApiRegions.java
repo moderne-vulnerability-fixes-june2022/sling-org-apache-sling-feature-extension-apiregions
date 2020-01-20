@@ -103,11 +103,16 @@ public class ApiRegions {
                 return false;
             }
         }
+        Set<ArtifactId> origins = new LinkedHashSet<>(Arrays.asList(region.getFeatureOrigins()));
+
         this.regions.stream()
             .filter(
                 existingRegion ->
-                    Stream.of(existingRegion.getFeatureOrigins())
-                        .anyMatch(Arrays.asList(region.getFeatureOrigins())::contains)
+                {
+                    ArtifactId[] targetOrigins = existingRegion.getFeatureOrigins();
+                    return (targetOrigins.length == 0 && origins.isEmpty())
+                        || Stream.of(targetOrigins).anyMatch(origins::contains);
+                }
             ).reduce((a,b) -> b).ifPresent(region::setParent);
 
         this.regions.add(region);
