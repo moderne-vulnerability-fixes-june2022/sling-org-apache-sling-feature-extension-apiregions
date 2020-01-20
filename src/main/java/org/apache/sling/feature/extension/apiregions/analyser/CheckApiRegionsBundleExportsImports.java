@@ -340,7 +340,7 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
                 for (String region : getBundleRegions(info, apiRegions, ignoreAPIRegions)) {
                     if (!NO_REGION.equals(region) &&
                             (apiRegions.getRegionByName(region) == null
-                                    || apiRegions.getRegionByName(region).getExportByName(pck.getName()) == null))
+                                    || apiRegions.getRegionByName(region).getAllExportByName(pck.getName()) == null))
                         continue;
 
                     Set<String> regions = candidates.get(info);
