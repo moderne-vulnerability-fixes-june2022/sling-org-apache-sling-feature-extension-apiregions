@@ -18,6 +18,7 @@ package org.apache.sling.feature.extension.apiregions.analyser;
 
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.analyser.task.AnalyserTaskContext;
+import org.apache.sling.feature.extension.apiregions.api.ApiExport;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegion;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
 import org.apache.sling.feature.scanner.BundleDescriptor;
@@ -63,7 +64,7 @@ public class CheckApiRegionsCrossFeatureDups extends AbstractApiRegionsAnalyserT
                     exports = new HashSet<>();
                     regionExports.put(r.getName(), exports);
                 }
-                exports.addAll(r.listExports().stream().map(e -> e.getName()).collect(Collectors.toSet()));
+                exports.addAll(r.listExports().stream().map(ApiExport::getName).collect(Collectors.toSet()));
             }
         }
 
@@ -72,7 +73,7 @@ public class CheckApiRegionsCrossFeatureDups extends AbstractApiRegionsAnalyserT
             List<ArtifactId> borgs = new ArrayList<>(Arrays.asList(bd.getArtifact().getFeatureOrigins()));
             borgs.removeAll(apiRegionsFeatures);
 
-            if (borgs.size() > 0) {
+            if (!borgs.isEmpty()) {
                 // This bundle was contributed by a feature that did not opt-in to the API Regions
                 Set<String> reportedPackages = new HashSet<>();
                 for (PackageInfo pi : bd.getExportedPackages()) {
