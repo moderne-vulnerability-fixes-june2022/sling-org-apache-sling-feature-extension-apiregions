@@ -4,8 +4,8 @@
 
 # Apache Sling API Regions extension
 
-This component contains extensions relating to the API Regions component. For more information about API Regions see
-https://github.com/apache/sling-org-apache-sling-feature/blob/master/apicontroller.md
+This component contains extensions relating to the API Regions component.
+Read the documentation about [API Regions](docs/api-regions.md) for more information.
 
 The following extensions are registered via the ServiceLoader mechanism:
 
@@ -18,7 +18,7 @@ Merge handlers are called when features are merged during the aggregation proces
 
 This component also contains Feature Model Analysers they are contributed through the Service Loader mechanism to the set of Analysers.
 
-These analysers relate to API Region definitions in Feature Models. 
+These analysers relate to API Region definitions in Feature Models.
 
 * `api-regions`: This analyser ensures that packages listed as exports in API-Regions sections are actually exported by a bundle that's part of the feature.
 
@@ -26,12 +26,12 @@ These analysers relate to API Region definitions in Feature Models.
   * Configuration parameters:
   * `exporting-apis`: the name of the region that provides the visible APIs.
   * `hiding-apis`: the name of the region that is 'hidden' i.e. not as visible as the exporting one. The
-packages in the `exporting-api` cannot depend on any packages from this region. 
+packages in the `exporting-api` cannot depend on any packages from this region.
 
 * `api-regions-duplicates`: This analyser ensures that packages are only listed in one region
 in a given feature. If the same package is listed in multiple regions this will be an error.
 
-* `api-regions-check-order`: This analyser checks that regions are defined in the specified 
+* `api-regions-check-order`: This analyser checks that regions are defined in the specified
 order and that the same region is only declared once. Later regions inherit the packages
 expose in earlier regions in the list, so the order is important.
   * Configuration parameters:
@@ -41,9 +41,9 @@ order must be obeyed.
 * `api-regions-crossfeature-dups`: This analyser checks whether there are exported packages in a feature model
 that does _not_ opt in to the API Regions (i.e. it does not have an API-Regions section) that overlap with exported
 packages from API regions in other feature models. It can prevent against unwanted results when packages are
-exported from the outside which should be exported from an API Region. 
-This analyser only provides a useful result when run on 
-an aggregate feature model, i.e. a feature model that was created by aggregating a number of other feature models. It uses the 
+exported from the outside which should be exported from an API Region.
+This analyser only provides a useful result when run on
+an aggregate feature model, i.e. a feature model that was created by aggregating a number of other feature models. It uses the
 `feature-origins` metadata to find the features that bundles were initially declared in. It then matches this with the `feature-origins` found in the `api-regions` section. Exports from  bundles from features that don't
 declare `api-regions` are compared to declared exports in the `api-regions` section. If there is overlap an error
 is reported.
