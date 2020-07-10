@@ -23,6 +23,8 @@ import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -43,6 +45,8 @@ import org.osgi.framework.Version;
 
 public class LauncherProperties
 {
+    private static final String REGION_ORDER = "__region.order__";
+
     public static Properties getBundleIDtoBSNandVersionMap(Feature app, ArtifactProvider artifactProvider) {
         Map<ArtifactId, String> map = new HashMap<>();
 
@@ -101,18 +105,22 @@ public class LauncherProperties
     }
 
     public static Properties getFeatureIDtoRegionsMap(ApiRegions regions) {
-        Map<ArtifactId, Set<String>> map = new HashMap<>();
+        Map<ArtifactId, List<String>> map = new HashMap<>();
 
         for (ApiRegion region : regions.listRegions())
         {
             for (ArtifactId featureId : region.getFeatureOrigins()) {
                 map.compute(featureId, (id, regionNames) -> {
                     if (regionNames == null) {
-                        regionNames = new HashSet<>();
+                        regionNames = new LinkedList<>();
                     }
                     regionNames.add(region.getName());
+                    int insertionIndex = regionNames.size() - 1;
                     for (ApiRegion parent = region.getParent(); parent != null; parent = parent.getParent()) {
-                        regionNames.add(parent.getName());
+                        String parentName = parent.getName();
+                        if (!regionNames.contains(parentName)) {
+                            regionNames.add(insertionIndex, parentName);
+                        }
                     }
                     return regionNames;
                 });
@@ -121,9 +129,13 @@ public class LauncherProperties
 
         Properties result = new Properties();
 
-        for (Map.Entry<ArtifactId, Set<String>> entry : map.entrySet()) {
+        for (Map.Entry<ArtifactId, List<String>> entry : map.entrySet()) {
             result.setProperty(entry.getKey().toMvnId(), String.join(",", entry.getValue()));
         }
+
+        result.put(REGION_ORDER, regions.listRegions().stream()
+                .map(ApiRegion::getName)
+                .collect(Collectors.joining(",")));
 
         return result;
     }
