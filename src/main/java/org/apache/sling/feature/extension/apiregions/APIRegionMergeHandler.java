@@ -18,7 +18,10 @@ package org.apache.sling.feature.extension.apiregions;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import javax.json.JsonArray;
 
 import org.apache.sling.feature.ArtifactId;
@@ -78,18 +81,39 @@ public class APIRegionMergeHandler implements MergeHandler {
                 }
             }
 
-            // If there are any remaining regions in the src extension, process them now
-            for (final ApiRegion r : srcRegions.listRegions()) {
-                if (targetRegions.getRegionByName(r.getName()) == null) {
-                    LinkedHashSet<ArtifactId> origins = new LinkedHashSet<>(Arrays.asList(r.getFeatureOrigins()));
+            // Build up a region map to identify the insertion positions
+            Map<String, Integer> regionPos = new HashMap<>();
+            List<ApiRegion> tRegions = targetRegions.listRegions();
+            for (int i=0; i<tRegions.size(); i++) {
+                regionPos.put(tRegions.get(i).getName(), i);
+            }
+
+            // Process the source regions back to front, to not interfere with the positions in the map
+            // Merge them in to have an ordered list that is consistent with both what was already in
+            // the target and what is in the source.
+            List<ApiRegion> sRegions = srcRegions.listRegions();
+            int nextInsertPosition = tRegions.size();
+            String nextFound = getNextFound(sRegions.size() - 1, regionPos, sRegions);
+
+            for (int i=sRegions.size() - 1; i>=0; i--) {
+                ApiRegion cur = sRegions.get(i);
+                if (cur.getName().equals(nextFound)) {
+                    nextFound = getNextFound(i - 1, regionPos, sRegions);
+                    if (nextFound == null) {
+                        nextInsertPosition = 0;
+                    } else {
+                        nextInsertPosition = regionPos.get(nextFound) + 1;
+                    }
+                } else {
+                    LinkedHashSet<ArtifactId> origins = new LinkedHashSet<>(Arrays.asList(cur.getFeatureOrigins()));
                     if (origins.isEmpty())
                     {
                         origins.add(source.getId());
-                        r.setFeatureOrigins(origins.toArray(new ArtifactId[0]));
+                        cur.setFeatureOrigins(origins.toArray(new ArtifactId[0]));
                     }
-                    if (!targetRegions.add(r))
+                    if (!targetRegions.add(nextInsertPosition, cur))
                     {
-                        throw new IllegalStateException("Duplicate region " + r.getName());
+                        throw new IllegalStateException("Duplicate region " + cur.getName());
                     }
                 }
             }
@@ -99,5 +123,15 @@ public class APIRegionMergeHandler implements MergeHandler {
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String getNextFound(int startPos, Map<String, Integer> regionPos, List<ApiRegion> sourceRegions) {
+        for (int i=startPos; i>=0; i--) {
+            String name = sourceRegions.get(i).getName();
+            if (regionPos.get(name) != null) {
+                return name;
+            }
+        }
+        return null;
     }
 }
