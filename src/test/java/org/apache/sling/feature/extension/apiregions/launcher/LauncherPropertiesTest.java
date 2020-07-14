@@ -39,8 +39,8 @@ public class LauncherPropertiesTest
 
         Assert.assertNotNull(properties);
         Assert.assertEquals("region1,region2,region4", properties.getProperty("f:f1:1"));
-
         Assert.assertEquals("region1,region2,region3", properties.getProperty("f:f2:1"));
+        Assert.assertEquals("region1,region2,region3,region4", properties.getProperty("__region.order__"));
     }
 
     @Test
@@ -50,14 +50,15 @@ public class LauncherPropertiesTest
             "{\"name\": \"region1\", \"exports\": [\"org.foo.b\"],\"feature-origins\":[\"f:f1:1\"]}," +
             "{\"name\": \"region2\", \"exports\": [\"org.foo.c\"],\"feature-origins\":[\"f:f1:1\"]}," +
             "{\"name\": \"region3\", \"exports\": [],\"feature-origins\":[\"f:f2:1\"]}," +
-            "{\"name\": \"region4\", \"exports\": [],\"feature-origins\":[\"f:f2:1\"]}" +
+            "{\"name\": \"region4\", \"exports\": [],\"feature-origins\":[\"f:f2:1\"]}," +
+            "{\"name\": \"region5\", \"exports\": [],\"feature-origins\":[\"f:f3:1\"]}" +
             "]");
 
         Properties properties = LauncherProperties.getFeatureIDtoRegionsMap(apiRegions);
 
         Assert.assertNotNull(properties);
         Assert.assertEquals("region1,region2", properties.getProperty("f:f1:1"));
-
         Assert.assertEquals("region3,region4", properties.getProperty("f:f2:1"));
+        Assert.assertEquals("region1,region2,region3,region4,region5", properties.getProperty("__region.order__"));
     }
 }
