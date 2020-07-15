@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
+
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
@@ -98,6 +99,18 @@ public class ApiRegions {
      * @return {@code true} if the region could be added, {@code false} otherwise
      */
     public boolean add(final ApiRegion region) {
+        return add(this.regions.size(), region);
+    }
+
+    /**
+     * Add the region. The region is only added if there isn't already a region with
+     * the same name
+     *
+     * @param idx The position to add
+     * @param region The region to add
+     * @return {@code true} if the region could be added, {@code false} otherwise
+     */
+    public boolean add(final int idx, final ApiRegion region) {
         for (final ApiRegion c : this.regions) {
             if (c.getName().equals(region.getName())) {
                 return false;
@@ -115,9 +128,10 @@ public class ApiRegions {
                 }
             ).reduce((a,b) -> b).ifPresent(region::setParent);
 
-        this.regions.add(region);
+        this.regions.add(idx, region);
         return true;
     }
+
 
     /**
      * Get a named region
