@@ -28,6 +28,7 @@ import javax.json.JsonArray;
 import javax.json.JsonReader;
 import javax.json.stream.JsonParsingException;
 
+import org.apache.johnzon.core.JsonReaderImpl.NothingToRead;
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Extension;
@@ -45,6 +46,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -102,8 +104,8 @@ public abstract class AbstractApiRegionsAnalyserTaskTest<T extends AbstractApiRe
             JsonArray array = null;
             try {
                 array = reader.readArray();
-            } catch (final JsonParsingException ignore) {
-
+            } catch (final JsonParsingException | NothingToRead ignore) {
+                // ignored
             }
             when(extension.getJSONStructure()).thenReturn(array);
         }
