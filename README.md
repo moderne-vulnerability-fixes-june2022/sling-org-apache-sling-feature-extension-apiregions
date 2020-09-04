@@ -26,6 +26,9 @@ packages in the `exporting-api` cannot depend on any packages from this region.
 * `api-regions-duplicates`: This analyser ensures that packages are only listed in one region
 in a given feature. If the same package is listed in multiple regions this will be an error.
 
+* `api-regions-exportsimports`: Checks bundle import/export package statements for consistency and completeness. If API Regions are used this analyser includes this 
+information as part of the check, to ensure that bundles don't import packages of which they have no visibility because of API Regions restrictions.
+
 * `api-regions-check-order`: This analyser checks that regions are defined in the specified
 order and that the same region is only declared once. Later regions inherit the packages
 expose in earlier regions in the list, so the order is important.
