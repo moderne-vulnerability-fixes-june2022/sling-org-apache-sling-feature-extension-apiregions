@@ -17,7 +17,6 @@
 package org.apache.sling.feature.extension.apiregions.api;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -199,30 +198,23 @@ public class ApiRegion {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((exports == null) ? 0 : exports.hashCode());
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + Arrays.hashCode(getFeatureOrigins());
-        result = prime * result + ((properties == null) ? 0 : properties.hashCode());
-        return result;
+        return Objects.hash(exports, name, origins, parent, properties);
     }
 
     @Override
-    public boolean equals(Object o)
-    {
-        if (this == o)
-        {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
-        if (o == null || getClass() != o.getClass())
-        {
+        if (obj == null) {
             return false;
         }
-        ApiRegion region = (ApiRegion) o;
-        return exports.equals(region.exports) &&
-            origins.equals(region.origins) &&
-            properties.equals(region.properties) &&
-            Objects.equals(name, region.name);
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        ApiRegion other = (ApiRegion) obj;
+        return Objects.equals(exports, other.exports) && Objects.equals(name, other.name)
+                && Objects.equals(origins, other.origins) && Objects.equals(parent, other.parent)
+                && Objects.equals(properties, other.properties);
     }
 }

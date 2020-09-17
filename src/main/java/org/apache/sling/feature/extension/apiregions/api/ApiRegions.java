@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -42,6 +43,9 @@ import javax.json.JsonWriter;
 
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
 
 /**
  * An api regions configuration
@@ -58,6 +62,8 @@ public class ApiRegions {
     private static final String TOGGLE_KEY = "toggle";
 
     private static final String PREVIOUS_KEY = "previous";
+
+    private static final String DEPRECATED_KEY = "deprecated";
 
     private final List<ApiRegion> regions = new ArrayList<>();
 
@@ -198,6 +204,12 @@ public class ApiRegions {
                         if (exp.getPrevious() != null) {
                             expBuilder.add(PREVIOUS_KEY, exp.getPrevious().toMvnId());
                         }
+
+                        final JsonValue depValue = exp.deprecationToJSON();
+                        if ( depValue != null ) {
+                            expBuilder.add(DEPRECATED_KEY, depValue);
+                        }
+
                         for (final Map.Entry<String, String> entry : exp.getProperties().entrySet()) {
                             expBuilder.add(entry.getKey(), entry.getValue());
                         }
@@ -297,22 +309,35 @@ public class ApiRegions {
                                 for (final String key : expObj.keySet()) {
                                     if (NAME_KEY.equals(key)) {
                                         continue; // already set
+
                                     } else if (TOGGLE_KEY.equals(key)) {
                                         export.setToggle(expObj.getString(key));
+
                                     } else if (PREVIOUS_KEY.equals(key)) {
                                         export.setPrevious(ArtifactId.parse(expObj.getString(key)));
+
+
+                                    } else if ( DEPRECATED_KEY.equals(key)) {
+                                        final JsonValue dValue = expObj.get(DEPRECATED_KEY);
+                                        export.parseDeprecation(dValue);
+
+                                        // everything else is stored as a string property
                                     } else {
                                         export.getProperties().put(key, expObj.getString(key));
                                     }
                                 }
+                            } else {
+                                throw new IOException("Region " + region.getName() + " has wrong type for " + EXPORTS_KEY + " : " + e.getValueType().name());
                             }
                         }
                     } else if (entry.getKey().equals(Artifact.KEY_FEATURE_ORIGINS)) {
-                        Set<ArtifactId> origins = new LinkedHashSet<>();
+                        final Set<ArtifactId> origins = new LinkedHashSet<>();
                         for (final JsonValue origin : (JsonArray) entry.getValue()) {
                             origins.add(ArtifactId.fromMvnId(((JsonString) origin).getString()));
                         }
                         region.setFeatureOrigins(origins.toArray(new ArtifactId[0]));
+
+                        // everything else is stored as a string property
                     } else {
                         region.getProperties().put(entry.getKey(), ((JsonString) entry.getValue()).getString());
                     }
@@ -327,6 +352,39 @@ public class ApiRegions {
         }
     }
 
+    /**
+     * Get the api regions from the feature - if it exists.
+     * @param feature The feature
+     * @return The api regions or {@code null}.
+     * @throws IllegalArgumentException If the extension is wrongly formatted
+     * @since 1.1
+     */
+    public static ApiRegions getApiRegions(final Feature feature) {
+        final Extension ext = feature == null ? null : feature.getExtensions().getByName(EXTENSION_NAME);
+        return getApiRegions(ext);
+    }
+
+    /**
+     * Get the api regions from the extension.
+     * @param ext The extension
+     * @return The api regions or {@code null}.
+     * @throws IllegalArgumentException If the extension is wrongly formatted
+     * @since 1.1
+     */
+    public static ApiRegions getApiRegions(final Extension ext) {
+        if ( ext == null ) {
+            return null;
+        }
+        if ( ext.getType() != ExtensionType.JSON ) {
+            throw new IllegalArgumentException("Extension " + ext.getName() + " must have JSON type");
+        }
+        try {
+            return parse(ext.getJSONStructure().asJsonArray());
+        } catch ( final IOException ioe) {
+            throw new IllegalArgumentException(ioe.getMessage(), ioe);
+        }
+    }
+
     @Override
     public String toString() {
         return "ApiRegions [regions=" + regions + "]";
@@ -334,26 +392,21 @@ public class ApiRegions {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((regions == null) ? 0 : regions.hashCode());
-        return result;
+        return Objects.hash(regions);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         ApiRegions other = (ApiRegions) obj;
-        if (regions == null) {
-            if (other.regions != null)
-                return false;
-        } else if (!regions.equals(other.regions))
-            return false;
-        return true;
+        return Objects.equals(regions, other.regions);
     }
 }

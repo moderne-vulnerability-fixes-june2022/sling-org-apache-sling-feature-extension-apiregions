@@ -16,8 +16,17 @@
  */
 package org.apache.sling.feature.extension.apiregions.api;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonString;
+import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
 
 import org.apache.sling.feature.ArtifactId;
 
@@ -25,6 +34,14 @@ import org.apache.sling.feature.ArtifactId;
  * Describes an exported package.
  */
 public class ApiExport implements Comparable<ApiExport> {
+
+    private static final String DEPRECATED_KEY = "deprecated";
+
+    private static final String MSG_KEY = "msg";
+
+    private static final String SINCE_KEY = "since";
+
+    private static final String MEMBERS_KEY = "members";
 
     private final String name;
 
@@ -34,12 +51,17 @@ public class ApiExport implements Comparable<ApiExport> {
 
     private final Map<String, String> properties = new HashMap<>();
 
+    private final Deprecation deprecation = new Deprecation();
+
     /**
      * Create a new export
      *
      * @param name Package name for the export
      */
     public ApiExport(final String name) {
+        if ( name == null ) {
+            throw new IllegalArgumentException();
+        }
         this.name = name;
     }
 
@@ -97,6 +119,109 @@ public class ApiExport implements Comparable<ApiExport> {
         return this.properties;
     }
 
+    /**
+     * Get the deprecation info
+     *
+     * @return The info
+     */
+    public Deprecation getDeprecation() {
+        return this.deprecation;
+    }
+
+    /**
+     * Internal method to parse the extension JSON
+     * @param dValue The JSON value
+     * @throws IOException If the format is not correct
+     */
+    void parseDeprecation(final JsonValue dValue) throws IOException {
+        if ( dValue.getValueType() == ValueType.STRING ) {
+
+            // value is deprecation message for the whole package
+            final DeprecationInfo info = new DeprecationInfo(((JsonString)dValue).getString());
+            this.getDeprecation().setPackageInfo(info);
+
+        } else if ( dValue.getValueType() == ValueType.OBJECT ) {
+
+            // value is an object with properties
+            final JsonObject depObj = dValue.asJsonObject();
+            if ( depObj.containsKey(MSG_KEY) && depObj.containsKey(MEMBERS_KEY) ) {
+                throw new IOException("Export " + this.getName() + " has wrong info in " + DEPRECATED_KEY);
+            }
+            if ( !depObj.containsKey(MSG_KEY) && !depObj.containsKey(MEMBERS_KEY)) {
+                throw new IOException("Export " + this.getName() + " has missing info in " + DEPRECATED_KEY);
+            }
+            if ( depObj.containsKey(MSG_KEY) ) {
+                // whole package
+                final DeprecationInfo info = new DeprecationInfo(depObj.getString(MSG_KEY));
+                info.setSince(depObj.getString(SINCE_KEY, null));
+                this.getDeprecation().setPackageInfo(info);
+            } else {
+                if ( depObj.containsKey(SINCE_KEY) ) {
+                    throw new IOException("Export " + this.getName() + " has wrong since in " + DEPRECATED_KEY);
+                }
+                final JsonValue val = depObj.get(MEMBERS_KEY);
+                if ( val.getValueType() != ValueType.OBJECT) {
+                    throw new IOException("Export " + this.getName() + " has wrong type for " + MEMBERS_KEY + " : " + val.getValueType().name());
+                }
+                for (final Map.Entry<String, JsonValue> memberProp : val.asJsonObject().entrySet()) {
+                    if ( memberProp.getValue().getValueType() == ValueType.STRING ) {
+                        final DeprecationInfo info = new DeprecationInfo(((JsonString)memberProp.getValue()).getString());
+                        this.getDeprecation().addMemberInfo(memberProp.getKey(), info);
+                    } else if ( memberProp.getValue().getValueType() == ValueType.OBJECT ) {
+                        final JsonObject memberObj = memberProp.getValue().asJsonObject();
+                        if ( !memberObj.containsKey(MSG_KEY) ) {
+                            throw new IOException("Export " + this.getName() + " has wrong type for member in " + MEMBERS_KEY + " : " + memberProp.getValue().getValueType().name());
+                        }
+                        final DeprecationInfo info = new DeprecationInfo(memberObj.getString(MSG_KEY));
+                        info.setSince(memberObj.getString(SINCE_KEY, null));
+                        this.getDeprecation().addMemberInfo(memberProp.getKey(), info);
+                    } else {
+                        throw new IOException("Export " + this.getName() + " has wrong type for member in " + MEMBERS_KEY + " : " + memberProp.getValue().getValueType().name());
+                    }
+                }
+            }
+        } else {
+            throw new IOException("Export " + this.getName() + " has wrong type for " + DEPRECATED_KEY + " : " + dValue.getValueType().name());
+        }
+    }
+
+    /**
+     * Internal method to create the JSON if deprecation is set
+     * @return The JSON value or {@code null}
+     */
+    JsonValue deprecationToJSON() {
+        final Deprecation dep = this.getDeprecation();
+        if ( dep.getPackageInfo() != null ) {
+            if ( dep.getPackageInfo().getSince() == null ) {
+                return Json.createValue(dep.getPackageInfo().getMessage());
+            } else {
+                final JsonObjectBuilder depBuilder = Json.createObjectBuilder();
+                depBuilder.add(MSG_KEY, dep.getPackageInfo().getMessage());
+                depBuilder.add(SINCE_KEY, dep.getPackageInfo().getSince());
+
+                return depBuilder.build();
+            }
+        } else if ( !dep.getMemberInfos().isEmpty() ) {
+            final JsonObjectBuilder depBuilder = Json.createObjectBuilder();
+            final JsonObjectBuilder membersBuilder = Json.createObjectBuilder();
+            for(final Map.Entry<String, DeprecationInfo> memberEntry : dep.getMemberInfos().entrySet()) {
+                if ( memberEntry.getValue().getSince() == null ) {
+                    membersBuilder.add(memberEntry.getKey(), memberEntry.getValue().getMessage());
+                } else {
+                    final JsonObjectBuilder mBuilder = Json.createObjectBuilder();
+                    mBuilder.add(MSG_KEY, memberEntry.getValue().getMessage());
+                    mBuilder.add(SINCE_KEY, memberEntry.getValue().getSince());
+
+                    membersBuilder.add(memberEntry.getKey(), mBuilder);
+                }
+            }
+
+            depBuilder.add(MEMBERS_KEY, membersBuilder);
+            return depBuilder.build();
+        }
+        return null;
+    }
+
     @Override
     public int compareTo(final ApiExport o) {
         return this.name.compareTo(o.name);
@@ -110,44 +235,23 @@ public class ApiExport implements Comparable<ApiExport> {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((previous == null) ? 0 : previous.hashCode());
-        result = prime * result + ((properties == null) ? 0 : properties.hashCode());
-        result = prime * result + ((toggle == null) ? 0 : toggle.hashCode());
-        return result;
+        return Objects.hash(deprecation, name, previous, properties, toggle);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         ApiExport other = (ApiExport) obj;
-        if (name == null) {
-            if (other.name != null)
-                return false;
-        } else if (!name.equals(other.name))
-            return false;
-        if (previous == null) {
-            if (other.previous != null)
-                return false;
-        } else if (!previous.equals(other.previous))
-            return false;
-        if (properties == null) {
-            if (other.properties != null)
-                return false;
-        } else if (!properties.equals(other.properties))
-            return false;
-        if (toggle == null) {
-            if (other.toggle != null)
-                return false;
-        } else if (!toggle.equals(other.toggle))
-            return false;
-        return true;
+        return Objects.equals(deprecation, other.deprecation) && Objects.equals(name, other.name)
+                && Objects.equals(previous, other.previous) && Objects.equals(properties, other.properties)
+                && Objects.equals(toggle, other.toggle);
     }
 }

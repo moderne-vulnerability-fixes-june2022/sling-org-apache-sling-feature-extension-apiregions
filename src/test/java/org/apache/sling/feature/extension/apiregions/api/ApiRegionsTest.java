@@ -16,6 +16,12 @@
  */
 package org.apache.sling.feature.extension.apiregions.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -23,18 +29,17 @@ import java.io.StringWriter;
 import java.io.Writer;
 
 import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionState;
+import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.Feature;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
-public class TestApiRegions {
+public class ApiRegionsTest {
 
     private String readJSON(final String name) throws IOException {
         try (final Reader reader = new InputStreamReader(
-                TestApiRegions.class.getResourceAsStream("/json/" + name + ".json"),
+                ApiRegionsTest.class.getResourceAsStream("/json/" + name + ".json"),
                 "UTF-8"); final Writer writer = new StringWriter()) {
             int l;
             char[] buf = new char[2048];
@@ -131,5 +136,23 @@ public class TestApiRegions {
         assertTrue(three.listAllExports().contains(new ApiExport("c")));
         assertEquals(1, three.listExports().size());
         assertTrue(three.listExports().contains(new ApiExport("c")));
+    }
+
+    @Test public void testNullFeature() {
+        assertNull(ApiRegions.getApiRegions((Feature)null));
+    }
+
+    @Test public void testNullExtension() {
+        assertNull(ApiRegions.getApiRegions((Extension)null));
+        final Feature f = new Feature(ArtifactId.parse("g:a:1.0"));
+        assertNull(ApiRegions.getApiRegions(f));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testWrongExtensionType() {
+        final Feature f = new Feature(ArtifactId.parse("g:a:1.0"));
+        final Extension e = new Extension(ExtensionType.TEXT, ApiRegions.EXTENSION_NAME, ExtensionState.OPTIONAL);
+        f.getExtensions().add(e);
+        ApiRegions.getApiRegions(f);
     }
 }

@@ -59,3 +59,40 @@ If a feature exports no packages and only wants to have visibility of packages f
             "exports": []
         }
     ]
+    
+## Deprecation of API
+
+When changing the source of an API is not possible to mark it as deprecated, it can be marked as such through this api region as well. This information can be used by tooling to mark and report usage of such API.
+
+     "api-regions:JSON|false":[
+        {
+            "name":"global",
+            "exports":[
+                # Package exported without deprecation
+                "org.apache.sling.api",
+                # Package exported - full package deprecated
+                {
+                    "name" : "org.apache.sling.api.file",
+                    "deprecated" : "Deprecation message"
+                },
+                # Package exported - single class and single member deprecated
+                {
+                    "name" : "org.apache.sling.api.io",
+                    "deprecated" : {
+                        "FileCache" : "Deprecation message",
+                        "MemoryCache#getFile()" : "Deprecation message"
+                    }
+                },
+                # Instead of just the message, additional information about when the 
+                # deprecation happened can be provided (this works in all of the
+                # above places)
+                {
+                    "name":"org.apache.sling.incubator.api",
+                    "deprecated":{
+                        "msg":"This is deprecated",
+                        "since":"Since Sling left the incubator"
+                    }
+                }
+            ]
+        }
+     ]
