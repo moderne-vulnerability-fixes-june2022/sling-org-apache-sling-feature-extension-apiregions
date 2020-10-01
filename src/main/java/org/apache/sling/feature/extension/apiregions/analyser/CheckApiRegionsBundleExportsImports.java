@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 import javax.json.JsonArray;
 
 import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.ArtifactResolution;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Extensions;
 import org.apache.sling.feature.Feature;
@@ -256,13 +257,13 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
                 ctx.reportWarning(key + " is exporting package(s) " + getPackageInfo(entry.getValue().importWithoutVersion, false) + " without a version.");
             }
 
-            if ( !entry.getValue().missingExports.isEmpty() ) {
+            if ( !entry.getValue().missingExports.isEmpty() && entry.getKey().getArtifact().getResolution() == ArtifactResolution.MANDATORY ) {
                 ctx.reportError(key + " is importing package(s) " + getPackageInfo(entry.getValue().missingExports, false) + " in start level " +
                         String.valueOf(entry.getKey().getArtifact().getStartOrder())
                         + " but no bundle is exporting these for that start level.");
                 errorReported = true;
             }
-            if ( !entry.getValue().missingExportsWithVersion.isEmpty() ) {
+            if ( !entry.getValue().missingExportsWithVersion.isEmpty() && entry.getKey().getArtifact().getResolution() == ArtifactResolution.MANDATORY ) {
                 StringBuilder message = new StringBuilder(key + " is importing package(s) " + getPackageInfo(entry.getValue().missingExportsWithVersion, true) + " in start level " +
                         String.valueOf(entry.getKey().getArtifact().getStartOrder())
                         + " but no visible bundle is exporting these for that start level in the required version range.");
