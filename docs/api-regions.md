@@ -79,8 +79,10 @@ When changing the source of an API is not possible to mark it as deprecated, it 
                 {
                     "name" : "org.apache.sling.api.io",
                     "deprecated" : {
-                        "FileCache" : "Deprecation message",
-                        "MemoryCache#getFile()" : "Deprecation message"
+                        "members" : {
+                            "FileCache" : "Deprecation message",
+                            "MemoryCache#getFile()" : "Deprecation message"
+                        }
                     }
                 },
                 # Instead of just the message, additional information about when the 
