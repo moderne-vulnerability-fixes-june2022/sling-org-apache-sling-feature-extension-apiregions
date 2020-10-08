@@ -193,7 +193,11 @@ public class ApiRegions {
             if (!region.listExports().isEmpty()) {
                 final JsonArrayBuilder expArrayBuilder = Json.createArrayBuilder();
                 for (final ApiExport exp : region.listExports()) {
-                    if (exp.getToggle() == null && exp.getPrevious() == null && exp.getProperties().isEmpty()) {
+                    if (exp.getToggle() == null 
+                        && exp.getPrevious() == null 
+                        && exp.getProperties().isEmpty() 
+                        && exp.getDeprecation().getPackageInfo() == null
+                        && exp.getDeprecation().getMemberInfos().isEmpty() ) {
                         expArrayBuilder.add(exp.getName());
                     } else {
                         final JsonObjectBuilder expBuilder = Json.createObjectBuilder();
