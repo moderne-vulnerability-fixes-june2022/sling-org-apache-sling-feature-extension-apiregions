@@ -1,0 +1,10 @@
+[
+   {
+     "name" : "internal",
+     "exports" : [ {
+        "name" : "org.apache.sling.internal",
+        "deprecated" : "deprecated"
+      }
+     ]
+   }
+]

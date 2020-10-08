@@ -25,8 +25,13 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonReader;
 
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Extension;
@@ -154,5 +159,33 @@ public class ApiRegionsTest {
         final Extension e = new Extension(ExtensionType.TEXT, ApiRegions.EXTENSION_NAME, ExtensionState.OPTIONAL);
         f.getExtensions().add(e);
         ApiRegions.getApiRegions(f);
+    }
+
+    @Test
+    public void testDeprecationJSON() throws Exception {
+        final String json = readJSON("apis-deprecation");
+
+        final ApiRegions regions = ApiRegions.parse(json);
+        assertNotNull(regions);
+
+        assertEquals(1, regions.listRegions().size());
+
+        final ApiRegion internal = regions.listRegions().get(0);
+        assertEquals("internal", internal.getName());
+
+        assertEquals(1, internal.listExports().size());
+
+        final ApiExport exp = internal.listExports().iterator().next();
+
+        assertEquals("org.apache.sling.internal", exp.getName());
+        assertNotNull(exp.getDeprecation().getPackageInfo());
+        assertEquals("deprecated", exp.getDeprecation().getPackageInfo().getMessage());
+
+        final JsonArray array = regions.toJSONArray();
+        try (final JsonReader reader = Json.createReader(new StringReader(json))) {
+            final JsonArray orig = reader.readArray();
+            assertEquals(orig, array);
+        }
+ 
     }
 }
