@@ -56,6 +56,9 @@ public class Property extends DescribableEntity {
 	/** The optional regex */
 	private String regex;
 
+	/** Required? */
+	private boolean required;
+	
     /**
      * Clear the object and remove all metadata
      */
@@ -63,6 +66,7 @@ public class Property extends DescribableEntity {
         super.clear();
 		this.setType(PropertyType.STRING);
 		this.setCardinality(1);
+		this.setRequired(false);
 		this.setVariable(null);
 		this.setRange(null);
 		this.setIncludes(null);
@@ -82,7 +86,8 @@ public class Property extends DescribableEntity {
         try {
 			this.setVariable(this.getString(Constants.KEY_VARIABLE));
 			this.setCardinality(this.getInteger(Constants.KEY_CARDINALITY, this.getCardinality()));
-
+			this.setRequired(this.getBoolean(Constants.KEY_REQUIRED, this.isRequired()));
+			
 			final String typeVal = this.getString(Constants.KEY_TYPE);
 			if ( typeVal != null ) {
                 this.setType(PropertyType.valueOf(typeVal.toUpperCase()));				
@@ -139,6 +144,9 @@ public class Property extends DescribableEntity {
 	    }
 		if ( this.getCardinality() != 1 ) {
 			objectBuilder.add(Constants.KEY_CARDINALITY, this.getCardinality());
+		}
+		if ( this.isRequired() ) {
+			objectBuilder.add(Constants.KEY_REQUIRED, this.isRequired());
 		}
 	    this.setString(objectBuilder, Constants.KEY_VARIABLE, this.getVariable());
 		
@@ -297,5 +305,21 @@ public class Property extends DescribableEntity {
 	 */
 	public void setRegex(final String regex) {
 		this.regex = regex;
+	}
+
+	/**
+	 * Is this property required?
+	 * @return {@code true} if it is required
+	 */
+	public boolean isRequired() {
+		return this.required;
+	}
+
+	/**
+	 * Set whether this property is required
+	 * @param flag The new value
+	 */
+	public void setRequired(final boolean flag) {
+		this.required = flag;
 	}
 }

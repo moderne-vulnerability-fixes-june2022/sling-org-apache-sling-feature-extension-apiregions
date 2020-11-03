@@ -25,6 +25,7 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
 
 import org.apache.felix.cm.json.Configurations;
 
@@ -133,16 +134,35 @@ public abstract class AttributeableEntity {
 			builder.add(attributeName, value);
 		}
 	}
+
 	/**
 	 * Helper method to get a integer value from an attribute
 	 * @param attributeName The attribute name
 	 * @param defaultValue default value
-	 * @return The integer value or
+	 * @return The integer value or the default value
 	 */
 	int getInteger(final String attributeName, final int defaultValue) {
 		final String val = this.getString(attributeName);
 		if ( val != null ) {
 			return Integer.parseInt(val);
+		}
+		return defaultValue;
+	}
+
+	/**
+	 * Helper method to get a boolean value from an attribute
+	 * @param attributeName The attribute name
+	 * @param defaultValue default value
+	 * @return The boolean value or the default value
+	 */
+	boolean getBoolean(final String attributeName, final boolean defaultValue) throws IOException {
+		final JsonValue val = this.getAttributes().remove(attributeName);
+		if ( val != null ) {
+			final Object obj = Configurations.convertToObject(val);
+			if ( obj instanceof Boolean ) {
+                return ((Boolean)obj).booleanValue();
+			}
+			throw new IOException("Invalid type for boolean value " + attributeName + " : " + val.getValueType().name());
 		}
 		return defaultValue;
 	}

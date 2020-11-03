@@ -62,4 +62,6 @@ public abstract class Constants {
     static final String KEY_REGEX = "regex";
 
     static final String KEY_VALUE = "value";
+
+    static final String KEY_REQUIRED = "required";
 }
