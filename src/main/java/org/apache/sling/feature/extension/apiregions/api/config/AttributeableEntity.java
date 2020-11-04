@@ -25,7 +25,6 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
-import javax.json.JsonValue.ValueType;
 
 import org.apache.felix.cm.json.Configurations;
 
