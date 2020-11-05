@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@org.osgi.annotation.versioning.Version("1.ü.0")
+@org.osgi.annotation.versioning.Version("1.0.0")
 package org.apache.sling.feature.extension.apiregions.api.config;
 
 

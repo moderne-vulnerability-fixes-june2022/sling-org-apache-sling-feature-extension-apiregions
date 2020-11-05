@@ -19,6 +19,7 @@ package org.apache.sling.feature.extension.apiregions.api.config;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -54,19 +55,27 @@ public class Property extends DescribableEntity {
 	private List<Option> options;
 	
 	/** The optional regex */
-	private String regex;
+	private Pattern pattern;
 
 	/** Required? */
 	private boolean required;
-	
+    
+    public Property() {
+        this.setDefaults();
+    }
+
+    void setDefaults() {
+		this.setType(PropertyType.STRING);
+        this.setCardinality(1);
+        this.setRequired(false);
+    }
+
     /**
      * Clear the object and remove all metadata
      */
 	public void clear() {
         super.clear();
-		this.setType(PropertyType.STRING);
-		this.setCardinality(1);
-		this.setRequired(false);
+        this.setDefaults();
 		this.setVariable(null);
 		this.setRange(null);
 		this.setIncludes(null);
@@ -84,21 +93,21 @@ public class Property extends DescribableEntity {
 	public void fromJSONObject(final JsonObject jsonObj) throws IOException {
         super.fromJSONObject(jsonObj);
         try {
-			this.setVariable(this.getString(Constants.KEY_VARIABLE));
-			this.setCardinality(this.getInteger(Constants.KEY_CARDINALITY, this.getCardinality()));
-			this.setRequired(this.getBoolean(Constants.KEY_REQUIRED, this.isRequired()));
+			this.setVariable(this.getString(InternalConstants.KEY_VARIABLE));
+			this.setCardinality(this.getInteger(InternalConstants.KEY_CARDINALITY, this.getCardinality()));
+			this.setRequired(this.getBoolean(InternalConstants.KEY_REQUIRED, this.isRequired()));
 			
-			final String typeVal = this.getString(Constants.KEY_TYPE);
+			final String typeVal = this.getString(InternalConstants.KEY_TYPE);
 			if ( typeVal != null ) {
                 this.setType(PropertyType.valueOf(typeVal.toUpperCase()));				
 			}
-			final JsonValue rangeVal = this.getAttributes().remove(Constants.KEY_RANGE);
+			final JsonValue rangeVal = this.getAttributes().remove(InternalConstants.KEY_RANGE);
 			if ( rangeVal != null ) {
 				final Range range = new Range();
 				range.fromJSONObject(rangeVal.asJsonObject());
 				this.setRange(range);
 			}
-			final JsonValue incs = this.getAttributes().remove(Constants.KEY_INCLUDES);
+			final JsonValue incs = this.getAttributes().remove(InternalConstants.KEY_INCLUDES);
 			if ( incs != null ) {
 				final List<String> list = new ArrayList<>();
 				for(final JsonValue innerVal : incs.asJsonArray()) {
@@ -106,7 +115,7 @@ public class Property extends DescribableEntity {
                 }
                 this.setIncludes(list.toArray(new String[list.size()]));
 			}
-			final JsonValue excs = this.getAttributes().remove(Constants.KEY_EXCLUDES);
+			final JsonValue excs = this.getAttributes().remove(InternalConstants.KEY_EXCLUDES);
 			if ( excs != null ) {
 				final List<String> list = new ArrayList<>();
 				for(final JsonValue innerVal : excs.asJsonArray()) {
@@ -114,7 +123,7 @@ public class Property extends DescribableEntity {
                 }
                 this.setExcludes(list.toArray(new String[list.size()]));
 			}
-			final JsonValue opts = this.getAttributes().remove(Constants.KEY_OPTIONS);
+			final JsonValue opts = this.getAttributes().remove(InternalConstants.KEY_OPTIONS);
 			if ( opts != null ) {
 				final List<Option> list = new ArrayList<>();
 				for(final JsonValue innerVal : opts.asJsonArray()) {
@@ -124,7 +133,7 @@ public class Property extends DescribableEntity {
                 }
 				this.setOptions(list);
 			}
-			this.setRegex(this.getString(Constants.KEY_REGEX));
+			this.setRegex(this.getString(InternalConstants.KEY_REGEX));
  		} catch (final JsonException | IllegalArgumentException e) {
             throw new IOException(e);
         }
@@ -140,41 +149,41 @@ public class Property extends DescribableEntity {
 		final JsonObjectBuilder objectBuilder = super.createJson();
 
 		if ( this.getType() != null ) {
-			this.setString(objectBuilder, Constants.KEY_TYPE, this.getType().name());
+			this.setString(objectBuilder, InternalConstants.KEY_TYPE, this.getType().name());
 	    }
 		if ( this.getCardinality() != 1 ) {
-			objectBuilder.add(Constants.KEY_CARDINALITY, this.getCardinality());
+			objectBuilder.add(InternalConstants.KEY_CARDINALITY, this.getCardinality());
 		}
 		if ( this.isRequired() ) {
-			objectBuilder.add(Constants.KEY_REQUIRED, this.isRequired());
+			objectBuilder.add(InternalConstants.KEY_REQUIRED, this.isRequired());
 		}
-	    this.setString(objectBuilder, Constants.KEY_VARIABLE, this.getVariable());
+	    this.setString(objectBuilder, InternalConstants.KEY_VARIABLE, this.getVariable());
 		
 		if ( this.range != null ) {
-			objectBuilder.add(Constants.KEY_RANGE, this.range.toJSONObject());
+			objectBuilder.add(InternalConstants.KEY_RANGE, this.range.toJSONObject());
 		}
 		if ( this.includes != null && this.includes.length > 0 ) {
 			final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 			for(final String v : this.includes) {
 				arrayBuilder.add(v);
 			}
-			objectBuilder.add(Constants.KEY_INCLUDES, arrayBuilder);
+			objectBuilder.add(InternalConstants.KEY_INCLUDES, arrayBuilder);
 		}
 		if ( this.excludes != null && this.excludes.length > 0 ) {
 			final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 			for(final String v : this.excludes) {
 				arrayBuilder.add(v);
 			}
-			objectBuilder.add(Constants.KEY_EXCLUDES, arrayBuilder);
+			objectBuilder.add(InternalConstants.KEY_EXCLUDES, arrayBuilder);
 		}
 		if ( this.options != null && !this.options.isEmpty()) {
 			final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
             for(final Option o : this.options) {
 				arrayBuilder.add(o.toJSONObject());
 			}
-			objectBuilder.add(Constants.KEY_OPTIONS, arrayBuilder);
+			objectBuilder.add(InternalConstants.KEY_OPTIONS, arrayBuilder);
 		}
-		this.setString(objectBuilder, Constants.KEY_REGEX, this.getRegex());
+		this.setString(objectBuilder, InternalConstants.KEY_REGEX, this.getRegex());
 		
 		return objectBuilder;
 	}
@@ -192,7 +201,7 @@ public class Property extends DescribableEntity {
 	 * @param type the type to set
 	 */
 	public void setType(final PropertyType type) {
-		this.type = type;
+		this.type = type == null ? PropertyType.STRING : type;
 	}
 
 	/**
@@ -296,16 +305,29 @@ public class Property extends DescribableEntity {
 	 * @return the regex
 	 */
 	public String getRegex() {
-		return regex;
+		return pattern == null ? null : pattern.pattern();
 	}
 
 	/**
 	 * Set the regex
 	 * @param regex the regex to set
+     * @throws IllegalArgumentException If the pattern is not valid
 	 */
 	public void setRegex(final String regex) {
-		this.regex = regex;
+        if ( regex == null ) {
+            this.pattern = null;
+        } else {
+           this.pattern = Pattern.compile(regex);
+        }
 	}
+
+    /**
+     * Get the regex pattern
+     * @return The pattern or {@code null}
+     */
+    public Pattern getRegexPattern() {
+        return this.pattern;
+    }
 
 	/**
 	 * Is this property required?

@@ -22,7 +22,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Validate values
@@ -144,9 +143,8 @@ public class Validator {
 							break;
 				default : messages.add("Unable to validate value - unknown property type : " + prop.getType());
 			}
-			if ( prop.getRegex() != null ) {
-				final Pattern p = Pattern.compile(prop.getRegex());
-				if ( !p.matcher(value.toString()).matches() ) {
+			if ( prop.getRegexPattern() != null ) {
+				if ( !prop.getRegexPattern().matcher(value.toString()).matches() ) {
                     messages.add("Value " + value + " does not match regex " + prop.getRegex());
 				}
 			}
@@ -321,16 +319,30 @@ public class Validator {
 	    if ( prop.getRange() != null ) {
 			try {
                 if ( prop.getRange().getMin() != null ) {
-					final long min = Long.valueOf(prop.getRange().getMin());
-					if ( value.longValue() < min ) {
-                         messages.add("Value " + value + " is too low; should not be lower than " + prop.getRange().getMin());
-					}
+                    if ( value instanceof Float || value instanceof Double ) {
+                        final double min = prop.getRange().getMin().doubleValue();
+                        if ( value.doubleValue() < min ) {
+                             messages.add("Value " + value + " is too low; should not be lower than " + prop.getRange().getMin());
+                        }    
+                    } else {
+                        final long min = prop.getRange().getMin().longValue();
+                        if ( value.longValue() < min ) {
+                             messages.add("Value " + value + " is too low; should not be lower than " + prop.getRange().getMin());
+                        }    
+                    }
 				}
                 if ( prop.getRange().getMax() != null ) {
-					final long max = Long.valueOf(prop.getRange().getMax());
-					if ( value.longValue() > max ) {
-                         messages.add("Value " + value + " is too high; should not be higher than " + prop.getRange().getMax());
-					}
+                    if ( value instanceof Float || value instanceof Double ) {
+                        final double max = prop.getRange().getMax().doubleValue();
+                        if ( value.doubleValue() > max ) {
+                            messages.add("Value " + value + " is too high; should not be higher than " + prop.getRange().getMax());
+                        }    
+                    } else {
+                        final long max = prop.getRange().getMax().longValue();
+                        if ( value.longValue() > max ) {
+                            messages.add("Value " + value + " is too high; should not be higher than " + prop.getRange().getMax());
+                        }    
+                    }
 				}
 			} catch ( final NumberFormatException nfe) {
 				messages.add("Invalid range specified in " + prop.getRange());

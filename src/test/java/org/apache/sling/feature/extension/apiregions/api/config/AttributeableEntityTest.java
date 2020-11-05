@@ -104,4 +104,22 @@ public class AttributeableEntityTest {
         assertEquals(9, entity.getInteger("foo", 7));
         assertTrue(entity.getAttributes().isEmpty());
     }
+
+    @Test public void testGetNumber() throws IOException {
+        final AE entity = new AE();
+        assertNull(entity.getNumber("foo"));
+
+        entity.getAttributes().put("foo", Json.createValue(5));
+        assertEquals(5L, entity.getNumber("foo"));
+        assertTrue(entity.getAttributes().isEmpty());
+
+
+        try {
+            entity.getAttributes().put("foo", Json.createValue("a"));
+            entity.getNumber("foo");
+            fail();
+        } catch ( final IOException expected) {
+            // this is expected
+        }
+    }
 }

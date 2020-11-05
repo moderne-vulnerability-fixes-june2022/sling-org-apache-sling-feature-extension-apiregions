@@ -31,10 +31,6 @@ import javax.json.JsonValue;
 
 public class FactoryConfiguration extends ConfigurableEntity {
     
-    private static final String KEY_OPERATIONS = "operations";
-
-    private static final String KEY_INTERNAL_NAMES = "internal-names";
-    
     private final Set<Operation> operations = new HashSet<>();
 
     private final List<String> internalNames = new ArrayList<>();
@@ -58,7 +54,7 @@ public class FactoryConfiguration extends ConfigurableEntity {
         super.fromJSONObject(jsonObj);
         try {
             JsonValue val;
-            val = this.getAttributes().remove(KEY_OPERATIONS);
+            val = this.getAttributes().remove(InternalConstants.KEY_OPERATIONS);
             if ( val != null ) {
                 for(final JsonValue innerVal : val.asJsonArray()) {
                     final String v = getString(innerVal).toUpperCase();
@@ -66,7 +62,7 @@ public class FactoryConfiguration extends ConfigurableEntity {
                 }
             }
             
-            val = this.getAttributes().remove(KEY_INTERNAL_NAMES);
+            val = this.getAttributes().remove(InternalConstants.KEY_INTERNAL_NAMES);
             if ( val != null ) {
                 for(final JsonValue innerVal : val.asJsonArray()) {
                     this.getInternalNames().add(getString(innerVal));
@@ -106,14 +102,14 @@ public class FactoryConfiguration extends ConfigurableEntity {
             for(final Operation op : this.getOperations()) {
                 arrayBuilder.add(op.name());
             }
-			objBuilder.add(KEY_OPERATIONS, arrayBuilder);
+			objBuilder.add(InternalConstants.KEY_OPERATIONS, arrayBuilder);
 		}
 		if ( !this.getInternalNames().isEmpty() ) {
             final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
             for(final String n : this.getInternalNames()) {
                 arrayBuilder.add(n);
             }
-			objBuilder.add(KEY_INTERNAL_NAMES, arrayBuilder);
+			objBuilder.add(InternalConstants.KEY_INTERNAL_NAMES, arrayBuilder);
 		}
 		return objBuilder;
    }

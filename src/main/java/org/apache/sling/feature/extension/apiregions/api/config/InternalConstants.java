@@ -19,7 +19,7 @@ package org.apache.sling.feature.extension.apiregions.api.config;
 /**
  * Constants used in this implementation
  */
-public abstract class Constants {
+abstract class InternalConstants {
     
     static final String KEY_TITLE = "title";
 
@@ -64,4 +64,8 @@ public abstract class Constants {
     static final String KEY_VALUE = "value";
 
     static final String KEY_REQUIRED = "required";
+
+    static final String KEY_OPERATIONS = "operations";
+
+    static final String KEY_INTERNAL_NAMES = "internal-names";
 }

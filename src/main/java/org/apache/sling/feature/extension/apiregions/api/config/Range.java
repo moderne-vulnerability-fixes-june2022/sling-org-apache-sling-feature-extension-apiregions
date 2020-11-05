@@ -22,13 +22,15 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
+import org.apache.felix.cm.json.Configurations;
+
 public class Range extends AttributeableEntity {
 
     /** The optional min value */
-    private String min;
+    private Number min;
 
     /** The optional max value */
-    private String max;
+    private Number max;
 
     /**
      * Clear the object and remove all metadata
@@ -48,8 +50,8 @@ public class Range extends AttributeableEntity {
 	public void fromJSONObject(final JsonObject jsonObj) throws IOException {
         super.fromJSONObject(jsonObj);
         try {
-			this.setMin(this.getString(Constants.KEY_MIN));
-			this.setMax(this.getString(Constants.KEY_MAX));
+			this.setMin(this.getNumber(InternalConstants.KEY_MIN));
+			this.setMax(this.getNumber(InternalConstants.KEY_MAX));
  		} catch (final JsonException | IllegalArgumentException e) {
             throw new IOException(e);
         }
@@ -59,7 +61,7 @@ public class Range extends AttributeableEntity {
      * Get the min value
 	 * @return the min
 	 */
-	public String getMin() {
+	public Number getMin() {
 		return min;
 	}
 
@@ -67,7 +69,7 @@ public class Range extends AttributeableEntity {
      * Set the min value
 	 * @param min the min to set
 	 */
-	public void setMin(final String min) {
+	public void setMin(final Number min) {
 		this.min = min;
 	}
 
@@ -75,7 +77,7 @@ public class Range extends AttributeableEntity {
      * Get the max value
 	 * @return the max
 	 */
-	public String getMax() {
+	public Number getMax() {
 		return max;
 	}
 
@@ -83,7 +85,7 @@ public class Range extends AttributeableEntity {
      * Set the max value
 	 * @param max the max to set
 	 */
-	public void setMax(final String max) {
+	public void setMax(final Number max) {
 		this.max = max;
     }
 
@@ -96,8 +98,12 @@ public class Range extends AttributeableEntity {
     JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objectBuilder = super.createJson();
 
-		this.setString(objectBuilder, Constants.KEY_MIN, this.getMin());
-		this.setString(objectBuilder, Constants.KEY_MAX, this.getMax());
+        if ( this.getMin() != null ) {
+            objectBuilder.add(InternalConstants.KEY_MIN, Configurations.convertToJsonValue(this.getMin()));
+        }
+        if ( this.getMax() != null ) {
+            objectBuilder.add(InternalConstants.KEY_MAX, Configurations.convertToJsonValue(this.getMax()));
+        }
 
 		return objectBuilder;
 	}

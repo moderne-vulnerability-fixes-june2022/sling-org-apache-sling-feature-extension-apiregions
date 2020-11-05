@@ -51,7 +51,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
 	public void fromJSONObject(final JsonObject jsonObj) throws IOException {
         super.fromJSONObject(jsonObj);
         try {
-            final JsonValue val = this.getAttributes().remove(Constants.KEY_PROPERTIES);
+            final JsonValue val = this.getAttributes().remove(InternalConstants.KEY_PROPERTIES);
             if ( val != null ) {
                 for(final Map.Entry<String, JsonValue> innerEntry : val.asJsonObject().entrySet()) {
 					final Property prop = new Property();
@@ -86,7 +86,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
 			for(final Map.Entry<String, Property> entry : this.getProperties().entrySet()) {
 				propBuilder.add(entry.getKey(), entry.getValue().createJson());
 			}
-			objBuilder.add(Constants.KEY_PROPERTIES, propBuilder);
+			objBuilder.add(InternalConstants.KEY_PROPERTIES, propBuilder);
 		}
 
 		return objBuilder;

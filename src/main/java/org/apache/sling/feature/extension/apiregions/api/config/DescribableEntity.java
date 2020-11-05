@@ -52,9 +52,9 @@ public abstract class DescribableEntity extends AttributeableEntity {
 	public void fromJSONObject(final JsonObject jsonObj) throws IOException {
 		super.fromJSONObject(jsonObj);
         try {
-			this.setTitle(this.getString(Constants.KEY_TITLE));
-			this.setDescription(this.getString(Constants.KEY_DESCRIPTION));
-			this.setDeprecated(this.getString(Constants.KEY_DEPRECATED));
+			this.setTitle(this.getString(InternalConstants.KEY_TITLE));
+			this.setDescription(this.getString(InternalConstants.KEY_DESCRIPTION));
+			this.setDeprecated(this.getString(InternalConstants.KEY_DEPRECATED));
         } catch (final JsonException | IllegalArgumentException e) {
             throw new IOException(e);
 		}
@@ -117,9 +117,9 @@ public abstract class DescribableEntity extends AttributeableEntity {
     JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objectBuilder = super.createJson();
 
-		this.setString(objectBuilder, Constants.KEY_TITLE, this.getTitle());
-		this.setString(objectBuilder, Constants.KEY_DESCRIPTION, this.getDescription());
-		this.setString(objectBuilder, Constants.KEY_DEPRECATED, this.getDeprecated());
+		this.setString(objectBuilder, InternalConstants.KEY_TITLE, this.getTitle());
+		this.setString(objectBuilder, InternalConstants.KEY_DESCRIPTION, this.getDescription());
+		this.setString(objectBuilder, InternalConstants.KEY_DEPRECATED, this.getDeprecated());
 
 		return objectBuilder;
 	}

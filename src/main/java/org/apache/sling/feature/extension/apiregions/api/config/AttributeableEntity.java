@@ -32,13 +32,6 @@ public abstract class AttributeableEntity {
 	
 	/** The additional attributes */
 	private final Map<String, JsonValue> attributes = new LinkedHashMap<>();
-	
-	/**
-	 * Create a new instance and set defaults.
-	 */
-	public AttributeableEntity() {
-		this.clear();
-	}
 
     /**
      * Clear the object and remove all metadata
@@ -128,7 +121,25 @@ public abstract class AttributeableEntity {
 		return null;
 	}
 
-	void setString(final JsonObjectBuilder builder, final String attributeName, final String value) {
+	/**
+	 * Helper method to get a number value from an attribute
+	 * @param attributeName The attribute name
+	 * @return The string value or {@code null}.
+     * @throws IOException If the attribute value is not of type boolean
+	 */
+	Number getNumber(final String attributeName) throws IOException {
+		final JsonValue val = this.getAttributes().remove(attributeName);
+		if ( val != null ) {
+			final Object obj = Configurations.convertToObject(val);
+			if ( obj instanceof Number ) {
+				return (Number)obj;
+			}
+			throw new IOException("Invalid type for number value " + attributeName + " : " + val.getValueType().name());
+		}
+		return null;
+	}
+
+    void setString(final JsonObjectBuilder builder, final String attributeName, final String value) {
 		if ( value != null ) {
 			builder.add(attributeName, value);
 		}
@@ -153,6 +164,7 @@ public abstract class AttributeableEntity {
 	 * @param attributeName The attribute name
 	 * @param defaultValue default value
 	 * @return The boolean value or the default value
+     * @throws IOException If the attribute value is not of type boolean
 	 */
 	boolean getBoolean(final String attributeName, final boolean defaultValue) throws IOException {
 		final JsonValue val = this.getAttributes().remove(attributeName);

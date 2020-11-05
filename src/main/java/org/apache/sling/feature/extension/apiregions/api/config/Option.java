@@ -30,22 +30,22 @@ public class Option extends DescribableEntity {
     /**
      * Clear the object and remove all metadata
      */
-	  public void clear() {
+    public void clear() {
         super.clear();
-		    this.setValue(null);
+        this.setValue(null);
     }
 
-	  /**
-	   * Extract the metadata from the JSON object.
-	   * This method first calls {@link #clear()}
-	   * @param jsonObj The JSON Object
-	   * @throws IOException If JSON parsing fails
-	   */
-	  public void fromJSONObject(final JsonObject jsonObj) throws IOException {
+    /**
+     * Extract the metadata from the JSON object.
+     * This method first calls {@link #clear()}
+     * @param jsonObj The JSON Object
+     * @throws IOException If JSON parsing fails
+     */
+    public void fromJSONObject(final JsonObject jsonObj) throws IOException {
         super.fromJSONObject(jsonObj);
         try {
-		      	this.setValue(this.getString(Constants.KEY_VALUE));
- 		    } catch (final JsonException | IllegalArgumentException e) {
+          	this.setValue(this.getString(InternalConstants.KEY_VALUE));
+        } catch (final JsonException | IllegalArgumentException e) {
             throw new IOException(e);
         }
     }
@@ -53,17 +53,17 @@ public class Option extends DescribableEntity {
     /**
      * Get the value for the option
   	 * @return the value
-	   */
-	  public String getValue() {
-		    return value;
-	  }
+     */
+    public String getValue() {
+        return value;
+    }
 
-	  /**
+    /**
      * Set the value for the option
-	   * @param value the value to set
-	   */
-	  public void setValue(final String value) {
-		    this.value = value;
+     * @param value the value to set
+     */
+    public void setValue(final String value) {
+        this.value = value;
     }
 
     /**
@@ -73,10 +73,10 @@ public class Option extends DescribableEntity {
      * @throws IOException If generating the JSON fails
      */
     JsonObjectBuilder createJson() throws IOException {
-		    final JsonObjectBuilder objectBuilder = super.createJson();
+        final JsonObjectBuilder objectBuilder = super.createJson();
 
-		    this.setString(objectBuilder, Constants.KEY_VALUE, this.getValue());
+        this.setString(objectBuilder, InternalConstants.KEY_VALUE, this.getValue());
 
-		    return objectBuilder;
+        return objectBuilder;
     }
 }

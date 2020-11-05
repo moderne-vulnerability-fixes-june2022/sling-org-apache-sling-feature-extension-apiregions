@@ -119,7 +119,7 @@ public class ConfigurationApi extends AttributeableEntity {
         super.fromJSONObject(jsonObj);
         try {
             JsonValue val;
-            val = this.getAttributes().remove(Constants.KEY_CONFIGURATIONS);
+            val = this.getAttributes().remove(InternalConstants.KEY_CONFIGURATIONS);
             if ( val != null ) {
                 for(final Map.Entry<String, JsonValue> innerEntry : val.asJsonObject().entrySet()) {
                     final Configuration cfg = new Configuration();
@@ -128,7 +128,7 @@ public class ConfigurationApi extends AttributeableEntity {
                 }
             }
             
-            val = this.getAttributes().remove(Constants.KEY_FACTORIES);
+            val = this.getAttributes().remove(InternalConstants.KEY_FACTORIES);
             if ( val != null ) {
                 for(final Map.Entry<String, JsonValue> innerEntry : val.asJsonObject().entrySet()) {
                     final FactoryConfiguration cfg = new FactoryConfiguration();
@@ -137,7 +137,7 @@ public class ConfigurationApi extends AttributeableEntity {
                 }
             }
 
-            val = this.getAttributes().remove(Constants.KEY_FWK_PROPERTIES);
+            val = this.getAttributes().remove(InternalConstants.KEY_FWK_PROPERTIES);
             if ( val != null ) {
                 for(final Map.Entry<String, JsonValue> innerEntry : val.asJsonObject().entrySet()) {
                     final FrameworkProperty cfg = new FrameworkProperty();
@@ -146,21 +146,21 @@ public class ConfigurationApi extends AttributeableEntity {
                 }
             }
 
-            val = this.getAttributes().remove(Constants.KEY_INTERNAL_CONFIGURATIONS);
+            val = this.getAttributes().remove(InternalConstants.KEY_INTERNAL_CONFIGURATIONS);
             if ( val != null ) {
                 for(final JsonValue innerVal : val.asJsonArray()) {
                     this.getInternalConfigurations().add(getString(innerVal));
                 }
             }
 
-            val = this.getAttributes().remove(Constants.KEY_INTERNAL_FACTORIES);
+            val = this.getAttributes().remove(InternalConstants.KEY_INTERNAL_FACTORIES);
             if ( val != null ) {
                 for(final JsonValue innerVal : val.asJsonArray()) {
                     this.getInternalFactories().add(getString(innerVal));
                 }
             }
 
-            val = this.getAttributes().remove(Constants.KEY_INTERNAL_FWK_PROPERTIES);
+            val = this.getAttributes().remove(InternalConstants.KEY_INTERNAL_FWK_PROPERTIES);
             if ( val != null ) {
                 for(final JsonValue innerVal : val.asJsonArray()) {
                     this.getInternalFrameworkProperties().add(getString(innerVal));
@@ -233,42 +233,42 @@ public class ConfigurationApi extends AttributeableEntity {
             for(final Map.Entry<String, Configuration> entry : this.getConfigurations().entrySet()) {
                 propBuilder.add(entry.getKey(), entry.getValue().createJson());
             }
-            objBuilder.add(Constants.KEY_CONFIGURATIONS, propBuilder);
+            objBuilder.add(InternalConstants.KEY_CONFIGURATIONS, propBuilder);
         }
         if ( !this.getFactories().isEmpty() ) {
             final JsonObjectBuilder propBuilder = Json.createObjectBuilder();
             for(final Map.Entry<String, FactoryConfiguration> entry : this.getFactories().entrySet()) {
                 propBuilder.add(entry.getKey(), entry.getValue().createJson());
             }
-            objBuilder.add(Constants.KEY_FACTORIES, propBuilder);
+            objBuilder.add(InternalConstants.KEY_FACTORIES, propBuilder);
         }
         if ( !this.getFrameworkProperties().isEmpty() ) {
             final JsonObjectBuilder propBuilder = Json.createObjectBuilder();
             for(final Map.Entry<String, FrameworkProperty> entry : this.getFrameworkProperties().entrySet()) {
                 propBuilder.add(entry.getKey(), entry.getValue().createJson());
             }
-            objBuilder.add(Constants.KEY_FWK_PROPERTIES, propBuilder);
+            objBuilder.add(InternalConstants.KEY_FWK_PROPERTIES, propBuilder);
         }
         if ( !this.getInternalConfigurations().isEmpty() ) {
             final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
             for(final String n : this.getInternalConfigurations()) {
                 arrayBuilder.add(n);
             }
-			objBuilder.add(Constants.KEY_INTERNAL_CONFIGURATIONS, arrayBuilder);
+			objBuilder.add(InternalConstants.KEY_INTERNAL_CONFIGURATIONS, arrayBuilder);
 		}
 		if ( !this.getInternalFactories().isEmpty() ) {
             final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
             for(final String n : this.getInternalFactories()) {
                 arrayBuilder.add(n);
             }
-			objBuilder.add(Constants.KEY_INTERNAL_FACTORIES, arrayBuilder);
+			objBuilder.add(InternalConstants.KEY_INTERNAL_FACTORIES, arrayBuilder);
 		}
 		if ( !this.getInternalFrameworkProperties().isEmpty() ) {
             final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
             for(final String n : this.getInternalFrameworkProperties()) {
                 arrayBuilder.add(n);
             }
-			objBuilder.add(Constants.KEY_INTERNAL_FWK_PROPERTIES, arrayBuilder);
+			objBuilder.add(InternalConstants.KEY_INTERNAL_FWK_PROPERTIES, arrayBuilder);
 		}
 
 		return objBuilder;
