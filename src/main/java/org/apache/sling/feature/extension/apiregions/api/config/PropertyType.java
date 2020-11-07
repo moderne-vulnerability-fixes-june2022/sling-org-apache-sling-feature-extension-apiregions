@@ -23,9 +23,9 @@ public enum PropertyType {
  
     STRING,
     LONG,
-    INT,
+    INTEGER,
     SHORT,
-    CHAR,
+    CHARACTER,
     BYTE,
     DOUBLE,
     FLOAT,

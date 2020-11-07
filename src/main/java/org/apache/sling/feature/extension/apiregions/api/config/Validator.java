@@ -65,41 +65,11 @@ public class Validator {
 			}
 
 			if ( values != null ) {
-				// array or collection
-				if ( prop.getCardinality() > 0 && values.size() > prop.getCardinality() ) {
-                    messages.add("Array/collection contains too many elements, only " + prop.getCardinality() + " allowed");
-				}
-				for(final Object val : values) {
-					validateValue(prop, val, messages);
-				}
-				if ( prop.getIncludes() != null ) {
-					for(final String inc : prop.getIncludes()) {
-						boolean found = false;
-						for(final Object val : values) {
-                            if ( inc.equals(val.toString())) {
-								found = true;
-								break;
-							}
-						}
-						if ( !found ) {
-                            messages.add("Required included value " + inc + " not found");
-						}
-					}
-				}
-				if ( prop.getExcludes() != null ) {
-					for(final String exc : prop.getExcludes()) {
-						boolean found = false;
-						for(final Object val : values) {
-                            if ( exc.equals(val.toString())) {
-								found = true;
-								break;
-							}
-						}
-						if ( found ) {
-                            messages.add("Required excluded value " + exc + " found");
-						}
-					}
-				}
+                // array or collection
+                for(final Object val : values) {
+                    validateValue(prop, val, messages);
+                }
+                validateList(prop, values, messages);
 			}
 		}
 		return new ValidationResult(){
@@ -114,6 +84,40 @@ public class Validator {
 		};
 	}
 
+    static void validateList(final Property prop, final List<Object> values, final List<String> messages) {
+        if ( prop.getCardinality() > 0 && values.size() > prop.getCardinality() ) {
+            messages.add("Array/collection contains too many elements, only " + prop.getCardinality() + " allowed");
+        }
+        if ( prop.getIncludes() != null ) {
+            for(final String inc : prop.getIncludes()) {
+                boolean found = false;
+                for(final Object val : values) {
+                    if ( inc.equals(val.toString())) {
+                        found = true;
+                        break;
+                    }
+                }
+                if ( !found ) {
+                    messages.add("Required included value " + inc + " not found");
+                }
+            }
+        }
+        if ( prop.getExcludes() != null ) {
+            for(final String exc : prop.getExcludes()) {
+                boolean found = false;
+                for(final Object val : values) {
+                    if ( exc.equals(val.toString())) {
+                        found = true;
+                        break;
+                    }
+                }
+                if ( found ) {
+                    messages.add("Required excluded value " + exc + " found");
+                }
+            }
+        }
+    }
+
 	static void validateValue(final Property prop, final Object value, final List<String> messages) {
 		if ( value != null ) {
 			switch ( prop.getType() ) {
@@ -121,13 +125,13 @@ public class Validator {
 							   break;
 				case BYTE : validateByte(prop, value, messages);
 							break;
-				case CHAR : validateChar(prop, value, messages);
+				case CHARACTER : validateCharacter(prop, value, messages);
 							break;
 				case DOUBLE : validateDouble(prop, value, messages); 
 							break;
 				case FLOAT : validateFloat(prop, value, messages); 
 							break;
-				case INT : validateInt(prop, value, messages);
+				case INTEGER : validateInteger(prop, value, messages);
 							break;
 				case LONG : validateLong(prop, value, messages);
 							break;
@@ -142,23 +146,9 @@ public class Validator {
 				case URL : validateURL(prop, value, messages);
 							break;
 				default : messages.add("Unable to validate value - unknown property type : " + prop.getType());
-			}
-			if ( prop.getRegexPattern() != null ) {
-				if ( !prop.getRegexPattern().matcher(value.toString()).matches() ) {
-                    messages.add("Value " + value + " does not match regex " + prop.getRegex());
-				}
-			}
-			if ( prop.getOptions() != null ) {
-				boolean found = false;
-				for(final Option opt : prop.getOptions()) {
-					if ( opt.getValue().equals(value.toString() ) ) {
-						found = true; 
-					}
-				}
-				if ( !found ) {
-					messages.add("Value " + value + " does not match provided options");
-				}
-			}
+            }
+            validateRegex(prop, value, messages);
+            validateOptions(prop, value, messages);
 		} else {
 			messages.add("Null value provided for validation");
 		}
@@ -185,7 +175,9 @@ public class Validator {
 					validateRange(prop, Byte.valueOf(v), messages);
 				} catch ( final NumberFormatException nfe ) {
                     messages.add("Value is not a valid Byte : " + value);
-				}
+                }
+            } else if ( value instanceof Number ) {
+                validateRange(prop, ((Number)value).byteValue(), messages);            
 			} else {
 				messages.add("Byte value must either be of type Byte or String : " + value);
 			}
@@ -203,6 +195,8 @@ public class Validator {
 				} catch ( final NumberFormatException nfe ) {
                     messages.add("Value is not a valid Short : " + value);
 				}
+            } else if ( value instanceof Number ) {
+                validateRange(prop, ((Number)value).shortValue(), messages);            
 			} else {
 				messages.add("Short value must either be of type Short or String : " + value);
 			}
@@ -211,7 +205,7 @@ public class Validator {
 		}
 	}
 
-	static void validateInt(final Property prop, final Object value, final List<String> messages) {
+	static void validateInteger(final Property prop, final Object value, final List<String> messages) {
         if ( ! (value instanceof Integer) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
@@ -220,6 +214,8 @@ public class Validator {
 				} catch ( final NumberFormatException nfe ) {
                     messages.add("Value is not a valid Integer : " + value);
 				}
+            } else if ( value instanceof Number ) {
+                validateRange(prop, ((Number)value).intValue(), messages);            
 			} else {
 				messages.add("Integer value must either be of type Integer or String : " + value);
 			}
@@ -237,6 +233,8 @@ public class Validator {
 				} catch ( final NumberFormatException nfe ) {
                     messages.add("Value is not a valid Long : " + value);
 				}
+            } else if ( value instanceof Number ) {
+                validateRange(prop, ((Number)value).longValue(), messages);            
 			} else {
 				messages.add("Long value must either be of type Long or String : " + value);
 			}
@@ -254,6 +252,8 @@ public class Validator {
 				} catch ( final NumberFormatException nfe ) {
                     messages.add("Value is not a valid Float : " + value);
 				}
+            } else if ( value instanceof Number ) {
+                validateRange(prop, ((Number)value).floatValue(), messages);            
 			} else {
 				messages.add("Float value must either be of type Float or String : " + value);
 			}
@@ -271,6 +271,8 @@ public class Validator {
 				} catch ( final NumberFormatException nfe ) {
                     messages.add("Value is not a valid Double : " + value);
 				}
+            } else if ( value instanceof Number ) {
+                validateRange(prop, ((Number)value).doubleValue(), messages);            
 			} else {
 				messages.add("Double value must either be of type Double or String : " + value);
 			}
@@ -279,7 +281,7 @@ public class Validator {
 		}
 	}
 
-	static void validateChar(final Property prop, final Object value, final List<String> messages) {
+	static void validateCharacter(final Property prop, final Object value, final List<String> messages) {
         if ( ! (value instanceof Character) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
@@ -317,37 +319,54 @@ public class Validator {
 
 	static void validateRange(final Property prop, final Number value, final List<String> messages) {
 	    if ( prop.getRange() != null ) {
-			try {
-                if ( prop.getRange().getMin() != null ) {
-                    if ( value instanceof Float || value instanceof Double ) {
-                        final double min = prop.getRange().getMin().doubleValue();
-                        if ( value.doubleValue() < min ) {
-                             messages.add("Value " + value + " is too low; should not be lower than " + prop.getRange().getMin());
-                        }    
-                    } else {
-                        final long min = prop.getRange().getMin().longValue();
-                        if ( value.longValue() < min ) {
-                             messages.add("Value " + value + " is too low; should not be lower than " + prop.getRange().getMin());
-                        }    
-                    }
-				}
-                if ( prop.getRange().getMax() != null ) {
-                    if ( value instanceof Float || value instanceof Double ) {
-                        final double max = prop.getRange().getMax().doubleValue();
-                        if ( value.doubleValue() > max ) {
-                            messages.add("Value " + value + " is too high; should not be higher than " + prop.getRange().getMax());
-                        }    
-                    } else {
-                        final long max = prop.getRange().getMax().longValue();
-                        if ( value.longValue() > max ) {
-                            messages.add("Value " + value + " is too high; should not be higher than " + prop.getRange().getMax());
-                        }    
-                    }
-				}
-			} catch ( final NumberFormatException nfe) {
-				messages.add("Invalid range specified in " + prop.getRange());
-			}
+            if ( prop.getRange().getMin() != null ) {
+                if ( value instanceof Float || value instanceof Double ) {
+                    final double min = prop.getRange().getMin().doubleValue();
+                    if ( value.doubleValue() < min ) {
+                            messages.add("Value " + value + " is too low; should not be lower than " + prop.getRange().getMin());
+                    }    
+                } else {
+                    final long min = prop.getRange().getMin().longValue();
+                    if ( value.longValue() < min ) {
+                            messages.add("Value " + value + " is too low; should not be lower than " + prop.getRange().getMin());
+                    }    
+                }
+            }
+            if ( prop.getRange().getMax() != null ) {
+                if ( value instanceof Float || value instanceof Double ) {
+                    final double max = prop.getRange().getMax().doubleValue();
+                    if ( value.doubleValue() > max ) {
+                        messages.add("Value " + value + " is too high; should not be higher than " + prop.getRange().getMax());
+                    }    
+                } else {
+                    final long max = prop.getRange().getMax().longValue();
+                    if ( value.longValue() > max ) {
+                        messages.add("Value " + value + " is too high; should not be higher than " + prop.getRange().getMax());
+                    }    
+                }
+            }
 		}
 	}
 
+    static void validateRegex(final Property prop, final Object value, final List<String> messages) {
+        if ( prop.getRegexPattern() != null ) {
+            if ( !prop.getRegexPattern().matcher(value.toString()).matches() ) {
+                messages.add("Value " + value + " does not match regex " + prop.getRegex());
+            }
+        }
+    }
+
+    static void validateOptions(final Property prop, final Object value, final List<String> messages) {
+        if ( prop.getOptions() != null ) {
+            boolean found = false;
+            for(final Option opt : prop.getOptions()) {
+                if ( opt.getValue().equals(value.toString() ) ) {
+                    found = true; 
+                }
+            }
+            if ( !found ) {
+                messages.add("Value " + value + " does not match provided options");
+            }
+        }
+    }
 }
