@@ -29,7 +29,7 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
-public class FactoryConfiguration extends ConfigurableEntity {
+public class FactoryConfigurationDescription extends ConfigurableEntity {
     
     private final Set<Operation> operations = new HashSet<>();
 

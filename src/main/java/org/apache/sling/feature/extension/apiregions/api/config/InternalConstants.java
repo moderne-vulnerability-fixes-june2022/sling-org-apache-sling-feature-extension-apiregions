@@ -31,13 +31,13 @@ abstract class InternalConstants {
 
     static final String KEY_CONFIGURATIONS = "configurations";
 
-    static final String KEY_FACTORIES = "factories";
+    static final String KEY_FACTORIES = "factory-configurations";
     
     static final String KEY_FWK_PROPERTIES = "framework-properties";
 
     static final String KEY_INTERNAL_CONFIGURATIONS = "internal-configurations";
 
-    static final String KEY_INTERNAL_FACTORIES = "internal-factories";
+    static final String KEY_INTERNAL_FACTORIES = "internal-factory-configurations";
     
     static final String KEY_INTERNAL_FWK_PROPERTIES = "internal-framework-properties";
 	

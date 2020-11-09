@@ -54,63 +54,63 @@ public class ConfigurationApiTest {
     @Test public void testClear() {
         final ConfigurationApi entity = new ConfigurationApi();
         entity.getAttributes().put("a", Json.createValue(5));
-        entity.getConfigurations().put("pid", new Configuration());
-        entity.getFactories().put("factory", new FactoryConfiguration());
-        entity.getFrameworkProperties().put("prop", new FrameworkProperty());
+        entity.getConfigurationDescriptions().put("pid", new ConfigurationDescription());
+        entity.getFactoryConfigurationDescriptions().put("factory", new FactoryConfigurationDescription());
+        entity.getFrameworkPropertyDescriptions().put("prop", new FrameworkPropertyDescription());
         entity.getInternalConfigurations().add("ipid");
-        entity.getInternalFactories().add("ifactory");
+        entity.getInternalFactoryConfigurations().add("ifactory");
         entity.getInternalFrameworkProperties().add("iprop");
         entity.clear();
         assertTrue(entity.getAttributes().isEmpty());
-        assertTrue(entity.getConfigurations().isEmpty());
-        assertTrue(entity.getFactories().isEmpty());
-        assertTrue(entity.getFrameworkProperties().isEmpty());
+        assertTrue(entity.getConfigurationDescriptions().isEmpty());
+        assertTrue(entity.getFactoryConfigurationDescriptions().isEmpty());
+        assertTrue(entity.getFrameworkPropertyDescriptions().isEmpty());
         assertTrue(entity.getInternalConfigurations().isEmpty());
-        assertTrue(entity.getInternalFactories().isEmpty());
+        assertTrue(entity.getInternalFactoryConfigurations().isEmpty());
         assertTrue(entity.getInternalFrameworkProperties().isEmpty());
     }
 
     @Test public void testFromJSONObject() throws IOException {
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
         ext.setJSON("{ \"a\" : 5, \"configurations\" : { \"pid\": {}}, " +
-            "\"factories\" : { \"factory\" : {}}," +
+            "\"factory-configurations\" : { \"factory\" : {}}," +
             "\"framework-properties\" : { \"prop\" : { \"type\" : \"STRING\"}}," +
             "\"internal-configurations\" : [\"ipid\"],"+
-            "\"internal-factories\" : [\"ifactory\"],"+
+            "\"internal-factory-configurations\" : [\"ifactory\"],"+
             "\"internal-framework-properties\" : [\"iprop\"]}");
 
         final ConfigurationApi entity = new ConfigurationApi();
         entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
-        assertEquals(1, entity.getConfigurations().size());
-        assertEquals(1, entity.getFactories().size());
-        assertEquals(1, entity.getFrameworkProperties().size());
+        assertEquals(1, entity.getConfigurationDescriptions().size());
+        assertEquals(1, entity.getFactoryConfigurationDescriptions().size());
+        assertEquals(1, entity.getFrameworkPropertyDescriptions().size());
         assertEquals(1, entity.getInternalConfigurations().size());
-        assertEquals(1, entity.getInternalFactories().size());
+        assertEquals(1, entity.getInternalFactoryConfigurations().size());
         assertEquals(1, entity.getInternalFrameworkProperties().size());
-        assertTrue(entity.getConfigurations().containsKey("pid"));
-        assertTrue(entity.getFactories().containsKey("factory"));
-        assertTrue(entity.getFrameworkProperties().containsKey("prop"));
+        assertTrue(entity.getConfigurationDescriptions().containsKey("pid"));
+        assertTrue(entity.getFactoryConfigurationDescriptions().containsKey("factory"));
+        assertTrue(entity.getFrameworkPropertyDescriptions().containsKey("prop"));
         assertTrue(entity.getInternalConfigurations().contains("ipid"));
-        assertTrue(entity.getInternalFactories().contains("ifactory"));
+        assertTrue(entity.getInternalFactoryConfigurations().contains("ifactory"));
         assertTrue(entity.getInternalFrameworkProperties().contains("iprop"));
     }
 
     @Test public void testToJSONObject() throws IOException {
         final ConfigurationApi entity = new ConfigurationApi();
         entity.getAttributes().put("a", Json.createValue(5));
-        entity.getConfigurations().put("pid", new Configuration());
-        entity.getFactories().put("factory", new FactoryConfiguration());
-        entity.getFrameworkProperties().put("prop", new FrameworkProperty());
+        entity.getConfigurationDescriptions().put("pid", new ConfigurationDescription());
+        entity.getFactoryConfigurationDescriptions().put("factory", new FactoryConfigurationDescription());
+        entity.getFrameworkPropertyDescriptions().put("prop", new FrameworkPropertyDescription());
         entity.getInternalConfigurations().add("ipid");
-        entity.getInternalFactories().add("ifactory");
+        entity.getInternalFactoryConfigurations().add("ifactory");
         entity.getInternalFrameworkProperties().add("iprop");
 
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
         ext.setJSON("{ \"a\" : 5, \"configurations\" : { \"pid\": {}}, " +
-            "\"factories\" : { \"factory\" : {}}," +
+            "\"factory-configurations\" : { \"factory\" : {}}," +
             "\"framework-properties\" : { \"prop\" : { \"type\" : \"STRING\"}}," +
             "\"internal-configurations\" : [\"ipid\"],"+
-            "\"internal-factories\" : [\"ifactory\"],"+
+            "\"internal-factory-configurations\" : [\"ifactory\"],"+
             "\"internal-framework-properties\" : [\"iprop\"]}");
 
         assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());

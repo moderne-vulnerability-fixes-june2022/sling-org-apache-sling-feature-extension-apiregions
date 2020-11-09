@@ -36,7 +36,7 @@ import org.junit.Test;
 public class PropertyTest {
 
     @Test public void testClear() {
-        final Property entity = new Property();
+        final PropertyDescription entity = new PropertyDescription();
         entity.getAttributes().put("a", Json.createValue(5));
         entity.setDeprecated("d");
         entity.setTitle("t");
@@ -49,7 +49,7 @@ public class PropertyTest {
         entity.setRegex(".");
         entity.setRequired(true);
         entity.setVariable("var");
-        entity.setType(PropertyType.BYTE);
+        entity.setType(PropertyType.BYTE);        
         entity.clear();
         assertTrue(entity.getAttributes().isEmpty());
         assertNull(entity.getDeprecated());
@@ -72,7 +72,7 @@ public class PropertyTest {
         ext.setJSON("{ \"type\" : \"BYTE\", \"cardinality\": 5, \"required\" : true, \"variable\" : \"var\"," +
         "\"range\" : {}, \"includes\" : [\"in\"], \"excludes\" : [\"ex\"] , \"options\": [{}], \"regex\": \".\"}");
 
-        final Property entity = new Property();
+        final PropertyDescription entity = new PropertyDescription();
         entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
 
         assertEquals(5, entity.getCardinality());
@@ -103,7 +103,7 @@ public class PropertyTest {
    }
 
     @Test public void testToJSONObject() throws IOException {
-        final Property entity = new Property();
+        final PropertyDescription entity = new PropertyDescription();
         entity.setCardinality(5);
         entity.setExcludes(new String[] {"ex"});
         entity.setIncludes(new String[] {"in"});

@@ -79,13 +79,13 @@ public class ConfigurationApi extends AttributeableEntity {
     }
    
     /** The map of configurations */
- 	private final Map<String, Configuration> configurations = new LinkedHashMap<>();
+ 	private final Map<String, ConfigurationDescription> configurations = new LinkedHashMap<>();
 
     /** The map of factory configurations */
-    private final Map<String, FactoryConfiguration> factories = new LinkedHashMap<>();
+    private final Map<String, FactoryConfigurationDescription> factories = new LinkedHashMap<>();
 
     /** The map of framework properties */
-    private final Map<String, FrameworkProperty> frameworkProperties = new LinkedHashMap<>();
+    private final Map<String, FrameworkPropertyDescription> frameworkProperties = new LinkedHashMap<>();
 
     /** The list of internal configuration names */
     private final List<String> internalConfigurations = new ArrayList<>();
@@ -122,27 +122,27 @@ public class ConfigurationApi extends AttributeableEntity {
             val = this.getAttributes().remove(InternalConstants.KEY_CONFIGURATIONS);
             if ( val != null ) {
                 for(final Map.Entry<String, JsonValue> innerEntry : val.asJsonObject().entrySet()) {
-                    final Configuration cfg = new Configuration();
+                    final ConfigurationDescription cfg = new ConfigurationDescription();
                     cfg.fromJSONObject(innerEntry.getValue().asJsonObject());
-                    this.getConfigurations().put(innerEntry.getKey(), cfg);
+                    this.getConfigurationDescriptions().put(innerEntry.getKey(), cfg);
                 }
             }
             
             val = this.getAttributes().remove(InternalConstants.KEY_FACTORIES);
             if ( val != null ) {
                 for(final Map.Entry<String, JsonValue> innerEntry : val.asJsonObject().entrySet()) {
-                    final FactoryConfiguration cfg = new FactoryConfiguration();
+                    final FactoryConfigurationDescription cfg = new FactoryConfigurationDescription();
                     cfg.fromJSONObject(innerEntry.getValue().asJsonObject());
-                    this.getFactories().put(innerEntry.getKey(), cfg);
+                    this.getFactoryConfigurationDescriptions().put(innerEntry.getKey(), cfg);
                 }
             }
 
             val = this.getAttributes().remove(InternalConstants.KEY_FWK_PROPERTIES);
             if ( val != null ) {
                 for(final Map.Entry<String, JsonValue> innerEntry : val.asJsonObject().entrySet()) {
-                    final FrameworkProperty cfg = new FrameworkProperty();
+                    final FrameworkPropertyDescription cfg = new FrameworkPropertyDescription();
                     cfg.fromJSONObject(innerEntry.getValue().asJsonObject());
-                    this.getFrameworkProperties().put(innerEntry.getKey(), cfg);
+                    this.getFrameworkPropertyDescriptions().put(innerEntry.getKey(), cfg);
                 }
             }
 
@@ -156,7 +156,7 @@ public class ConfigurationApi extends AttributeableEntity {
             val = this.getAttributes().remove(InternalConstants.KEY_INTERNAL_FACTORIES);
             if ( val != null ) {
                 for(final JsonValue innerVal : val.asJsonArray()) {
-                    this.getInternalFactories().add(getString(innerVal));
+                    this.getInternalFactoryConfigurations().add(getString(innerVal));
                 }
             }
 
@@ -173,18 +173,18 @@ public class ConfigurationApi extends AttributeableEntity {
     }
 
     /**
-     * Get the configurations
-	 * @return the configurations
+     * Get the configuration descriptions
+	 * @return the configuration descriptions
 	 */
-	public Map<String, Configuration> getConfigurations() {
+	public Map<String, ConfigurationDescription> getConfigurationDescriptions() {
 		return configurations;
 	}
 
 	/**
-     * Get the factory configurations
+     * Get the factory configuration descriptions
 	 * @return the factories
 	 */
-	public Map<String, FactoryConfiguration> getFactories() {
+	public Map<String, FactoryConfigurationDescription> getFactoryConfigurationDescriptions() {
 		return factories;
 	}
 
@@ -192,7 +192,7 @@ public class ConfigurationApi extends AttributeableEntity {
      * Get the framework properties
 	 * @return the frameworkProperties
 	 */
-	public Map<String, FrameworkProperty> getFrameworkProperties() {
+	public Map<String, FrameworkPropertyDescription> getFrameworkPropertyDescriptions() {
 		return frameworkProperties;
 	}
 
@@ -208,7 +208,7 @@ public class ConfigurationApi extends AttributeableEntity {
      * Get the internal factory names
 	 * @return the internalFactories
 	 */
-	public List<String> getInternalFactories() {
+	public List<String> getInternalFactoryConfigurations() {
 		return internalFactories;
 	}
 
@@ -228,23 +228,23 @@ public class ConfigurationApi extends AttributeableEntity {
      */
     JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objBuilder = super.createJson();
-        if ( !this.getConfigurations().isEmpty() ) {
+        if ( !this.getConfigurationDescriptions().isEmpty() ) {
             final JsonObjectBuilder propBuilder = Json.createObjectBuilder();
-            for(final Map.Entry<String, Configuration> entry : this.getConfigurations().entrySet()) {
+            for(final Map.Entry<String, ConfigurationDescription> entry : this.getConfigurationDescriptions().entrySet()) {
                 propBuilder.add(entry.getKey(), entry.getValue().createJson());
             }
             objBuilder.add(InternalConstants.KEY_CONFIGURATIONS, propBuilder);
         }
-        if ( !this.getFactories().isEmpty() ) {
+        if ( !this.getFactoryConfigurationDescriptions().isEmpty() ) {
             final JsonObjectBuilder propBuilder = Json.createObjectBuilder();
-            for(final Map.Entry<String, FactoryConfiguration> entry : this.getFactories().entrySet()) {
+            for(final Map.Entry<String, FactoryConfigurationDescription> entry : this.getFactoryConfigurationDescriptions().entrySet()) {
                 propBuilder.add(entry.getKey(), entry.getValue().createJson());
             }
             objBuilder.add(InternalConstants.KEY_FACTORIES, propBuilder);
         }
-        if ( !this.getFrameworkProperties().isEmpty() ) {
+        if ( !this.getFrameworkPropertyDescriptions().isEmpty() ) {
             final JsonObjectBuilder propBuilder = Json.createObjectBuilder();
-            for(final Map.Entry<String, FrameworkProperty> entry : this.getFrameworkProperties().entrySet()) {
+            for(final Map.Entry<String, FrameworkPropertyDescription> entry : this.getFrameworkPropertyDescriptions().entrySet()) {
                 propBuilder.add(entry.getKey(), entry.getValue().createJson());
             }
             objBuilder.add(InternalConstants.KEY_FWK_PROPERTIES, propBuilder);
@@ -256,9 +256,9 @@ public class ConfigurationApi extends AttributeableEntity {
             }
 			objBuilder.add(InternalConstants.KEY_INTERNAL_CONFIGURATIONS, arrayBuilder);
 		}
-		if ( !this.getInternalFactories().isEmpty() ) {
+		if ( !this.getInternalFactoryConfigurations().isEmpty() ) {
             final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
-            for(final String n : this.getInternalFactories()) {
+            for(final String n : this.getInternalFactoryConfigurations()) {
                 arrayBuilder.add(n);
             }
 			objBuilder.add(InternalConstants.KEY_INTERNAL_FACTORIES, arrayBuilder);

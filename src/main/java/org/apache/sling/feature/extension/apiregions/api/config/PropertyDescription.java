@@ -31,7 +31,7 @@ import javax.json.JsonValue;
 /**
  * Instances of this class represent a single configuration property
  */
-public class Property extends DescribableEntity {
+public class PropertyDescription extends DescribableEntity {
 	
 	/** The property type */
 	private PropertyType type;
@@ -60,7 +60,7 @@ public class Property extends DescribableEntity {
 	/** Required? */
 	private boolean required;
     
-    public Property() {
+    public PropertyDescription() {
         this.setDefaults();
     }
 

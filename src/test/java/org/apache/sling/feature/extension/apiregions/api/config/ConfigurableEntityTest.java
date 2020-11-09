@@ -42,13 +42,13 @@ public class ConfigurableEntityTest {
         entity.setDeprecated("d");
         entity.setTitle("t");
         entity.setDescription("x");
-        entity.getProperties().put("a", new Property());
+        entity.getPropertyDescriptions().put("a", new PropertyDescription());
         entity.clear();
         assertTrue(entity.getAttributes().isEmpty());
         assertNull(entity.getDeprecated());
         assertNull(entity.getTitle());
         assertNull(entity.getDescription());
-        assertTrue(entity.getProperties().isEmpty());
+        assertTrue(entity.getPropertyDescriptions().isEmpty());
     }
 
     @Test public void testFromJSONObject() throws IOException {
@@ -57,15 +57,15 @@ public class ConfigurableEntityTest {
 
         final CE entity = new CE();
         entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
-        assertEquals(2, entity.getProperties().size());
-        assertNotNull(entity.getProperties().get("a"));
-        assertNotNull(entity.getProperties().get("b"));
+        assertEquals(2, entity.getPropertyDescriptions().size());
+        assertNotNull(entity.getPropertyDescriptions().get("a"));
+        assertNotNull(entity.getPropertyDescriptions().get("b"));
     }
 
     @Test public void testToJSONObject() throws IOException {
         final CE entity = new CE();
-        entity.getProperties().put("a", new Property());
-        entity.getProperties().put("b", new Property());
+        entity.getPropertyDescriptions().put("a", new PropertyDescription());
+        entity.getPropertyDescriptions().put("b", new PropertyDescription());
 
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
         ext.setJSON("{ \"properties\" : { \"a\" : {\"type\":\"STRING\"}, \"b\" : {\"type\":\"STRING\"}}}");

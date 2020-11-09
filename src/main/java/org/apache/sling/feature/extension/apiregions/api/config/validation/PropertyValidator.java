@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.feature.extension.apiregions.api.config;
+package org.apache.sling.feature.extension.apiregions.api.config.validation;
 
 import java.lang.reflect.Array;
 import java.net.MalformedURLException;
@@ -23,26 +23,24 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.sling.feature.extension.apiregions.api.config.Option;
+import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
+
 /**
  * Validate values
  */
-public class Validator {
-	
-	public interface ValidationResult {
-
-		boolean isValid();
-
-		List<String> getErrors();
-	}
-
+public class PropertyValidator {
+    
 	/**
 	 * Validate the value against the property definition
-	 * @return {@code null} if the value is valid, a human readable validation error message otherwise
+	 * @return A property validation result
 	 */
-	public static ValidationResult validate(final Property prop, final Object value) {
-		final List<String> messages = new ArrayList<>();
+	public PropertyValidationResult validate(final PropertyDescription prop, final Object value) {
+		final PropertyValidationResult result = new PropertyValidationResult();
 		if ( value == null ) {
-			messages.add("No value provided");
+            if ( prop.isRequired() ) {
+                result.getErrors().add("No value provided");
+            }
 		} else {
 			final List<Object> values;
 			if ( value.getClass().isArray() ) {
@@ -61,30 +59,21 @@ public class Validator {
 			} else {
 				// single value
 				values = null;
-				validateValue(prop, value, messages);
+				validateValue(prop, value, result.getErrors());
 			}
 
 			if ( values != null ) {
                 // array or collection
                 for(final Object val : values) {
-                    validateValue(prop, val, messages);
+                    validateValue(prop, val, result.getErrors());
                 }
-                validateList(prop, values, messages);
+                validateList(prop, values, result.getErrors());
 			}
 		}
-		return new ValidationResult(){
-			
-			public boolean isValid() {
-				return messages.isEmpty();
-			}
-
-			public List<String> getErrors() {
-				return messages;
-			}	
-		};
+		return result;
 	}
 
-    static void validateList(final Property prop, final List<Object> values, final List<String> messages) {
+    void validateList(final PropertyDescription prop, final List<Object> values, final List<String> messages) {
         if ( prop.getCardinality() > 0 && values.size() > prop.getCardinality() ) {
             messages.add("Array/collection contains too many elements, only " + prop.getCardinality() + " allowed");
         }
@@ -118,7 +107,7 @@ public class Validator {
         }
     }
 
-	static void validateValue(final Property prop, final Object value, final List<String> messages) {
+	void validateValue(final PropertyDescription prop, final Object value, final List<String> messages) {
 		if ( value != null ) {
 			switch ( prop.getType() ) {
 				case BOOLEAN : validateBoolean(prop, value, messages);
@@ -154,7 +143,7 @@ public class Validator {
 		}
 	}
 	
-	static void validateBoolean(final Property prop, final Object value, final List<String> messages) {
+	void validateBoolean(final PropertyDescription prop, final Object value, final List<String> messages) {
         if ( ! (value instanceof Boolean) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
@@ -167,7 +156,7 @@ public class Validator {
 		}
 	}
 
-	static void validateByte(final Property prop, final Object value, final List<String> messages) {
+	void validateByte(final PropertyDescription prop, final Object value, final List<String> messages) {
         if ( ! (value instanceof Byte) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
@@ -186,7 +175,7 @@ public class Validator {
 		}
 	}
 
-	static void validateShort(final Property prop, final Object value, final List<String> messages) {
+	void validateShort(final PropertyDescription prop, final Object value, final List<String> messages) {
         if ( ! (value instanceof Short) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
@@ -205,7 +194,7 @@ public class Validator {
 		}
 	}
 
-	static void validateInteger(final Property prop, final Object value, final List<String> messages) {
+	void validateInteger(final PropertyDescription prop, final Object value, final List<String> messages) {
         if ( ! (value instanceof Integer) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
@@ -224,7 +213,7 @@ public class Validator {
 		}
 	}
 
-	static void validateLong(final Property prop, final Object value, final List<String> messages) {
+	void validateLong(final PropertyDescription prop, final Object value, final List<String> messages) {
         if ( ! (value instanceof Long) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
@@ -243,7 +232,7 @@ public class Validator {
 		}
 	}
 
-	static void validateFloat(final Property prop, final Object value, final List<String> messages) {
+	void validateFloat(final PropertyDescription prop, final Object value, final List<String> messages) {
         if ( ! (value instanceof Float) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
@@ -262,7 +251,7 @@ public class Validator {
 		}
 	}
 
-	static void validateDouble(final Property prop, final Object value, final List<String> messages) {
+	void validateDouble(final PropertyDescription prop, final Object value, final List<String> messages) {
         if ( ! (value instanceof Double) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
@@ -281,7 +270,7 @@ public class Validator {
 		}
 	}
 
-	static void validateCharacter(final Property prop, final Object value, final List<String> messages) {
+	void validateCharacter(final PropertyDescription prop, final Object value, final List<String> messages) {
         if ( ! (value instanceof Character) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
@@ -294,7 +283,7 @@ public class Validator {
 		}
 	}
 
-	static void validateURL(final Property prop, final Object value, final List<String> messages) {
+	void validateURL(final PropertyDescription prop, final Object value, final List<String> messages) {
 		final String val = value.toString();
 		try {
 			new URL(val);
@@ -303,7 +292,7 @@ public class Validator {
 		}
 	}
 
-	static void validateEmail(final Property prop, final Object value, final List<String> messages) {
+	void validateEmail(final PropertyDescription prop, final Object value, final List<String> messages) {
 		final String val = value.toString();
 		// poor man's validation (should probably use InternetAddress)
 		if ( !val.contains("@") ) {
@@ -311,13 +300,13 @@ public class Validator {
 		}
 	}
 
-	static void validatePassword(final Property prop, final Object value, final List<String> messages) {
+	void validatePassword(final PropertyDescription prop, final Object value, final List<String> messages) {
 		if ( prop.getVariable() == null ) {
 			messages.add("Value for a password must use a variable");
 		}
 	}
 
-	static void validateRange(final Property prop, final Number value, final List<String> messages) {
+	void validateRange(final PropertyDescription prop, final Number value, final List<String> messages) {
 	    if ( prop.getRange() != null ) {
             if ( prop.getRange().getMin() != null ) {
                 if ( value instanceof Float || value instanceof Double ) {
@@ -348,7 +337,7 @@ public class Validator {
 		}
 	}
 
-    static void validateRegex(final Property prop, final Object value, final List<String> messages) {
+    void validateRegex(final PropertyDescription prop, final Object value, final List<String> messages) {
         if ( prop.getRegexPattern() != null ) {
             if ( !prop.getRegexPattern().matcher(value.toString()).matches() ) {
                 messages.add("Value " + value + " does not match regex " + prop.getRegex());
@@ -356,7 +345,7 @@ public class Validator {
         }
     }
 
-    static void validateOptions(final Property prop, final Object value, final List<String> messages) {
+    void validateOptions(final PropertyDescription prop, final Object value, final List<String> messages) {
         if ( prop.getOptions() != null ) {
             boolean found = false;
             for(final Option opt : prop.getOptions()) {

@@ -32,7 +32,7 @@ import javax.json.JsonValue;
 public abstract class ConfigurableEntity extends DescribableEntity {
 	
 	/** The properties */
-    private final Map<String, Property> properties = new LinkedHashMap<>();
+    private final Map<String, PropertyDescription> properties = new LinkedHashMap<>();
 
     /**
      * Clear the object and remove all metadata
@@ -54,9 +54,9 @@ public abstract class ConfigurableEntity extends DescribableEntity {
             final JsonValue val = this.getAttributes().remove(InternalConstants.KEY_PROPERTIES);
             if ( val != null ) {
                 for(final Map.Entry<String, JsonValue> innerEntry : val.asJsonObject().entrySet()) {
-					final Property prop = new Property();
+					final PropertyDescription prop = new PropertyDescription();
 					prop.fromJSONObject(innerEntry.getValue().asJsonObject());
-                    this.getProperties().put(innerEntry.getKey(), prop);
+                    this.getPropertyDescriptions().put(innerEntry.getKey(), prop);
                 }
             }            
         } catch (final JsonException | IllegalArgumentException e) {
@@ -68,7 +68,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
 	 * Get the properties
 	 * @return The properties
 	 */
-    public Map<String, Property> getProperties() {
+    public Map<String, PropertyDescription> getPropertyDescriptions() {
         return this.properties;
     }
 
@@ -81,9 +81,9 @@ public abstract class ConfigurableEntity extends DescribableEntity {
 	JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objBuilder = super.createJson();
 
-		if ( !this.getProperties().isEmpty() ) {
+		if ( !this.getPropertyDescriptions().isEmpty() ) {
 			final JsonObjectBuilder propBuilder = Json.createObjectBuilder();
-			for(final Map.Entry<String, Property> entry : this.getProperties().entrySet()) {
+			for(final Map.Entry<String, PropertyDescription> entry : this.getPropertyDescriptions().entrySet()) {
 				propBuilder.add(entry.getKey(), entry.getValue().createJson());
 			}
 			objBuilder.add(InternalConstants.KEY_PROPERTIES, propBuilder);

@@ -29,15 +29,15 @@ import org.apache.sling.feature.ExtensionState;
 import org.apache.sling.feature.ExtensionType;
 import org.junit.Test;
 
-public class FactoryConfigurationTest {
+public class FactoryConfigurationDescriptionTest {
 
     @Test public void testClear() {
-        final FactoryConfiguration entity = new FactoryConfiguration();
+        final FactoryConfigurationDescription entity = new FactoryConfigurationDescription();
         entity.getAttributes().put("a", Json.createValue(5));
         entity.setDeprecated("d");
         entity.setTitle("t");
         entity.setDescription("x");
-        entity.getProperties().put("a", new Property());
+        entity.getPropertyDescriptions().put("a", new PropertyDescription());
         entity.getOperations().add(Operation.CREATE);
         entity.getInternalNames().add("internal");
         entity.clear();
@@ -45,7 +45,7 @@ public class FactoryConfigurationTest {
         assertNull(entity.getDeprecated());
         assertNull(entity.getTitle());
         assertNull(entity.getDescription());
-        assertTrue(entity.getProperties().isEmpty());
+        assertTrue(entity.getPropertyDescriptions().isEmpty());
         assertTrue(entity.getOperations().isEmpty());
         assertTrue(entity.getInternalNames().isEmpty());
     }
@@ -54,7 +54,7 @@ public class FactoryConfigurationTest {
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
         ext.setJSON("{ \"internal-names\" : [ \"a\", \"b\"], \"operations\" : [\"create\"]}");
 
-        final FactoryConfiguration entity = new FactoryConfiguration();
+        final FactoryConfigurationDescription entity = new FactoryConfigurationDescription();
         entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
         assertEquals(2, entity.getInternalNames().size());
         assertTrue(entity.getInternalNames().contains("a"));
@@ -64,7 +64,7 @@ public class FactoryConfigurationTest {
     }
 
     @Test public void testToJSONObject() throws IOException {
-        final FactoryConfiguration entity = new FactoryConfiguration();
+        final FactoryConfigurationDescription entity = new FactoryConfigurationDescription();
         entity.getInternalNames().add("a");
         entity.getInternalNames().add("b");
         entity.getOperations().add(Operation.UPDATE);

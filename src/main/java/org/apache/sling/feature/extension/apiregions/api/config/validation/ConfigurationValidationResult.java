@@ -14,8 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.feature.extension.apiregions.api.config;
+package org.apache.sling.feature.extension.apiregions.api.config.validation;
 
-public class Configuration extends ConfigurableEntity {
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+public class ConfigurationValidationResult {
+
+    private final Map<String, PropertyValidationResult> propertyErrors = new HashMap<>();
+
+    private final List<String> globalErrors = new ArrayList<>();
+    
+    public boolean isValid() {
+        return propertyErrors.isEmpty() && globalErrors.isEmpty();
+    }
+
+    public List<String> getGlobalErrors() {
+        return this.globalErrors;
+    }
+    
+    public Map<String, PropertyValidationResult> getPropertyErrors() {
+        return propertyErrors;
+    }
 }
