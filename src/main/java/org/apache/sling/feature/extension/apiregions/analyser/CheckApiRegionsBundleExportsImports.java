@@ -250,14 +250,17 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
             final String key = "Bundle " + entry.getKey().getArtifact().getId().getArtifactId() + ":" + entry.getKey().getArtifact().getId().getVersion();
 
             if ( !entry.getValue().importWithoutVersion.isEmpty() ) {
-                ctx.reportWarning(key + " is importing package(s) " + getPackageInfo(entry.getValue().importWithoutVersion, false) + " without specifying a version range.");
+                ctx.reportArtifactWarning(entry.getKey().getArtifact().getId(),
+                        key + " is importing package(s) " + getPackageInfo(entry.getValue().importWithoutVersion, false) + " without specifying a version range.");
             }
             if ( !entry.getValue().exportWithoutVersion.isEmpty() ) {
-                ctx.reportWarning(key + " is exporting package(s) " + getPackageInfo(entry.getValue().importWithoutVersion, false) + " without a version.");
+                ctx.reportArtifactWarning(entry.getKey().getArtifact().getId(),
+                        key + " is exporting package(s) " + getPackageInfo(entry.getValue().importWithoutVersion, false) + " without a version.");
             }
 
             if ( !entry.getValue().missingExports.isEmpty() ) {
-                ctx.reportError(key + " is importing package(s) " + getPackageInfo(entry.getValue().missingExports, false) + " in start level " +
+                ctx.reportArtifactError(entry.getKey().getArtifact().getId(),
+                        key + " is importing package(s) " + getPackageInfo(entry.getValue().missingExports, false) + " in start level " +
                         String.valueOf(entry.getKey().getArtifact().getStartOrder())
                         + " but no bundle is exporting these for that start level.");
                 errorReported = true;
@@ -274,7 +277,7 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
                         message.append("\n" + pkg.getName() + " is exported in regions " + regions.getKey() + " but it is imported in regions " + regions.getValue());
                     }
                 }
-                ctx.reportError(message.toString());
+                ctx.reportArtifactError(entry.getKey().getArtifact().getId(), message.toString());
                 errorReported = true;
             }
         }
