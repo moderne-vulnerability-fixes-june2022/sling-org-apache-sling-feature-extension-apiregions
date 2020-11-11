@@ -35,13 +35,22 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
 
     private final List<String> internalNames = new ArrayList<>();
 
+    public FactoryConfigurationDescription() {
+        this.setDefaults();
+    }
+
+    void setDefaults() {
+        this.getOperations().add(Operation.CREATE);
+        this.getOperations().add(Operation.UPDATE);
+    }
+    
     /**
      * Clear the object and remove all metadata
      */
     public void clear() {
         super.clear();
-		this.operations.clear();
-		this.internalNames.clear();
+        this.setDefaults();
+        this.internalNames.clear();
     }
 
 	/**
@@ -56,6 +65,7 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
             JsonValue val;
             val = this.getAttributes().remove(InternalConstants.KEY_OPERATIONS);
             if ( val != null ) {
+                this.getOperations().clear();
                 for(final JsonValue innerVal : val.asJsonArray()) {
                     final String v = getString(innerVal).toUpperCase();
                     this.getOperations().add(Operation.valueOf(v));
@@ -97,7 +107,7 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
     JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objBuilder = super.createJson();
 		
-		if ( !this.getOperations().isEmpty() ) {
+		if ( !this.getOperations().isEmpty() && this.getOperations().size() != 2 ) {
             final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
             for(final Operation op : this.getOperations()) {
                 arrayBuilder.add(op.name());

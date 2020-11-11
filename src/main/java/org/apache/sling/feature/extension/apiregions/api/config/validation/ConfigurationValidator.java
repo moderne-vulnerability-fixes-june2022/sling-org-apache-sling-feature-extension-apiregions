@@ -30,10 +30,13 @@ import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescript
 import org.osgi.framework.Constants;
 
 /**
- * Validate values
+ * Validator to validate a configuration
  */
 public class ConfigurationValidator {
     
+    /**
+     * List of properties which are always allowed
+     */
     public static final List<String> ALLOWED_PROPERTIES = Arrays.asList(Constants.SERVICE_DESCRIPTION,
         Constants.SERVICE_VENDOR,
         Constants.SERVICE_RANKING);
@@ -43,6 +46,9 @@ public class ConfigurationValidator {
 
     /**
      * Validate a configuration
+     * @param The configuration description 
+     * @param config The OSGi configuration
+     * @return The result
      */
     public ConfigurationValidationResult validate(final ConfigurableEntity desc, final Configuration config) {
         final ConfigurationValidationResult result = new ConfigurationValidationResult();
@@ -56,40 +62,46 @@ public class ConfigurationValidator {
                 } else if ( fDesc.getInternalNames().contains(config.getName())) {
                     result.getGlobalErrors().add("Factory configuration with name " + config.getName() + " not allowed");
                 } else {
-                    validateProperties(desc, config, result.getPropertyErrors());
+                    validateProperties(desc, config, result.getPropertyResults());
                 }
             }
         } else {
             if ( !(desc instanceof ConfigurationDescription) ) {
                 result.getGlobalErrors().add("Configuration cannot be validated against factory configuration description");
             } else {
-                validateProperties(desc, config, result.getPropertyErrors());
+                validateProperties(desc, config, result.getPropertyResults());
             }
         }
 
+        if ( desc.getDeprecated() != null ) {
+            result.getWarnings().add(desc.getDeprecated());
+        }
         return result;
     }
 
     void validateProperties(final ConfigurableEntity desc, 
             final Configuration configuration, 
-            final Map<String, PropertyValidationResult> errors) {
+            final Map<String, PropertyValidationResult> results) {
         final Dictionary<String, Object> properties = configuration.getConfigurationProperties();
         for(final Map.Entry<String, PropertyDescription> propEntry : desc.getPropertyDescriptions().entrySet()) {
             final Object value = properties.get(propEntry.getKey());
             final PropertyValidationResult result = propertyValidator.validate(propEntry.getValue(), value);
-            if ( !result.isValid()) {
-                errors.put(propEntry.getKey(), result);
-            }
+            results.put(propEntry.getKey(), result);
         }
         final Enumeration<String> keyEnum = properties.keys();
         while ( keyEnum.hasMoreElements() ) {
             final String propName = keyEnum.nextElement();
-            if ( !desc.getPropertyDescriptions().containsKey(propName) && !ALLOWED_PROPERTIES.contains(propName)) {
-                errors.computeIfAbsent(propName, key -> new PropertyValidationResult()).getErrors().add("Property is not allowed");
-            } else if ( Constants.SERVICE_RANKING.equals(propName) ) {
-                final Object value = properties.get(propName);
-                if ( !(value instanceof Integer) ) {
-                    errors.computeIfAbsent(propName, key -> new PropertyValidationResult()).getErrors().add("service.ranking must be of type Integer");
+            if ( !desc.getPropertyDescriptions().containsKey(propName) ) {
+                final PropertyValidationResult result = new PropertyValidationResult();
+                results.put(propName, result);
+                if ( Constants.SERVICE_RANKING.equals(propName) ) {
+                    final Object value = properties.get(propName);
+                    if ( !(value instanceof Integer) ) {
+                        result.getErrors().add("service.ranking must be of type Integer");
+                    }    
+                } else if ( !ALLOWED_PROPERTIES.contains(propName) ) {
+                    result.getErrors().add("Property is not allowed");
+
                 }
             }
         }

@@ -27,7 +27,7 @@ import org.apache.sling.feature.extension.apiregions.api.config.Option;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
 
 /**
- * Validate values
+ * Validate a configuration property
  */
 public class PropertyValidator {
     
@@ -68,11 +68,21 @@ public class PropertyValidator {
                     validateValue(prop, val, result.getErrors());
                 }
                 validateList(prop, values, result.getErrors());
-			}
+            }
+            
+            if ( prop.getDeprecated() != null ) {
+                result.getWarnings().add(prop.getDeprecated());
+            }
 		}
 		return result;
 	}
 
+    /**
+     * Validate a multi value
+     * @param prop The property description
+     * @param values The values
+     * @param messages The messages to record errors
+     */
     void validateList(final PropertyDescription prop, final List<Object> values, final List<String> messages) {
         if ( prop.getCardinality() > 0 && values.size() > prop.getCardinality() ) {
             messages.add("Array/collection contains too many elements, only " + prop.getCardinality() + " allowed");
@@ -132,7 +142,9 @@ public class PropertyValidator {
 							break;
 				case PASSWORD : validatePassword(prop, value, messages);
 							break;
-				case URL : validateURL(prop, value, messages);
+                case URL : validateURL(prop, value, messages);
+                           break;
+                case PATH : validatePath(prop, value, messages);
 							break;
 				default : messages.add("Unable to validate value - unknown property type : " + prop.getType());
             }
@@ -306,7 +318,15 @@ public class PropertyValidator {
 		}
 	}
 
-	void validateRange(final PropertyDescription prop, final Number value, final List<String> messages) {
+	void validatePath(final PropertyDescription prop, final Object value, final List<String> messages) {
+		final String val = value.toString();
+		// poor man's validation 
+		if ( !val.startsWith("/") ) {
+			messages.add("Not a valid path " + val);
+		}
+	}
+
+    void validateRange(final PropertyDescription prop, final Number value, final List<String> messages) {
 	    if ( prop.getRange() != null ) {
             if ( prop.getRange().getMin() != null ) {
                 if ( value instanceof Float || value instanceof Double ) {

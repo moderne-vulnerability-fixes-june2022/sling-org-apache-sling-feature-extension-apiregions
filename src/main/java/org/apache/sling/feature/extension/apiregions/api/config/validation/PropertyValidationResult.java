@@ -23,6 +23,8 @@ public class PropertyValidationResult {
 
     private final List<String> errors = new ArrayList<>();
 
+    private final List<String> warnings = new ArrayList<>();
+
     /**
      * Is the property value valid?
      * @return {@code true} if the value is valid
@@ -38,5 +40,13 @@ public class PropertyValidationResult {
      */
 	public List<String> getErrors() {
         return errors;
+    }
+
+    /**
+     * Return the list of warnings
+     * @return The list of warnings - might be empty
+     */
+    public List<String> getWarnings() {
+        return this.warnings;
     }
 }

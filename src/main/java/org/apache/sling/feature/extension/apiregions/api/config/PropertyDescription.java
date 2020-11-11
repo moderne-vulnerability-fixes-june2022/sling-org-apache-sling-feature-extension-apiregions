@@ -148,7 +148,7 @@ public class PropertyDescription extends DescribableEntity {
     JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objectBuilder = super.createJson();
 
-		if ( this.getType() != null ) {
+		if ( this.getType() != null && this.getType() != PropertyType.STRING ) {
 			this.setString(objectBuilder, InternalConstants.KEY_TYPE, this.getType().name());
 	    }
 		if ( this.getCardinality() != 1 ) {

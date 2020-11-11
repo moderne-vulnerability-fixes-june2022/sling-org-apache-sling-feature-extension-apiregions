@@ -43,25 +43,21 @@ public class FeatureValidator {
                 final FactoryConfigurationDescription desc = api.getFactoryConfigurationDescriptions().get(config.getFactoryPid());
                 if ( desc != null ) {
                     final ConfigurationValidationResult r = configurationValidator.validate(desc, config);
-                    if ( !r.isValid()) {
-                        result.getConfigurationErrors().put(config.getPid(), r);
-                    }
+                    result.getConfigurationResults().put(config.getPid(), r);
                 } else if ( api.getInternalFactoryConfigurations().contains(config.getFactoryPid())) {
                     final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
                     cvr.getGlobalErrors().add("Factory configuration is not allowed");
-                    result.getConfigurationErrors().put(config.getPid(), cvr);
+                    result.getConfigurationResults().put(config.getPid(), cvr);
                 }
             } else {
                 final ConfigurationDescription desc = api.getConfigurationDescriptions().get(config.getPid());
                 if ( desc != null ) {
                     final ConfigurationValidationResult r = configurationValidator.validate(desc, config);
-                    if ( !r.isValid()) {
-                        result.getConfigurationErrors().put(config.getPid(), r);
-                    }
+                    result.getConfigurationResults().put(config.getPid(), r);
                 } else if ( api.getInternalConfigurations().contains(config.getPid())) {
                     final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
                     cvr.getGlobalErrors().add("Configuration is not allowed");
-                    result.getConfigurationErrors().put(config.getPid(), cvr);
+                    result.getConfigurationResults().put(config.getPid(), cvr);
                 }
             }
         }

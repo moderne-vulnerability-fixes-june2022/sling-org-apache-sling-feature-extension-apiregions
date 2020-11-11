@@ -245,6 +245,17 @@ public class PropertyValidatorTest {
         assertTrue(messages.isEmpty());
     }
 
+    @Test public void testValidatePath() {
+        final List<String> messages = new ArrayList<>();
+
+        validator.validatePath(null, "/a/b/c", messages);
+        assertTrue(messages.isEmpty());
+
+        validator.validateEmail(null, "hello world", messages);
+        assertEquals(1, messages.size());
+        messages.clear();
+    }
+    
     @Test public void testValidateRange() {
         final List<String> messages = new ArrayList<>();
         final PropertyDescription prop = new PropertyDescription();
@@ -388,5 +399,15 @@ public class PropertyValidatorTest {
         values.remove("a");
         validator.validateList(prop, values, messages);
         assertTrue(messages.isEmpty());
+    }
+
+    @Test public void testDeprecation() {
+        final PropertyDescription prop = new PropertyDescription();
+        prop.setDeprecated("This is deprecated");
+
+        final PropertyValidationResult result = validator.validate(prop, "foo");
+        assertTrue(result.isValid());
+        assertEquals(1, result.getWarnings().size());
+        assertEquals("This is deprecated", result.getWarnings().get(0));
     }
 }

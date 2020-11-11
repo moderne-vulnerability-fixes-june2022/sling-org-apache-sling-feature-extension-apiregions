@@ -68,7 +68,7 @@ public class ConfigurableEntityTest {
         entity.getPropertyDescriptions().put("b", new PropertyDescription());
 
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
-        ext.setJSON("{ \"properties\" : { \"a\" : {\"type\":\"STRING\"}, \"b\" : {\"type\":\"STRING\"}}}");
+        ext.setJSON("{ \"properties\" : { \"a\" : {}, \"b\" : {}}}");
 
         assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
     }

@@ -32,6 +32,7 @@ public enum PropertyType {
     BOOLEAN,
     PASSWORD,
     URL,
-    EMAIL;
+    EMAIL,
+    PATH;
  
 }

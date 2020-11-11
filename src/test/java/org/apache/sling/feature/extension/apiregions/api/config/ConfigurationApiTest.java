@@ -108,7 +108,7 @@ public class ConfigurationApiTest {
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
         ext.setJSON("{ \"a\" : 5, \"configurations\" : { \"pid\": {}}, " +
             "\"factory-configurations\" : { \"factory\" : {}}," +
-            "\"framework-properties\" : { \"prop\" : { \"type\" : \"STRING\"}}," +
+            "\"framework-properties\" : { \"prop\" : {}}," +
             "\"internal-configurations\" : [\"ipid\"],"+
             "\"internal-factory-configurations\" : [\"ifactory\"],"+
             "\"internal-framework-properties\" : [\"iprop\"]}");

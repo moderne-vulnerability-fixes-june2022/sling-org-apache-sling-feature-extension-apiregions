@@ -23,19 +23,38 @@ import java.util.Map;
 
 public class ConfigurationValidationResult {
 
-    private final Map<String, PropertyValidationResult> propertyErrors = new HashMap<>();
+    private final Map<String, PropertyValidationResult> propertyResults = new HashMap<>();
 
     private final List<String> globalErrors = new ArrayList<>();
     
+    private final List<String> warnings = new ArrayList<>();
+
     public boolean isValid() {
-        return propertyErrors.isEmpty() && globalErrors.isEmpty();
+        boolean valid = globalErrors.isEmpty();
+        if ( valid ) {
+            for(final PropertyValidationResult r : this.propertyResults.values()) {
+                if ( r.isValid() ) {
+                    valid = false;
+                    break;
+                }
+            }
+        }
+        return valid;
     }
 
     public List<String> getGlobalErrors() {
         return this.globalErrors;
     }
     
-    public Map<String, PropertyValidationResult> getPropertyErrors() {
-        return propertyErrors;
+    public Map<String, PropertyValidationResult> getPropertyResults() {
+        return propertyResults;
+    }
+
+    /**
+     * Return the list of warnings
+     * @return The list of warnings - might be empty
+     */
+    public List<String> getWarnings() {
+        return this.warnings;
     }
 }

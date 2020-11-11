@@ -129,7 +129,7 @@ public class PropertyTest {
         entity.setExcludes(null);
         entity.setIncludes(null);
 
-        ext.setJSON("{ \"type\" : \"STRING\", \"variable\" : \"var\", \"regex\": \".\"}");
+        ext.setJSON("{ \"variable\" : \"var\", \"regex\": \".\"}");
 
         assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
     }

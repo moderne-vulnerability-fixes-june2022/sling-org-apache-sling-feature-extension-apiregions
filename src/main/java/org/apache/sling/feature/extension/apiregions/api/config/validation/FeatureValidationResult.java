@@ -21,13 +21,20 @@ import java.util.Map;
 
 public class FeatureValidationResult {
 
-    private final Map<String, ConfigurationValidationResult> configurationErrors = new HashMap<>();
+    private final Map<String, ConfigurationValidationResult> configurationResults = new HashMap<>();
 
     public boolean isValid() {
-        return configurationErrors.isEmpty();
+        boolean valid = true;
+        for(final ConfigurationValidationResult r : this.configurationResults.values()) {
+            if ( r.isValid() ) {
+                valid = false;
+                break;
+            }
+        }
+        return valid;
     }
 
-    public Map<String, ConfigurationValidationResult> getConfigurationErrors() {
-        return this.configurationErrors;
+    public Map<String, ConfigurationValidationResult> getConfigurationResults() {
+        return this.configurationResults;
     }
 }

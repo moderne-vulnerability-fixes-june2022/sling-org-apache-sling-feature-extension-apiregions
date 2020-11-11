@@ -46,7 +46,7 @@ public class FactoryConfigurationDescriptionTest {
         assertNull(entity.getTitle());
         assertNull(entity.getDescription());
         assertTrue(entity.getPropertyDescriptions().isEmpty());
-        assertTrue(entity.getOperations().isEmpty());
+        assertEquals(2, entity.getOperations().size());
         assertTrue(entity.getInternalNames().isEmpty());
     }
 
@@ -67,6 +67,7 @@ public class FactoryConfigurationDescriptionTest {
         final FactoryConfigurationDescription entity = new FactoryConfigurationDescription();
         entity.getInternalNames().add("a");
         entity.getInternalNames().add("b");
+        entity.getOperations().clear();
         entity.getOperations().add(Operation.UPDATE);
 
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
