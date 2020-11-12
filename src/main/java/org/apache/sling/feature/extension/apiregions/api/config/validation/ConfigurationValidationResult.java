@@ -33,7 +33,7 @@ public class ConfigurationValidationResult {
         boolean valid = globalErrors.isEmpty();
         if ( valid ) {
             for(final PropertyValidationResult r : this.propertyResults.values()) {
-                if ( r.isValid() ) {
+                if ( !r.isValid() ) {
                     valid = false;
                     break;
                 }

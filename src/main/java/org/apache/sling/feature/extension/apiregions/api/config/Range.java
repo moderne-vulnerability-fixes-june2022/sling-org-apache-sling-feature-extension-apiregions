@@ -24,6 +24,9 @@ import javax.json.JsonObjectBuilder;
 
 import org.apache.felix.cm.json.Configurations;
 
+/**
+ * A numerical value range
+ */
 public class Range extends AttributeableEntity {
 
     /** The optional min value */
@@ -33,7 +36,7 @@ public class Range extends AttributeableEntity {
     private Number max;
 
     /**
-     * Clear the object and remove all metadata
+     * Clear the object and reset to defaults
      */
 	public void clear() {
         super.clear();
@@ -59,7 +62,7 @@ public class Range extends AttributeableEntity {
 
 	/**
      * Get the min value
-	 * @return the min
+	 * @return the min or {@code null}
 	 */
 	public Number getMin() {
 		return min;
@@ -75,7 +78,7 @@ public class Range extends AttributeableEntity {
 
 	/**
      * Get the max value
-	 * @return the max
+	 * @return the max or {@code null}
 	 */
 	public Number getMax() {
 		return max;

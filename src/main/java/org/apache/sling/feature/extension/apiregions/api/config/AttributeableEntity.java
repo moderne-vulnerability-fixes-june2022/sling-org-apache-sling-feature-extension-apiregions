@@ -28,13 +28,16 @@ import javax.json.JsonValue;
 
 import org.apache.felix.cm.json.Configurations;
 
+/**
+ * Abstract class used by all entities which allow additional attributes to be stored.
+ */
 public abstract class AttributeableEntity {
 	
 	/** The additional attributes */
 	private final Map<String, JsonValue> attributes = new LinkedHashMap<>();
 
     /**
-     * Clear the object and remove all metadata
+     * Clear the object and reset to defaults
      */
 	public void clear() {
 		this.attributes.clear();
@@ -54,6 +57,7 @@ public abstract class AttributeableEntity {
 	/**
 	 * Extract the metadata from the JSON object.
 	 * This method first calls {@link #clear()}
+     * 
 	 * @param jsonObj The JSON Object
 	 * @throws IOException If JSON parsing fails
 	 */
@@ -70,7 +74,7 @@ public abstract class AttributeableEntity {
 
 	/**
 	 * Get the attributes
-	 * @return The attributes
+	 * @return Mutable map of attributes, by attribute name
 	 */
 	public Map<String, JsonValue> getAttributes() {
         return this.attributes;
@@ -139,6 +143,9 @@ public abstract class AttributeableEntity {
 		return null;
 	}
 
+    /**
+     * Helper method to set a string value
+     */
     void setString(final JsonObjectBuilder builder, final String attributeName, final String value) {
 		if ( value != null ) {
 			builder.add(attributeName, value);

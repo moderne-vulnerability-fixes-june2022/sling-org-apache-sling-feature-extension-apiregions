@@ -26,7 +26,7 @@ public class FeatureValidationResult {
     public boolean isValid() {
         boolean valid = true;
         for(final ConfigurationValidationResult r : this.configurationResults.values()) {
-            if ( r.isValid() ) {
+            if ( !r.isValid() ) {
                 valid = false;
                 break;
             }

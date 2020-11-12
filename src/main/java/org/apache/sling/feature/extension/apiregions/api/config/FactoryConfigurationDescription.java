@@ -29,6 +29,9 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
+/**
+ * Description of an OSGi factory configuration
+ */
 public class FactoryConfigurationDescription extends ConfigurableEntity {
     
     private final Set<Operation> operations = new HashSet<>();
@@ -45,7 +48,7 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
     }
     
     /**
-     * Clear the object and remove all metadata
+     * Clear the object and set the defaults
      */
     public void clear() {
         super.clear();
@@ -56,6 +59,7 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
 	/**
 	 * Extract the metadata from the JSON object.
 	 * This method first calls {@link #clear()}
+     *
 	 * @param jsonObj The JSON Object
 	 * @throws IOException If JSON parsing fails
 	 */
@@ -69,6 +73,9 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
                 for(final JsonValue innerVal : val.asJsonArray()) {
                     final String v = getString(innerVal).toUpperCase();
                     this.getOperations().add(Operation.valueOf(v));
+                }
+                if ( this.getOperations().isEmpty() ) {
+                    throw new IOException("Operations must not be empty");
                 }
             }
             
@@ -85,14 +92,16 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
     }
 
    /**
-	 * @return the operations
+    * Get the operations
+	 * @return Mutable set of operations
 	 */
 	public Set<Operation> getOperations() {
 		return operations;
 	}
 
 	/**
-	 * @return the internalNames
+     * Get the internal factory configuration name
+	 * @return Mutable list of internal names
 	 */
 	public List<String> getInternalNames() {
 		return internalNames;

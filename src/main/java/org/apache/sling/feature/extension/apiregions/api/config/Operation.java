@@ -21,6 +21,6 @@ package org.apache.sling.feature.extension.apiregions.api.config;
  */
 public enum Operation {
     
-    CREATE,
-    UPDATE
+    CREATE, // allowed to create a factory configuration
+    UPDATE  // allowed to update a factory configuration
 }

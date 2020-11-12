@@ -17,7 +17,7 @@
 package org.apache.sling.feature.extension.apiregions.api.config;
 
 /**
- * A framework property
+ * A framework property description
  */
 public class FrameworkPropertyDescription extends PropertyDescription {
     

@@ -59,7 +59,7 @@ public class ConfigurationApi extends AttributeableEntity {
      * Get the configuration api from the extension.
      * 
      * @param ext The extension
-     * @return The configuration api or {@code null}.
+     * @return The configuration api or {@code null} if the extension is {@code null}.
      * @throws IllegalArgumentException If the extension is wrongly formatted
      */
     public static ConfigurationApi getConfigurationApi(final Extension ext) {
@@ -97,7 +97,7 @@ public class ConfigurationApi extends AttributeableEntity {
     private final List<String> internalFrameworkProperties = new ArrayList<>();
     
     /**
-     * Clear the object and remove all metadata
+     * Clear the object and reset to defaults
      */
     public void clear() {
         super.clear();
@@ -111,7 +111,8 @@ public class ConfigurationApi extends AttributeableEntity {
 
 	/**
 	 * Extract the metadata from the JSON object.
-	 * This method first calls {@link #clear()}
+	 * This method first calls {@link #clear()}.
+     * 
 	 * @param jsonObj The JSON Object
 	 * @throws IOException If JSON parsing fails
 	 */
@@ -174,7 +175,7 @@ public class ConfigurationApi extends AttributeableEntity {
 
     /**
      * Get the configuration descriptions
-	 * @return the configuration descriptions
+	 * @return Mutable map of configuration descriptions by pid
 	 */
 	public Map<String, ConfigurationDescription> getConfigurationDescriptions() {
 		return configurations;
@@ -182,7 +183,7 @@ public class ConfigurationApi extends AttributeableEntity {
 
 	/**
      * Get the factory configuration descriptions
-	 * @return the factories
+	 * @return Mutable map of factory descriptions by factory pid
 	 */
 	public Map<String, FactoryConfigurationDescription> getFactoryConfigurationDescriptions() {
 		return factories;
@@ -190,23 +191,23 @@ public class ConfigurationApi extends AttributeableEntity {
 
 	/**
      * Get the framework properties
-	 * @return the frameworkProperties
+	 * @return Mutable map of framework properties
 	 */
 	public Map<String, FrameworkPropertyDescription> getFrameworkPropertyDescriptions() {
 		return frameworkProperties;
 	}
 
 	/**
-     * Get the internal configuration names
-	 * @return the internalConfigurations
+     * Get the internal configuration pids
+	 * @return Mutable list of internal configuration pids
 	 */
 	public List<String> getInternalConfigurations() {
 		return internalConfigurations;
 	}
 
 	/**
-     * Get the internal factory names
-	 * @return the internalFactories
+     * Get the internal factory pids
+	 * @return Mutable list of internal factory configuration pids
 	 */
 	public List<String> getInternalFactoryConfigurations() {
 		return internalFactories;
@@ -214,7 +215,7 @@ public class ConfigurationApi extends AttributeableEntity {
 
 	/**
      * Get the internal framework property names
-	 * @return the internalFrameworkProperties
+	 * @return Mutable list of internal framework property names
 	 */
 	public List<String> getInternalFrameworkProperties() {
 		return internalFrameworkProperties;

@@ -22,13 +22,16 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
+/**
+ * Option for a property value
+ */
 public class Option extends DescribableEntity {
 
     /** The value for the option */
     private String value;
 
     /**
-     * Clear the object and remove all metadata
+     * Clear the object and reset to defaults
      */
     public void clear() {
         super.clear();
@@ -52,7 +55,7 @@ public class Option extends DescribableEntity {
     
     /**
      * Get the value for the option
-  	 * @return the value
+  	 * @return the value or {@code null}
      */
     public String getValue() {
         return value;

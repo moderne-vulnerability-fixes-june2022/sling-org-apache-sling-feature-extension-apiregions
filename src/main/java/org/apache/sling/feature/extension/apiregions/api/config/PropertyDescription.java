@@ -60,6 +60,9 @@ public class PropertyDescription extends DescribableEntity {
 	/** Required? */
 	private boolean required;
     
+    /**
+     * Create a new description
+     */
     public PropertyDescription() {
         this.setDefaults();
     }
@@ -71,7 +74,7 @@ public class PropertyDescription extends DescribableEntity {
     }
 
     /**
-     * Clear the object and remove all metadata
+     * Clear the object and reset to defaults
      */
 	public void clear() {
         super.clear();
@@ -222,7 +225,7 @@ public class PropertyDescription extends DescribableEntity {
 
 	/**
 	 * Get the variable
-	 * @return the variable
+	 * @return the variable or {@code null}
 	 */
 	public String getVariable() {
 		return variable;
@@ -302,7 +305,7 @@ public class PropertyDescription extends DescribableEntity {
 
 	/**
 	 * Get the regex
-	 * @return the regex
+	 * @return the regex or {@code null}
 	 */
 	public String getRegex() {
 		return pattern == null ? null : pattern.pattern();

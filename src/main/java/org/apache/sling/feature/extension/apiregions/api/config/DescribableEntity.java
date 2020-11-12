@@ -22,6 +22,10 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
+/**
+ * Abstract class for all describable entities, having an optional title,
+ * description and deprecation info.
+ */
 public abstract class DescribableEntity extends AttributeableEntity {
 	
 	/** The title */
@@ -34,7 +38,7 @@ public abstract class DescribableEntity extends AttributeableEntity {
 	private String deprecated;
 
 	/**
-     * Clear the object and remove all metadata
+     * Clear the object and reset to defaults
      */
 	public void clear() {
 		super.clear();
@@ -46,6 +50,7 @@ public abstract class DescribableEntity extends AttributeableEntity {
 	/**
 	 * Extract the metadata from the JSON object.
 	 * This method first calls {@link #clear()}
+     * 
 	 * @param jsonObj The JSON Object
 	 * @throws IOException If JSON parsing fails
 	 */
@@ -62,7 +67,7 @@ public abstract class DescribableEntity extends AttributeableEntity {
 
 	/**
 	 * Get the title
-	 * @return the title
+	 * @return The title or {@code null}
 	 */
 	public String getTitle() {
 		return title;
@@ -72,13 +77,13 @@ public abstract class DescribableEntity extends AttributeableEntity {
 	 * Set the title
 	 * @param title the title to set
 	 */
-	public void setTitle(String title) {
+	public void setTitle(final String title) {
 		this.title = title;
 	}
 
 	/**
 	 * Get the description
-	 * @return the description
+	 * @return the description or {@code null}
 	 */
 	public String getDescription() {
 		return description;
@@ -88,13 +93,13 @@ public abstract class DescribableEntity extends AttributeableEntity {
 	 * Set the description
 	 * @param description the description to set
 	 */
-	public void setDescription(String description) {
+	public void setDescription(final String description) {
 		this.description = description;
 	}
 
 	/**
 	 * Get the deprecation text
-	 * @return the deprecated
+	 * @return the deprecation text or {@code null}
 	 */
 	public String getDeprecated() {
 		return deprecated;
@@ -102,9 +107,9 @@ public abstract class DescribableEntity extends AttributeableEntity {
 
 	/**
 	 * Set the deprecation text
-	 * @param deprecated the deprecated to set
+	 * @param deprecated the deprecation text to set
 	 */
-	public void setDeprecated(String deprecated) {
+	public void setDeprecated(final String deprecated) {
 		this.deprecated = deprecated;
 	}
 

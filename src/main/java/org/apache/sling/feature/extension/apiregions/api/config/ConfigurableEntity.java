@@ -35,7 +35,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
     private final Map<String, PropertyDescription> properties = new LinkedHashMap<>();
 
     /**
-     * Clear the object and remove all metadata
+     * Clear the object and reset to defaults
      */
 	public void clear() {
         super.clear();
@@ -45,6 +45,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
 	/**
 	 * Extract the metadata from the JSON object.
 	 * This method first calls {@link #clear()}
+     * 
 	 * @param jsonObj The JSON Object
 	 * @throws IOException If JSON parsing fails
 	 */
@@ -66,7 +67,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
 
 	/**
 	 * Get the properties
-	 * @return The properties
+	 * @return Mutable map of properties by property name
 	 */
     public Map<String, PropertyDescription> getPropertyDescriptions() {
         return this.properties;
