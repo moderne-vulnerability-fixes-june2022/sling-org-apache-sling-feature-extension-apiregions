@@ -33,7 +33,7 @@ import org.apache.sling.feature.ExtensionState;
 import org.apache.sling.feature.ExtensionType;
 import org.junit.Test;
 
-public class PropertyTest {
+public class PropertyDescriptionTest {
 
     @Test public void testClear() {
         final PropertyDescription entity = new PropertyDescription();

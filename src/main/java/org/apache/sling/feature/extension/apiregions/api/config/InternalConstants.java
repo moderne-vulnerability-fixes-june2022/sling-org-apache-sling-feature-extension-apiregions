@@ -68,4 +68,6 @@ abstract class InternalConstants {
     static final String KEY_OPERATIONS = "operations";
 
     static final String KEY_INTERNAL_NAMES = "internal-names";
+
+    static final String KEY_REGION = "region";
 }

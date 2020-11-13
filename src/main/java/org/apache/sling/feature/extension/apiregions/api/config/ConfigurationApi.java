@@ -30,6 +30,7 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
 import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionState;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 
@@ -78,6 +79,32 @@ public class ConfigurationApi extends AttributeableEntity {
         }
     }
    
+    /**
+     * Set the configuration api as an extension to the feature
+     * @param feature The feature
+     * @param api The configuration api
+     * @throws IllegalStateException If the feature has already an extension of a wrong type
+     * @throws IllegalArgumentException If the api configuration can't be serialized to JSON
+     */
+    public static void setConfigurationApi(final Feature feature, final ConfigurationApi api) {
+        Extension ext = feature.getExtensions().getByName(EXTENSION_NAME);
+        if ( api == null ) {
+            if ( ext != null ) {
+                feature.getExtensions().remove(ext);
+            }
+        } else {
+            if ( ext == null ) {
+                ext = new Extension(ExtensionType.JSON, EXTENSION_NAME, ExtensionState.OPTIONAL);
+                feature.getExtensions().add(ext);
+            }
+            try {
+                ext.setJSONStructure(api.toJSONObject());
+            } catch ( final IOException ioe) {
+                throw new IllegalArgumentException(ioe);
+            }
+        }
+    }
+
     /** The map of configurations */
  	private final Map<String, ConfigurationDescription> configurations = new LinkedHashMap<>();
 
@@ -96,6 +123,9 @@ public class ConfigurationApi extends AttributeableEntity {
     /** The list of internal framework property names */
     private final List<String> internalFrameworkProperties = new ArrayList<>();
     
+    /** The configuration region of this feature */
+    private Region region;
+
     /**
      * Clear the object and reset to defaults
      */
@@ -107,6 +137,7 @@ public class ConfigurationApi extends AttributeableEntity {
         this.internalConfigurations.clear();
         this.internalFactories.clear();
         this.internalFrameworkProperties.clear();
+        this.setRegion(null);
     }
 
 	/**
@@ -119,6 +150,11 @@ public class ConfigurationApi extends AttributeableEntity {
     public void fromJSONObject(final JsonObject jsonObj) throws IOException {
         super.fromJSONObject(jsonObj);
         try {
+			final String typeVal = this.getString(InternalConstants.KEY_REGION);
+			if ( typeVal != null ) {
+                this.setRegion(Region.valueOf(typeVal.toUpperCase()));				
+			}
+
             JsonValue val;
             val = this.getAttributes().remove(InternalConstants.KEY_CONFIGURATIONS);
             if ( val != null ) {
@@ -222,6 +258,22 @@ public class ConfigurationApi extends AttributeableEntity {
     }
 
     /**
+     * Get the api configuration region
+     * @return The region or {@code null}
+     */
+    public Region getRegion() {
+        return this.region;
+    }
+
+    /**
+     * Set the api configuration region
+     * @param value The region to set
+     */
+    public void setRegion(final Region value) {
+        this.region = value;
+    }
+
+    /**
      * Convert this object into JSON
      *
      * @return The json object builder
@@ -229,6 +281,9 @@ public class ConfigurationApi extends AttributeableEntity {
      */
     JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objBuilder = super.createJson();
+        if ( this.getRegion() != null ) {
+            objBuilder.add(InternalConstants.KEY_REGION, this.getRegion().name());
+        }
         if ( !this.getConfigurationDescriptions().isEmpty() ) {
             final JsonObjectBuilder propBuilder = Json.createObjectBuilder();
             for(final Map.Entry<String, ConfigurationDescription> entry : this.getConfigurationDescriptions().entrySet()) {
@@ -270,7 +325,7 @@ public class ConfigurationApi extends AttributeableEntity {
                 arrayBuilder.add(n);
             }
 			objBuilder.add(InternalConstants.KEY_INTERNAL_FWK_PROPERTIES, arrayBuilder);
-		}
+        }
 
 		return objBuilder;
     }

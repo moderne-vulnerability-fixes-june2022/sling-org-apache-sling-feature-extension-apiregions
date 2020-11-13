@@ -17,6 +17,7 @@
 package org.apache.sling.feature.extension.apiregions.api.config;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -51,6 +52,20 @@ public class ConfigurationApiTest {
         ConfigurationApi.getConfigurationApi(f);
     }
 
+    @Test public void testSetConfigurationApi() {
+        final ConfigurationApi api = new ConfigurationApi();
+        final Feature f = new Feature(ArtifactId.parse("g:a:1"));
+
+        assertNull(f.getExtensions().getByName(ConfigurationApi.EXTENSION_NAME));
+
+        ConfigurationApi.setConfigurationApi(f, api);
+        assertNotNull(f.getExtensions().getByName(ConfigurationApi.EXTENSION_NAME));
+        assertNotNull(ConfigurationApi.getConfigurationApi(f));
+
+        ConfigurationApi.setConfigurationApi(f, null);
+        assertNull(f.getExtensions().getByName(ConfigurationApi.EXTENSION_NAME));
+    }
+
     @Test public void testClear() {
         final ConfigurationApi entity = new ConfigurationApi();
         entity.getAttributes().put("a", Json.createValue(5));
@@ -60,6 +75,7 @@ public class ConfigurationApiTest {
         entity.getInternalConfigurations().add("ipid");
         entity.getInternalFactoryConfigurations().add("ifactory");
         entity.getInternalFrameworkProperties().add("iprop");
+        entity.setRegion(Region.GLOBAL);
         entity.clear();
         assertTrue(entity.getAttributes().isEmpty());
         assertTrue(entity.getConfigurationDescriptions().isEmpty());
@@ -68,6 +84,7 @@ public class ConfigurationApiTest {
         assertTrue(entity.getInternalConfigurations().isEmpty());
         assertTrue(entity.getInternalFactoryConfigurations().isEmpty());
         assertTrue(entity.getInternalFrameworkProperties().isEmpty());
+        assertNull(entity.getRegion());
     }
 
     @Test public void testFromJSONObject() throws IOException {
@@ -77,7 +94,8 @@ public class ConfigurationApiTest {
             "\"framework-properties\" : { \"prop\" : { \"type\" : \"STRING\"}}," +
             "\"internal-configurations\" : [\"ipid\"],"+
             "\"internal-factory-configurations\" : [\"ifactory\"],"+
-            "\"internal-framework-properties\" : [\"iprop\"]}");
+            "\"internal-framework-properties\" : [\"iprop\"],"+
+            "\"region\" : \"INTERNAL\"}");
 
         final ConfigurationApi entity = new ConfigurationApi();
         entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
@@ -93,6 +111,7 @@ public class ConfigurationApiTest {
         assertTrue(entity.getInternalConfigurations().contains("ipid"));
         assertTrue(entity.getInternalFactoryConfigurations().contains("ifactory"));
         assertTrue(entity.getInternalFrameworkProperties().contains("iprop"));
+        assertEquals(Region.INTERNAL, entity.getRegion());
     }
 
     @Test public void testToJSONObject() throws IOException {
@@ -104,6 +123,7 @@ public class ConfigurationApiTest {
         entity.getInternalConfigurations().add("ipid");
         entity.getInternalFactoryConfigurations().add("ifactory");
         entity.getInternalFrameworkProperties().add("iprop");
+        entity.setRegion(Region.INTERNAL);
 
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
         ext.setJSON("{ \"a\" : 5, \"configurations\" : { \"pid\": {}}, " +
@@ -111,8 +131,9 @@ public class ConfigurationApiTest {
             "\"framework-properties\" : { \"prop\" : {}}," +
             "\"internal-configurations\" : [\"ipid\"],"+
             "\"internal-factory-configurations\" : [\"ifactory\"],"+
-            "\"internal-framework-properties\" : [\"iprop\"]}");
+            "\"internal-framework-properties\" : [\"iprop\"],"+
+            "\"region\" : \"INTERNAL\"}");
 
-        assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
+        assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());        
     }
 }
