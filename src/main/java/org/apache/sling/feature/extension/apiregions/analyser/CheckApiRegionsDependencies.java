@@ -22,7 +22,6 @@ import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
 import org.apache.sling.feature.scanner.BundleDescriptor;
 import org.apache.sling.feature.scanner.FeatureDescriptor;
 import org.apache.sling.feature.scanner.PackageInfo;
-import org.osgi.framework.Constants;
 
 public class CheckApiRegionsDependencies extends AbstractApiRegionsAnalyserTask {
 
@@ -55,27 +54,25 @@ public class CheckApiRegionsDependencies extends AbstractApiRegionsAnalyserTask 
                 if (exportingApisName.getExportByName(exportedPackage) != null) {
                     if (hidingApisName.getExportByName(exportedPackage) != null) {
                         String errorMessage = String.format(
-                                "Bundle '%s' (defined in feature '%s') declares '%s' in the '%s' header that is enlisted in both exporting '%s' and hiding '%s' APIs regions, please adjust Feature settings",
+                                "Bundle '%s' (defined in feature '%s') exports package '%s' that is declared in both visible '%s' and non-visible '%s' APIs regions",
                                 bundleDescriptor.getArtifact().getId(),
                                 ctx.getFeature().getId(),
                                 exportedPackage,
-                                Constants.EXPORT_PACKAGE,
                                 exportingApisName.getName(),
                                 hidingApisName.getName());
-                        ctx.reportError(errorMessage);
+                        ctx.reportArtifactError(bundleDescriptor.getArtifact().getId(), errorMessage);
                     } else {
                         for (String uses : packageInfo.getUses()) {
                             if (hidingApisName.getExportByName(uses) != null) {
                                 String errorMessage = String.format(
-                                        "Bundle '%s' (defined in feature '%s') declares '%s' in the '%s' header, enlisted in the '%s' region, which uses '%s' package that is in the '%s' region",
+                                        "Bundle '%s' (defined in feature '%s') exports package '%s' that is declared in the visible '%s' region, which uses package '%s' that is in the non-visible '%s' region",
                                         bundleDescriptor.getArtifact().getId(),
                                         ctx.getFeature().getId(),
                                         exportedPackage,
-                                        Constants.EXPORT_PACKAGE,
                                         exportingApisName.getName(),
                                         uses,
                                         hidingApisName.getName());
-                                ctx.reportError(errorMessage);
+                                ctx.reportArtifactError(bundleDescriptor.getArtifact().getId(), errorMessage);
                             }
                         }
                     }

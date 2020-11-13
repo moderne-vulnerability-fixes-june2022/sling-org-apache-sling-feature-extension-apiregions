@@ -36,7 +36,7 @@ public class CheckApiRegions extends AbstractApiRegionsAnalyserTask {
 
     @Override
     public String getName() {
-        return "Api Regions analyser task";
+        return "Api Regions analyser task that checks that listed packages are actually exported";
     }
 
     @Override

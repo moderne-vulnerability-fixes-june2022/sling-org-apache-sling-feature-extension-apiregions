@@ -91,9 +91,9 @@ public class CheckApiRegionsCrossFeatureDups extends AbstractApiRegionsAnalyserT
                                 + " which comes from a feature without API Regions: " + borgs
                                 + ". Both export package: " + pi.getName();
                             if (matchesSet(pkgName, warningPackages)) {
-                                ctx.reportWarning(msg);
+                                ctx.reportArtifactWarning(bd.getArtifact().getId(), msg);
                             } else {
-                                ctx.reportError(msg);
+                                ctx.reportArtifactError(bd.getArtifact().getId(), msg);
                             }
                         }
                     }

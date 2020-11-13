@@ -49,6 +49,7 @@ import org.mockito.stubbing.Answer;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -155,6 +156,11 @@ public abstract class AbstractApiRegionsAnalyserTaskTest<T extends AbstractApiRe
             errors.add(error);
             return null;
         }).when(ctx).reportError(anyString());
+        doAnswer(invocation -> {
+            String error = invocation.getArgument(1);
+            errors.add(error);
+            return null;
+        }).when(ctx).reportArtifactError(any(), anyString());
 
         analyserTask.execute(ctx);
 
