@@ -19,10 +19,17 @@ package org.apache.sling.feature.extension.apiregions.api.config.validation;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Validation result for a feature
+ */
 public class FeatureValidationResult {
 
     private final Map<String, ConfigurationValidationResult> configurationResults = new HashMap<>();
 
+    /**
+     * Is the configuration of the feature valid?
+     * @return {@code true} if it is valid
+     */
     public boolean isValid() {
         boolean valid = true;
         for(final ConfigurationValidationResult r : this.configurationResults.values()) {
@@ -34,6 +41,10 @@ public class FeatureValidationResult {
         return valid;
     }
 
+    /**
+     * Get the confiugration validation results.
+     * @return The results keyed by configuration PIDs
+     */
     public Map<String, ConfigurationValidationResult> getConfigurationResults() {
         return this.configurationResults;
     }

@@ -37,13 +37,13 @@ public class PropertyValidatorTest {
         final PropertyDescription prop = new PropertyDescription();
 
         // prop not required - no error
-        assertTrue(validator.validate(prop, null).getErrors().isEmpty());
-        assertTrue(validator.validate(prop, null).isValid());
+        assertTrue(validator.validate(null, prop).getErrors().isEmpty());
+        assertTrue(validator.validate(null, prop).isValid());
 
         // prop required - error
         prop.setRequired(true);
-        assertEquals(1, validator.validate(prop, null).getErrors().size());
-        assertFalse(validator.validate(prop, null).isValid());
+        assertEquals(1, validator.validate(null, prop).getErrors().size());
+        assertFalse(validator.validate(null, prop).isValid());
     }
 
     @Test public void testValidateBoolean() {
@@ -405,7 +405,7 @@ public class PropertyValidatorTest {
         final PropertyDescription prop = new PropertyDescription();
         prop.setDeprecated("This is deprecated");
 
-        final PropertyValidationResult result = validator.validate(prop, "foo");
+        final PropertyValidationResult result = validator.validate("foo", prop);
         assertTrue(result.isValid());
         assertEquals(1, result.getWarnings().size());
         assertEquals("This is deprecated", result.getWarnings().get(0));

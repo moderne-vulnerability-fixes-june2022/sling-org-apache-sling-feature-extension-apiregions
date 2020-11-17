@@ -27,6 +27,7 @@ import org.apache.sling.feature.extension.apiregions.api.config.ConfigurableEnti
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.FactoryConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
+import org.apache.sling.feature.extension.apiregions.api.config.Region;
 import org.osgi.framework.Constants;
 
 /**
@@ -46,30 +47,24 @@ public class ConfigurationValidator {
 
     /**
      * Validate a configuration
-     * @param The configuration description 
      * @param config The OSGi configuration
+     * @param desc The configuration description 
+     * @param region The optional region for the configuration
      * @return The result
      */
-    public ConfigurationValidationResult validate(final ConfigurableEntity desc, final Configuration config) {
+    public ConfigurationValidationResult validate(final Configuration config, final ConfigurableEntity desc, final Region region) {
         final ConfigurationValidationResult result = new ConfigurationValidationResult();
         if ( config.isFactoryConfiguration() ) {
             if ( !(desc instanceof FactoryConfigurationDescription) ) {
                 result.getGlobalErrors().add("Factory configuration cannot be validated against non factory configuration description");
             } else {
-                final FactoryConfigurationDescription fDesc = (FactoryConfigurationDescription)desc;
-                if ( fDesc.getOperations().isEmpty() ) {
-                    result.getGlobalErrors().add("Factory configuration not allowed");
-                } else if ( fDesc.getInternalNames().contains(config.getName())) {
-                    result.getGlobalErrors().add("Factory configuration with name " + config.getName() + " not allowed");
-                } else {
-                    validateProperties(desc, config, result.getPropertyResults());
-                }
+                validateProperties(desc, config, result.getPropertyResults(), region);
             }
         } else {
             if ( !(desc instanceof ConfigurationDescription) ) {
                 result.getGlobalErrors().add("Configuration cannot be validated against factory configuration description");
             } else {
-                validateProperties(desc, config, result.getPropertyResults());
+                validateProperties(desc, config, result.getPropertyResults(), region);
             }
         }
 
@@ -81,11 +76,12 @@ public class ConfigurationValidator {
 
     void validateProperties(final ConfigurableEntity desc, 
             final Configuration configuration, 
-            final Map<String, PropertyValidationResult> results) {
+            final Map<String, PropertyValidationResult> results,
+            final Region region) {
         final Dictionary<String, Object> properties = configuration.getConfigurationProperties();
         for(final Map.Entry<String, PropertyDescription> propEntry : desc.getPropertyDescriptions().entrySet()) {
             final Object value = properties.get(propEntry.getKey());
-            final PropertyValidationResult result = propertyValidator.validate(propEntry.getValue(), value);
+            final PropertyValidationResult result = propertyValidator.validate(value, propEntry.getValue());
             results.put(propEntry.getKey(), result);
         }
         final Enumeration<String> keyEnum = properties.keys();
@@ -99,9 +95,8 @@ public class ConfigurationValidator {
                     if ( !(value instanceof Integer) ) {
                         result.getErrors().add("service.ranking must be of type Integer");
                     }    
-                } else if ( !ALLOWED_PROPERTIES.contains(propName) ) {
+                } else if ( !ALLOWED_PROPERTIES.contains(propName) && region != Region.INTERNAL ) {
                     result.getErrors().add("Property is not allowed");
-
                 }
             }
         }

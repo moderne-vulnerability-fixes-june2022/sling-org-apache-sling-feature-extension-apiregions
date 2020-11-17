@@ -25,6 +25,7 @@ import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationDes
 import org.apache.sling.feature.extension.apiregions.api.config.FactoryConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyType;
+import org.apache.sling.feature.extension.apiregions.api.config.Region;
 import org.junit.Test;
 import org.osgi.framework.Constants;
 
@@ -36,7 +37,7 @@ public class ConfigurationValidatorTest {
         final Configuration cfg = new Configuration("org.apache");
         final FactoryConfigurationDescription fcd = new FactoryConfigurationDescription();
 
-        final ConfigurationValidationResult result = validator.validate(fcd, cfg);
+        final ConfigurationValidationResult result = validator.validate(cfg, fcd, null);
         assertFalse(result.isValid());
         assertEquals(1, result.getGlobalErrors().size());
     }
@@ -45,7 +46,7 @@ public class ConfigurationValidatorTest {
         final Configuration cfg = new Configuration("org.apache~foo");
         final ConfigurationDescription fcd = new ConfigurationDescription();
 
-        final ConfigurationValidationResult result = validator.validate(fcd, cfg);
+        final ConfigurationValidationResult result = validator.validate(cfg, fcd, null);
         assertFalse(result.isValid());
         assertEquals(1, result.getGlobalErrors().size());
     }
@@ -54,12 +55,12 @@ public class ConfigurationValidatorTest {
         final Configuration cfg = new Configuration("org.apache");
         final ConfigurationDescription cd = new ConfigurationDescription();
         
-        ConfigurationValidationResult result = validator.validate(cd, cfg);
+        ConfigurationValidationResult result = validator.validate(cfg, cd, null);
         assertTrue(result.isValid());
         assertTrue(result.getWarnings().isEmpty());
 
         cd.setDeprecated("this is deprecated");
-        result = validator.validate(cd, cfg);
+        result = validator.validate(cfg, cd, null);
         assertTrue(result.isValid());
         assertFalse(result.getWarnings().isEmpty());
         assertEquals("this is deprecated", result.getWarnings().get(0));
@@ -70,11 +71,11 @@ public class ConfigurationValidatorTest {
         final ConfigurationDescription cd = new ConfigurationDescription();
         cfg.getProperties().put(Constants.SERVICE_RANKING, 5); 
 
-        ConfigurationValidationResult result = validator.validate(cd, cfg);
+        ConfigurationValidationResult result = validator.validate(cfg, cd, null);
         assertTrue(result.isValid());
 
         cfg.getProperties().put(Constants.SERVICE_RANKING, "5");
-        result = validator.validate(cd, cfg);
+        result = validator.validate(cfg, cd, null);
         assertFalse(result.isValid());
     }
 
@@ -84,7 +85,7 @@ public class ConfigurationValidatorTest {
         cfg.getProperties().put(Constants.SERVICE_DESCRIPTION, "desc");
         cfg.getProperties().put(Constants.SERVICE_VENDOR, "vendor");
 
-        ConfigurationValidationResult result = validator.validate(cd, cfg);
+        ConfigurationValidationResult result = validator.validate(cfg, cd, null);
         assertTrue(result.isValid());
     }
 
@@ -96,17 +97,22 @@ public class ConfigurationValidatorTest {
         final PropertyDescription prop = new PropertyDescription();
         cd.getPropertyDescriptions().put("a", prop);
 
-        ConfigurationValidationResult result = validator.validate(cd, cfg);
+        ConfigurationValidationResult result = validator.validate(cfg, cd, Region.GLOBAL);
         assertTrue(result.isValid());
         assertEquals(1, result.getPropertyResults().size());
         assertTrue(result.getPropertyResults().get("a").isValid());
 
         cfg.getProperties().put("b", "vendor");
-        result = validator.validate(cd, cfg);
+        result = validator.validate(cfg, cd, Region.GLOBAL);
         assertFalse(result.isValid());
         assertEquals(2, result.getPropertyResults().size());
         assertTrue(result.getPropertyResults().get("a").isValid());
         assertFalse(result.getPropertyResults().get("b").isValid());
+
+        // allowed if internal
+        result = validator.validate(cfg, cd, Region.INTERNAL);
+        assertTrue(result.isValid());
+        assertEquals(2, result.getPropertyResults().size());
     }
 
     @Test public void testInvalidProperty() {
@@ -121,7 +127,7 @@ public class ConfigurationValidatorTest {
         propB.setType(PropertyType.INTEGER);
         cd.getPropertyDescriptions().put("b", propB);
 
-        ConfigurationValidationResult result = validator.validate(cd, cfg);
+        ConfigurationValidationResult result = validator.validate(cfg, cd, null);
         assertFalse(result.isValid());
         assertEquals(2, result.getPropertyResults().size());
         assertTrue(result.getPropertyResults().get("a").isValid());

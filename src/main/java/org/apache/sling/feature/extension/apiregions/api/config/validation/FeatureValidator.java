@@ -16,11 +16,17 @@
  */
 package org.apache.sling.feature.extension.apiregions.api.config.validation;
 
+import java.util.List;
+
+import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Feature;
+import org.apache.sling.feature.builder.FeatureProvider;
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationApi;
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.FactoryConfigurationDescription;
+import org.apache.sling.feature.extension.apiregions.api.config.Operation;
+import org.apache.sling.feature.extension.apiregions.api.config.Region;
 
 /**
  * Validator to validate a feature
@@ -29,37 +35,123 @@ public class FeatureValidator {
     
     private final ConfigurationValidator configurationValidator = new ConfigurationValidator();
 
+    private volatile FeatureProvider featureProvider;
+
+    /**
+     * Get the current feature provider
+	 * @return the feature provider or {@code null}
+	 */
+	public FeatureProvider getFeatureProvider() {
+		return featureProvider;
+	}
+
+	/**
+     * Set the feature provider
+	 * @param featureProvider the feature provider to set
+	 */
+	public void setFeatureProvider(final FeatureProvider provider) {
+		this.featureProvider = provider;
+    }
+    
     /**
      * Validate the feature against the configuration API
-     * @param api The configuration API
      * @param feature The feature
+     * @param api The configuration API
      * @return A {@code FeatureValidationResult}
+     * @throws IllegalArgumentException If api is {@code null}
      */
-    public FeatureValidationResult validate(final ConfigurationApi api, final Feature feature) {
+    public FeatureValidationResult validate(final Feature feature, final ConfigurationApi api) {
         final FeatureValidationResult result = new FeatureValidationResult();
+        if ( api == null ) {
+            throw new IllegalArgumentException();
+        }
 
         for(final Configuration config : feature.getConfigurations()) {
-            if ( config.isFactoryConfiguration() ) {
-                final FactoryConfigurationDescription desc = api.getFactoryConfigurationDescriptions().get(config.getFactoryPid());
-                if ( desc != null ) {
-                    final ConfigurationValidationResult r = configurationValidator.validate(desc, config);
-                    result.getConfigurationResults().put(config.getPid(), r);
-                } else if ( api.getInternalFactoryConfigurations().contains(config.getFactoryPid())) {
-                    final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
-                    cvr.getGlobalErrors().add("Factory configuration is not allowed");
-                    result.getConfigurationResults().put(config.getPid(), cvr);
-                }
+            final RegionInfo regionInfo = getRegionInfo(feature, config);
+
+            if ( regionInfo == null ) {
+                final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
+                cvr.getGlobalErrors().add("Unable to properly validate configuration, region info cannot be determined");
+                result.getConfigurationResults().put(config.getPid(), cvr);
             } else {
-                final ConfigurationDescription desc = api.getConfigurationDescriptions().get(config.getPid());
-                if ( desc != null ) {
-                    final ConfigurationValidationResult r = configurationValidator.validate(desc, config);
-                    result.getConfigurationResults().put(config.getPid(), r);
-                } else if ( api.getInternalConfigurations().contains(config.getPid())) {
-                    final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
-                    cvr.getGlobalErrors().add("Configuration is not allowed");
-                    result.getConfigurationResults().put(config.getPid(), cvr);
+                if ( config.isFactoryConfiguration() ) {
+                    final FactoryConfigurationDescription desc = api.getFactoryConfigurationDescriptions().get(config.getFactoryPid());
+                    if ( desc != null ) {
+                        final ConfigurationValidationResult r = configurationValidator.validate(config, desc, regionInfo.region);
+                        result.getConfigurationResults().put(config.getPid(), r);
+                        if ( regionInfo.region != Region.INTERNAL ) {
+                            if ( desc.getOperations().isEmpty() ) {
+                                r.getGlobalErrors().add("No operations allowed for factory configuration");
+                            } else {
+                                if ( regionInfo.isUpdate && !desc.getOperations().contains(Operation.UPDATE)) {
+                                    r.getGlobalErrors().add("Updating of factory configuration is not allowed");
+                                } else if ( !regionInfo.isUpdate && !desc.getOperations().contains(Operation.CREATE)) {
+                                    r.getGlobalErrors().add("Creation of factory configuration is not allowed");
+                                }
+                            }
+                            if ( desc.getInternalNames().contains(config.getName())) {
+                                r.getGlobalErrors().add("Factory configuration with name is not allowed");
+                            }
+                        }                        
+
+                    } else if ( regionInfo.region != Region.INTERNAL && api.getInternalFactoryConfigurations().contains(config.getFactoryPid())) {
+                        final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
+                        cvr.getGlobalErrors().add("Factory configuration is not allowed");
+                        result.getConfigurationResults().put(config.getPid(), cvr);
+                    }
+                } else {
+                    final ConfigurationDescription desc = api.getConfigurationDescriptions().get(config.getPid());
+                    if ( desc != null ) {
+                        final ConfigurationValidationResult r = configurationValidator.validate(config, desc, regionInfo.region);
+                        result.getConfigurationResults().put(config.getPid(), r);
+                    } else if ( regionInfo.region!= Region.INTERNAL && api.getInternalConfigurations().contains(config.getPid())) {
+                        final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
+                        cvr.getGlobalErrors().add("Configuration is not allowed");
+                        result.getConfigurationResults().put(config.getPid(), cvr);
+                    } 
+                }    
+            }
+            // make sure a result exists
+            result.getConfigurationResults().computeIfAbsent(config.getPid(), id -> new ConfigurationValidationResult());
+        }
+        return result;
+    }
+
+    static final class RegionInfo {
+        
+        public Region region;
+
+        public boolean isUpdate;
+    }
+
+    RegionInfo getRegionInfo(final Feature feature, final Configuration cfg) {
+        final FeatureProvider provider = this.getFeatureProvider();
+        final RegionInfo result = new RegionInfo();
+        
+        final List<ArtifactId> list = cfg.getFeatureOrigins();
+        if ( !list.isEmpty() ) {
+            boolean global = false;
+            for(final ArtifactId id : list) {
+                final Feature f = provider == null ? null : provider.provide(id);
+                if ( f == null ) {
+                    return null;
+                }
+                final ConfigurationApi api = ConfigurationApi.getConfigurationApi(f);
+                if ( api == null || api.getRegion() != Region.INTERNAL ) {
+                    global = true;
+                    break;
                 }
             }
+            result.region = global ? Region.GLOBAL : Region.INTERNAL;
+            result.isUpdate = list.size() > 1;
+        } else {
+            final ConfigurationApi api = ConfigurationApi.getConfigurationApi(feature);
+            if ( api == null || api.getRegion() == null || api.getRegion() == Region.GLOBAL ) {
+                result.region = Region.GLOBAL;
+            } else {
+                result.region = Region.INTERNAL;
+            }
+            result.isUpdate = false;
         }
         return result;
     }

@@ -112,4 +112,86 @@ public class ConfigurationApiMergeHandlerTest {
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.GLOBAL, api.getRegion());
     }
- }
+ 
+    @Test public void testRegionMerge() {
+        // always return prototype
+        final BuilderContext context = new BuilderContext(id -> null);
+        context.addMergeExtensions(new ConfigurationApiMergeHandler());
+
+        final Feature featureA = new Feature(ArtifactId.parse("g:a:1"));
+        final ConfigurationApi apiA = new ConfigurationApi();
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+        
+        final Feature featureB = new Feature(ArtifactId.parse("g:b:1"));
+        final ConfigurationApi apiB = new ConfigurationApi();
+        ConfigurationApi.setConfigurationApi(featureB, apiB);
+
+        // no region
+        final ArtifactId id = ArtifactId.parse("g:m:1");
+        Feature result = FeatureBuilder.assemble(id, context, featureA, featureB);
+        ConfigurationApi api = ConfigurationApi.getConfigurationApi(result);
+        assertNotNull(api);
+        assertNull(api.getRegion());
+
+        // only A has region
+        apiA.setRegion(Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+        result = FeatureBuilder.assemble(id, context, featureA, featureB);
+        api = ConfigurationApi.getConfigurationApi(result);
+        assertEquals(Region.GLOBAL, api.getRegion());
+
+        apiA.setRegion(Region.GLOBAL);
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+        result = FeatureBuilder.assemble(id, context, featureA, featureB);
+        api = ConfigurationApi.getConfigurationApi(result);
+        assertEquals(Region.GLOBAL, api.getRegion());
+
+        // only B has region
+        apiA.setRegion(null);
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+        apiB.setRegion(Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(featureB, apiB);
+        result = FeatureBuilder.assemble(id, context, featureA, featureB);
+        api = ConfigurationApi.getConfigurationApi(result);
+        assertEquals(Region.GLOBAL, api.getRegion());
+
+        apiB.setRegion(Region.GLOBAL);
+        ConfigurationApi.setConfigurationApi(featureB, apiB);
+        result = FeatureBuilder.assemble(id, context, featureA, featureB);
+        api = ConfigurationApi.getConfigurationApi(result);
+        assertEquals(Region.GLOBAL, api.getRegion());
+
+        // both have region
+        apiA.setRegion(Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+        apiB.setRegion(Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(featureB, apiB);
+        result = FeatureBuilder.assemble(id, context, featureA, featureB);
+        api = ConfigurationApi.getConfigurationApi(result);
+        assertEquals(Region.INTERNAL, api.getRegion());
+
+        apiA.setRegion(Region.GLOBAL);
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+        apiB.setRegion(Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(featureB, apiB);
+        result = FeatureBuilder.assemble(id, context, featureA, featureB);
+        api = ConfigurationApi.getConfigurationApi(result);
+        assertEquals(Region.GLOBAL, api.getRegion());
+
+        apiA.setRegion(Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+        apiB.setRegion(Region.GLOBAL);
+        ConfigurationApi.setConfigurationApi(featureB, apiB);
+        result = FeatureBuilder.assemble(id, context, featureA, featureB);
+        api = ConfigurationApi.getConfigurationApi(result);
+        assertEquals(Region.GLOBAL, api.getRegion());
+
+        apiA.setRegion(Region.GLOBAL);
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+        apiB.setRegion(Region.GLOBAL);
+        ConfigurationApi.setConfigurationApi(featureB, apiB);
+        result = FeatureBuilder.assemble(id, context, featureA, featureB);
+        api = ConfigurationApi.getConfigurationApi(result);
+        assertEquals(Region.GLOBAL, api.getRegion());
+    }
+}

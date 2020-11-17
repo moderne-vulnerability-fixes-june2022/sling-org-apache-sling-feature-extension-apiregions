@@ -35,7 +35,7 @@ public class PropertyValidator {
 	 * Validate the value against the property definition
 	 * @return A property validation result
 	 */
-	public PropertyValidationResult validate(final PropertyDescription prop, final Object value) {
+	public PropertyValidationResult validate(final Object value, final PropertyDescription prop) {
 		final PropertyValidationResult result = new PropertyValidationResult();
 		if ( value == null ) {
             if ( prop.isRequired() ) {
