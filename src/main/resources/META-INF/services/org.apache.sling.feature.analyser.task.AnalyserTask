@@ -4,3 +4,4 @@ org.apache.sling.feature.extension.apiregions.analyser.CheckApiRegionsDuplicates
 org.apache.sling.feature.extension.apiregions.analyser.CheckApiRegionsOrder
 org.apache.sling.feature.extension.apiregions.analyser.CheckApiRegionsBundleExportsImports
 org.apache.sling.feature.extension.apiregions.analyser.CheckApiRegionsCrossFeatureDups
+org.apache.sling.feature.extension.apiregions.analyser.CheckConfigurationApi
