@@ -26,6 +26,8 @@ public class FeatureValidationResult {
 
     private final Map<String, ConfigurationValidationResult> configurationResults = new HashMap<>();
 
+    private final Map<String, PropertyValidationResult> frameworkPropertyResults = new HashMap<>();
+
     /**
      * Is the configuration of the feature valid?
      * @return {@code true} if it is valid
@@ -38,6 +40,14 @@ public class FeatureValidationResult {
                 break;
             }
         }
+        if ( valid ) {
+            for(final PropertyValidationResult r : this.frameworkPropertyResults.values()) {
+                if ( !r.isValid() ) {
+                    valid = false;
+                    break;
+                }
+            }
+        }
         return valid;
     }
 
@@ -47,5 +57,13 @@ public class FeatureValidationResult {
      */
     public Map<String, ConfigurationValidationResult> getConfigurationResults() {
         return this.configurationResults;
+    }
+
+    /**
+     * Get the framework property validation results
+     * @return The results keyed by framework property name
+     */
+    public Map<String, PropertyValidationResult> getFrameworkPropertyResults() {
+        return this.frameworkPropertyResults;
     }
 }

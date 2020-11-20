@@ -31,8 +31,10 @@ import org.apache.sling.feature.builder.FeatureProvider;
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationApi;
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.FactoryConfigurationDescription;
+import org.apache.sling.feature.extension.apiregions.api.config.FrameworkPropertyDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.Operation;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
+import org.apache.sling.feature.extension.apiregions.api.config.PropertyType;
 import org.apache.sling.feature.extension.apiregions.api.config.Region;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,6 +61,8 @@ public class FeatureValidatorTest {
         fc.getProperties().put("key", "value");
         f.getConfigurations().add(fc);
 
+        f.getFrameworkProperties().put("prop", "1");
+
         return f;
     }
 
@@ -75,10 +79,14 @@ public class FeatureValidatorTest {
 
         api.getFactoryConfigurationDescriptions().put(FACTORY_PID, fd);
 
+        final FrameworkPropertyDescription fpd = new FrameworkPropertyDescription();
+        fpd.setType(PropertyType.INTEGER);
+        api.getFrameworkPropertyDescriptions().put("prop", fpd);
+
         return api;
     }
 
-    @Test public void testGetRegionInfoNoOrigin() {
+    @Test public void testGetRegionInfoConfigurationNoOrigin() {
         final Feature f1 = createFeature("g:a:1");
         final Configuration cfg = f1.getConfigurations().getConfiguration(PID);
 
@@ -109,7 +117,7 @@ public class FeatureValidatorTest {
         assertFalse(info.isUpdate);
     }
      
-    @Test public void testGetRegionInfoSingleOrigin() {
+    @Test public void testGetRegionInfoConfigurationSingleOrigin() {
         final Feature f1 = createFeature("g:a:1");
         final Configuration cfg = f1.getConfigurations().getConfiguration(PID);
 
@@ -151,7 +159,7 @@ public class FeatureValidatorTest {
         assertNull(info);
     }
 
-    @Test public void testGetRegionInfoMultipleOrigins() {
+    @Test public void testGetRegionInfoConfigurationMultipleOrigins() {
         final Feature f1 = createFeature("g:a:1");
         final Configuration cfg = f1.getConfigurations().getConfiguration(PID);
 
@@ -224,7 +232,152 @@ public class FeatureValidatorTest {
         assertEquals(Region.GLOBAL, info.region);
         assertTrue(info.isUpdate);
     }
-    @Test public void testSingleValidation() {
+
+    @Test public void testGetRegionInfoFrameworkPropertyNoOrigin() {
+        final Feature f1 = createFeature("g:a:1");
+
+        // no api set
+        FeatureValidator.RegionInfo info = validator.getRegionInfo(f1, "prop");
+        assertEquals(Region.GLOBAL, info.region);
+        assertFalse(info.isUpdate);
+
+        // empty region in api
+        final ConfigurationApi api = createApi();
+        ConfigurationApi.setConfigurationApi(f1, api);
+        info = validator.getRegionInfo(f1, "prop");
+        assertEquals(Region.GLOBAL, info.region);
+        assertFalse(info.isUpdate);
+
+        // global region in api
+        api.setRegion(Region.GLOBAL);
+        ConfigurationApi.setConfigurationApi(f1, api);
+        info = validator.getRegionInfo(f1, "prop");
+        assertEquals(Region.GLOBAL, info.region);
+        assertFalse(info.isUpdate);
+
+        // internal region in api
+        api.setRegion(Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(f1, api);
+        info = validator.getRegionInfo(f1, "prop");
+        assertEquals(Region.INTERNAL, info.region);
+        assertFalse(info.isUpdate);
+    }
+     
+    @Test public void testGetRegionInfoFrameworkPropertySingleOrigin() {
+        final Feature f1 = createFeature("g:a:1");
+
+        final Feature f2 = createFeature("g:b:1");
+        f1.setFeatureOrigins(f1.getFrameworkPropertyMetadata("prop"), Collections.singletonList(f2.getId()));
+
+        // set feature provider to always provide f2
+        this.validator.setFeatureProvider(id -> f2);
+        // no api in origin
+        FeatureValidator.RegionInfo info = validator.getRegionInfo(f1, "prop");
+        assertEquals(Region.GLOBAL, info.region);
+        assertFalse(info.isUpdate);
+
+        // no region in api
+        final ConfigurationApi api2 = new ConfigurationApi();
+        ConfigurationApi.setConfigurationApi(f2, api2);
+        info = validator.getRegionInfo(f1, "prop");
+        assertEquals(Region.GLOBAL, info.region);
+        assertFalse(info.isUpdate);
+
+        // global in api
+        api2.setRegion(Region.GLOBAL);
+        ConfigurationApi.setConfigurationApi(f2, api2);
+        info = validator.getRegionInfo(f1, "prop");
+        assertEquals(Region.GLOBAL, info.region);
+        assertFalse(info.isUpdate);
+
+        // internal in api
+        api2.setRegion(Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(f2, api2);
+        info = validator.getRegionInfo(f1, "prop");
+        assertEquals(Region.INTERNAL, info.region);
+        assertFalse(info.isUpdate);
+
+        // unknown id
+        this.validator.setFeatureProvider(id -> null);
+        f1.setFeatureOrigins(f1.getFrameworkPropertyMetadata("prop"), Collections.singletonList(ArtifactId.parse("g:xy:1")));
+        info = validator.getRegionInfo(f1, "prop");
+        assertNull(info);
+    }
+
+    @Test public void testGetRegionInfoFrameworkPropertyMultipleOrigins() {
+        final Feature f1 = createFeature("g:a:1");
+
+        final Feature f2 = createFeature("g:b:1");
+        final Feature f3 = createFeature("g:c:1");
+        f1.setFeatureOrigins(f1.getFrameworkPropertyMetadata("prop"), Arrays.asList(f2.getId(), f3.getId()));
+
+        final FeatureProvider provider = new FeatureProvider() {
+
+			@Override
+			public Feature provide(final ArtifactId id) {
+                if ( f1.getId().equals(id) ) {
+                    return f1;
+                } else if ( f2.getId().equals(id)) {
+                    return f2;
+                } else if ( f3.getId().equals(id)) {
+                    return f3;
+                }
+				return null;
+			}
+            
+        };
+
+        this.validator.setFeatureProvider(provider);
+
+        // no api in origins
+        FeatureValidator.RegionInfo info = validator.getRegionInfo(f1, "prop");
+        assertEquals(Region.GLOBAL, info.region);
+        assertTrue(info.isUpdate);
+
+        // global-internal
+        final ConfigurationApi api2 = new ConfigurationApi();
+        final ConfigurationApi api3 = new ConfigurationApi();
+        api2.setRegion(Region.GLOBAL);
+        api3.setRegion(Region.INTERNAL);        
+        ConfigurationApi.setConfigurationApi(f2, api2);
+        ConfigurationApi.setConfigurationApi(f3, api3);
+
+        info = validator.getRegionInfo(f1, "prop");
+        assertEquals(Region.GLOBAL, info.region);
+        assertTrue(info.isUpdate);
+
+        // global-global
+        api2.setRegion(Region.GLOBAL);
+        api3.setRegion(Region.GLOBAL);        
+        ConfigurationApi.setConfigurationApi(f2, api2);
+        ConfigurationApi.setConfigurationApi(f3, api3);
+
+        info = validator.getRegionInfo(f1, "prop");
+        assertEquals(Region.GLOBAL, info.region);
+        assertTrue(info.isUpdate);
+
+        // internal-internal
+        api2.setRegion(Region.INTERNAL);
+        api3.setRegion(Region.INTERNAL);        
+        ConfigurationApi.setConfigurationApi(f2, api2);
+        ConfigurationApi.setConfigurationApi(f3, api3);
+
+        info = validator.getRegionInfo(f1, "prop");
+        assertEquals(Region.INTERNAL, info.region);
+        assertTrue(info.isUpdate);
+
+        // internal-global
+        api2.setRegion(Region.INTERNAL);
+        api3.setRegion(Region.GLOBAL);        
+        ConfigurationApi.setConfigurationApi(f2, api2);
+        ConfigurationApi.setConfigurationApi(f3, api3);
+
+        info = validator.getRegionInfo(f1, "prop");
+        assertEquals(Region.GLOBAL, info.region);
+        assertTrue(info.isUpdate);
+    }
+
+    @Test public void testSingleConfigurationValidation() {
         final Feature f1 = createFeature("g:a:1");
         final ConfigurationApi api = createApi();
         ConfigurationApi.setConfigurationApi(f1, api);
@@ -432,5 +585,51 @@ public class FeatureValidatorTest {
         ConfigurationApi.setConfigurationApi(f1, api);
         result = validator.validate(f1, api);
         assertTrue(result.isValid());
+    }
+
+    @Test public void testInternalFrameworkProperty() {
+        final Feature f1 = createFeature("g:a:1");
+        final ConfigurationApi api = new ConfigurationApi();
+        ConfigurationApi.setConfigurationApi(f1, api);
+
+        // global region
+        FeatureValidationResult result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+
+        // mark framework property as internal
+        api.getInternalFrameworkProperties().add("prop");
+        ConfigurationApi.setConfigurationApi(f1, api);
+
+        // global region
+        result = validator.validate(f1, api);
+        assertFalse(result.isValid());
+        assertFalse(result.getFrameworkPropertyResults().get("prop").isValid());
+
+        // internal region
+        api.setRegion(Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(f1, api);
+        result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+    }
+
+    @Test public void testFrameworkProperty() {
+        final Feature f1 = createFeature("g:a:1");
+        final ConfigurationApi api = createApi();
+        ConfigurationApi.setConfigurationApi(f1, api);
+
+        // value is valid
+        FeatureValidationResult result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+
+        // no value -> valid
+        f1.getFrameworkProperties().remove("prop");
+        result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+
+        // invalid value
+        f1.getFrameworkProperties().put("prop", "foo");
+        result = validator.validate(f1, api);
+        assertFalse(result.isValid());
+        assertFalse(result.getFrameworkPropertyResults().get("prop").isValid());
     }
 }

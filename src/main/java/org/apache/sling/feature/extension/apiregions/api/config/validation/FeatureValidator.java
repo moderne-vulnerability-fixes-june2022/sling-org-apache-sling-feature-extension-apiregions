@@ -25,6 +25,7 @@ import org.apache.sling.feature.builder.FeatureProvider;
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationApi;
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.FactoryConfigurationDescription;
+import org.apache.sling.feature.extension.apiregions.api.config.FrameworkPropertyDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.Operation;
 import org.apache.sling.feature.extension.apiregions.api.config.Region;
 
@@ -34,6 +35,8 @@ import org.apache.sling.feature.extension.apiregions.api.config.Region;
 public class FeatureValidator {
     
     private final ConfigurationValidator configurationValidator = new ConfigurationValidator();
+
+    private final PropertyValidator propertyValidator = new PropertyValidator();
 
     private volatile FeatureProvider featureProvider;
 
@@ -111,9 +114,32 @@ public class FeatureValidator {
                     } 
                 }    
             }
+
             // make sure a result exists
             result.getConfigurationResults().computeIfAbsent(config.getPid(), id -> new ConfigurationValidationResult());
         }
+
+        for(final String frameworkProperty : feature.getFrameworkProperties().keySet()) {
+            final RegionInfo regionInfo = getRegionInfo(feature, frameworkProperty);
+            if ( regionInfo == null ) {
+                final PropertyValidationResult pvr = new PropertyValidationResult();
+                pvr.getErrors().add("Unable to properly validate framework property, region info cannot be determined");
+                result.getFrameworkPropertyResults().put(frameworkProperty, pvr);
+            } else {
+                final FrameworkPropertyDescription fpd = api.getFrameworkPropertyDescriptions().get(frameworkProperty);
+                if ( fpd != null ) {
+                    final PropertyValidationResult pvr = propertyValidator.validate(feature.getFrameworkProperties().get(frameworkProperty), fpd);
+                    result.getFrameworkPropertyResults().put(frameworkProperty, pvr);
+                } else if ( regionInfo.region != Region.INTERNAL && api.getInternalFrameworkProperties().contains(frameworkProperty) ) {
+                    final PropertyValidationResult pvr = new PropertyValidationResult();
+                    pvr.getErrors().add("Framework property is not allowed");
+                    result.getFrameworkPropertyResults().put(frameworkProperty, pvr);
+                }
+            } 
+            // make sure a result exists
+            result.getFrameworkPropertyResults().computeIfAbsent(frameworkProperty, id -> new PropertyValidationResult());
+        }
+
         return result;
     }
 
@@ -153,6 +179,34 @@ public class FeatureValidator {
             }
             result.isUpdate = false;
         }
+        return result;
+    }
+
+    RegionInfo getRegionInfo(final Feature feature, final String frameworkProperty) {
+        final FeatureProvider provider = this.getFeatureProvider();
+        
+        final List<ArtifactId> list = feature.getFeatureOrigins(feature.getFrameworkPropertyMetadata(frameworkProperty));
+        boolean global = false;
+        for(final ArtifactId id : list) {
+            Feature found = null;
+            if ( feature.getId().equals(id) ) {
+                found = feature;
+            } else {
+                found = provider == null ? null : provider.provide(id);
+            }
+            if ( found == null ) {
+                return null;
+            }
+            final ConfigurationApi api = ConfigurationApi.getConfigurationApi(found);
+            if ( api == null || api.getRegion() != Region.INTERNAL ) {
+                global = true;
+                break;
+            }
+        }
+        final RegionInfo result = new RegionInfo();
+        result.region = global ? Region.GLOBAL : Region.INTERNAL;
+        result.isUpdate = list.size() > 1;
+
         return result;
     }
 }
