@@ -36,7 +36,7 @@ public class CheckApiRegionsDependenciesTest extends AbstractApiRegionsAnalyserT
 
         assertFalse(errors.isEmpty());
         assertEquals(
-                "Bundle 'org.osgi:org.osgi.util.function:1.0.0' (defined in feature 'org.apache.sling.testing:org.apache.sling.testing.apiregions:1.0.0') declares 'org.osgi.util.function' in the 'Export-Package' header, enlisted in the 'global' region, which uses 'org.objectweb.asm' package that is in the 'deprecated' region",
+                "Bundle 'org.osgi:org.osgi.util.function:1.0.0' (defined in feature 'org.apache.sling.testing:org.apache.sling.testing.apiregions:1.0.0') exports package 'org.osgi.util.function' that is declared in the visible 'global' region, which uses package 'org.objectweb.asm' that is in the non-visible 'deprecated' region",
                 errors.iterator().next()
         );
     }
@@ -47,7 +47,7 @@ public class CheckApiRegionsDependenciesTest extends AbstractApiRegionsAnalyserT
 
         assertFalse(errors.isEmpty());
         assertEquals(
-                "Bundle 'org.osgi:org.osgi.util.function:1.0.0' (defined in feature 'org.apache.sling.testing:org.apache.sling.testing.apiregions:1.0.0') declares 'org.osgi.util.function' in the 'Export-Package' header that is enlisted in both exporting 'global' and hiding 'deprecated' APIs regions, please adjust Feature settings",
+                "Bundle 'org.osgi:org.osgi.util.function:1.0.0' (defined in feature 'org.apache.sling.testing:org.apache.sling.testing.apiregions:1.0.0') exports package 'org.osgi.util.function' that is declared in both visible 'global' and non-visible 'deprecated' APIs regions",
                 errors.iterator().next());
     }
 

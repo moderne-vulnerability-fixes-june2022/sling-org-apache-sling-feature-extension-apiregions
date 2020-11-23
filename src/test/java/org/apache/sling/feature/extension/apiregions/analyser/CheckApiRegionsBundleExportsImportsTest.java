@@ -39,6 +39,7 @@ import org.apache.sling.feature.scanner.impl.FeatureDescriptorImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
+
 import static org.junit.Assert.assertEquals;
 
 public class CheckApiRegionsBundleExportsImportsTest {
@@ -76,8 +77,12 @@ public class CheckApiRegionsBundleExportsImportsTest {
         Mockito.when(ctx.getFeatureDescriptor()).thenReturn(fd);
         t.execute(ctx);
 
-        Mockito.verify(ctx, Mockito.times(2)).reportError(Mockito.anyString());
-        Mockito.verify(ctx).reportError(Mockito.contains("org.foo.e"));
+        Mockito.verify(ctx, Mockito.times(1)).reportArtifactError(Mockito.any(), Mockito.anyString());
+        Mockito.verify(ctx, Mockito.times(1)).reportError(Mockito.anyString());
+
+        Mockito.verify(ctx).reportArtifactError(
+                Mockito.eq(ArtifactId.fromMvnId("g:b3:1")),
+                Mockito.contains("org.foo.e"));
         Mockito.verify(ctx).reportError(Mockito.contains("marked as 'complete'"));
         Mockito.verify(ctx, Mockito.never()).reportWarning(Mockito.anyString());
     }
@@ -119,9 +124,13 @@ public class CheckApiRegionsBundleExportsImportsTest {
         Mockito.when(ctx.getFeatureDescriptor()).thenReturn(fd);
         t.execute(ctx);
 
-        Mockito.verify(ctx).reportError(Mockito.contains("org.foo.e"));
-        Mockito.verify(ctx, Mockito.times(1)).reportError(Mockito.anyString());
+        Mockito.verify(ctx).reportArtifactError(
+                Mockito.eq(ArtifactId.fromMvnId("g:b3:1")),
+                Mockito.contains("org.foo.e"));
+        Mockito.verify(ctx, Mockito.times(1)).reportArtifactError(Mockito.any(), Mockito.anyString());
+        Mockito.verify(ctx, Mockito.never()).reportError(Mockito.anyString());
         Mockito.verify(ctx, Mockito.never()).reportWarning(Mockito.anyString());
+        Mockito.verify(ctx, Mockito.never()).reportArtifactWarning(Mockito.any(), Mockito.anyString());
     }
 
     @Test
@@ -149,9 +158,9 @@ public class CheckApiRegionsBundleExportsImportsTest {
         Mockito.when(ctx.getFeatureDescriptor()).thenReturn(fd);
         t.execute(ctx);
 
-        Mockito.verify(ctx).reportError(Mockito.contains("org.foo.b"));
-        Mockito.verify(ctx, Mockito.times(1)).reportError(Mockito.anyString());
-        Mockito.verify(ctx, Mockito.never()).reportWarning(Mockito.anyString());
+        Mockito.verify(ctx).reportArtifactError(Mockito.eq(ArtifactId.fromMvnId("g:b2:1")), Mockito.contains("org.foo.b"));
+        Mockito.verify(ctx, Mockito.times(1)).reportArtifactError(Mockito.any(), Mockito.anyString());
+        Mockito.verify(ctx, Mockito.never()).reportArtifactWarning(Mockito.any(), Mockito.anyString());
     }
 
     @Test
@@ -188,10 +197,18 @@ public class CheckApiRegionsBundleExportsImportsTest {
         Mockito.when(ctx.getConfiguration()).thenReturn(cfgMap);
         t.execute(ctx);
 
-        Mockito.verify(ctx).reportError(Mockito.contains("org.foo.b"));
-        Mockito.verify(ctx).reportError(Mockito.contains("something"));
-        Mockito.verify(ctx).reportError(Mockito.contains("somethingelse"));
-        Mockito.verify(ctx, Mockito.times(1)).reportError(Mockito.anyString());
+        Mockito.verify(ctx).reportArtifactError(
+                Mockito.eq(ArtifactId.fromMvnId("g:b2:1")),
+                Mockito.contains("org.foo.b"));
+        Mockito.verify(ctx).reportArtifactError(
+                Mockito.eq(ArtifactId.fromMvnId("g:b2:1")),
+                Mockito.contains("something"));
+        Mockito.verify(ctx).reportArtifactError(
+                Mockito.eq(ArtifactId.fromMvnId("g:b2:1")),
+                Mockito.contains("somethingelse"));
+        Mockito.verify(ctx, Mockito.times(1)).reportArtifactError(Mockito.any(), Mockito.anyString());
+        Mockito.verify(ctx, Mockito.never()).reportArtifactWarning(Mockito.any(), Mockito.anyString());
+        Mockito.verify(ctx, Mockito.never()).reportError(Mockito.anyString());
         Mockito.verify(ctx, Mockito.never()).reportWarning(Mockito.anyString());
     }
 
