@@ -38,7 +38,7 @@ public class FeatureValidator {
 
     private final PropertyValidator propertyValidator = new PropertyValidator();
 
-    private volatile FeatureProvider featureProvider;
+    private FeatureProvider featureProvider;
 
     /**
      * Get the current feature provider
