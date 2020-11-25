@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,10 +53,11 @@ public class CheckApiRegionsCrossFeatureDups extends AbstractApiRegionsAnalyserT
         Set<String> checkedRegions = splitListConfig(ctx.getConfiguration().get("regions"));
         Set<String> ignoredPackages = splitListConfig(ctx.getConfiguration().get("ignoredPackages"));
         Set<String> warningPackages = splitListConfig(ctx.getConfiguration().get("warningPackages"));
+        Set<String> definingFeatures = splitListConfig(ctx.getConfiguration().get("definingFeatures"));
 
         Map<String, Set<String>> regionExports = new HashMap<>();
+        Set<ArtifactId> apiRegionsFeatures = new HashSet<>();
 
-        List<ArtifactId> apiRegionsFeatures = new ArrayList<>();
         for (ApiRegion r : apiRegions.listRegions()) {
             apiRegionsFeatures.addAll(Arrays.asList(r.getFeatureOrigins()));
             if (checkedRegions.isEmpty() || checkedRegions.contains(r.getName())) {
@@ -68,13 +70,19 @@ public class CheckApiRegionsCrossFeatureDups extends AbstractApiRegionsAnalyserT
             }
         }
 
+        if (definingFeatures.isEmpty()) {
+            definingFeatures = apiRegionsFeatures
+                    .stream()
+                    .map(ArtifactId::toMvnId)
+                    .collect(Collectors.toSet());
+        }
+
         FeatureDescriptor f = ctx.getFeatureDescriptor();
         for (BundleDescriptor bd : f.getBundleDescriptors()) {
             List<ArtifactId> borgs = new ArrayList<>(Arrays.asList(bd.getArtifact().getFeatureOrigins()));
-            borgs.removeAll(apiRegionsFeatures);
+            removeDefiningFeatures(definingFeatures, borgs);
 
             if (!borgs.isEmpty()) {
-                // This bundle was contributed by a feature that did not opt-in to the API Regions
                 Set<String> reportedPackages = new HashSet<>();
                 for (PackageInfo pi : bd.getExportedPackages()) {
                     String pkgName = pi.getName();
@@ -84,11 +92,16 @@ public class CheckApiRegionsCrossFeatureDups extends AbstractApiRegionsAnalyserT
                                 continue;
                             }
 
+                            if (allOtherExportersNonDefining(pi, f, definingFeatures)) {
+                                // If all exports are done by non-defining features then that's ok
+                                continue;
+                            }
+
                             reportedPackages.add(pi.getName());
 
                             String msg = "Package overlap found between region " + entry.getKey()
                                 + " and bundle " + bd.getBundleSymbolicName() + " " + bd.getBundleVersion()
-                                + " which comes from a feature without API Regions: " + borgs
+                                + " which comes from feature: " + borgs
                                 + ". Both export package: " + pi.getName();
                             if (matchesSet(pkgName, warningPackages)) {
                                 ctx.reportArtifactWarning(bd.getArtifact().getId(), msg);
@@ -96,6 +109,51 @@ public class CheckApiRegionsCrossFeatureDups extends AbstractApiRegionsAnalyserT
                                 ctx.reportArtifactError(bd.getArtifact().getId(), msg);
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    // Check if all exports of this package are done by non-defining features
+    private boolean allOtherExportersNonDefining(PackageInfo pi, FeatureDescriptor f, Set<String> definingFeatures) {
+        List<ArtifactId> declaringFeatures = new ArrayList<>();
+
+        for (BundleDescriptor bd : f.getBundleDescriptors()) {
+            if (bd.getExportedPackages().contains(pi)) {
+                declaringFeatures.addAll(Arrays.asList(bd.getArtifact().getFeatureOrigins(f.getFeature().getId())));
+            }
+        }
+
+        for (ArtifactId feature : declaringFeatures) {
+            for (String definingFeature : definingFeatures) {
+                if (definingFeature.endsWith("*")) {
+                    String prefix = definingFeature.substring(0, definingFeature.length() - 1);
+                    if (feature.toMvnId().startsWith(prefix)) {
+                        return false;
+                    }
+                } else {
+                    if (feature.toMvnId().equals(definingFeature)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private void removeDefiningFeatures(Set<String> definingFeatures, List<ArtifactId> features) {
+        for (Iterator<ArtifactId> it = features.iterator(); it.hasNext(); ) {
+            ArtifactId feature = it.next();
+            for (String definingFeature : definingFeatures) {
+                if (definingFeature.endsWith("*")) {
+                    String prefix = definingFeature.substring(0, definingFeature.length() - 1);
+                    if (feature.toMvnId().startsWith(prefix)) {
+                        it.remove();
+                    }
+                } else {
+                    if (feature.toMvnId().equals(definingFeature)) {
+                        it.remove();
                     }
                 }
             }
