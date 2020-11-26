@@ -19,6 +19,7 @@
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Feature;
@@ -26,6 +27,10 @@ import org.apache.sling.feature.Prototype;
 import org.apache.sling.feature.builder.BuilderContext;
 import org.apache.sling.feature.builder.FeatureBuilder;
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationApi;
+import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationDescription;
+import org.apache.sling.feature.extension.apiregions.api.config.FactoryConfigurationDescription;
+import org.apache.sling.feature.extension.apiregions.api.config.FrameworkPropertyDescription;
+import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.Region;
 import org.junit.Test;
 
@@ -114,7 +119,6 @@ public class ConfigurationApiMergeHandlerTest {
     }
  
     @Test public void testRegionMerge() {
-        // always return prototype
         final BuilderContext context = new BuilderContext(id -> null);
         context.addMergeExtensions(new ConfigurationApiMergeHandler());
 
@@ -193,5 +197,145 @@ public class ConfigurationApiMergeHandlerTest {
         result = FeatureBuilder.assemble(id, context, featureA, featureB);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.GLOBAL, api.getRegion());
+    }
+
+    @Test public void testConfigurationApiMergeDifferentConfig() {
+        final BuilderContext context = new BuilderContext(id -> null);
+        context.addMergeExtensions(new ConfigurationApiMergeHandler());
+
+        final Feature featureA = new Feature(ArtifactId.parse("g:a:1"));
+        final ConfigurationApi apiA = new ConfigurationApi();
+        apiA.getConfigurationDescriptions().put("a", new ConfigurationDescription());
+        apiA.getFactoryConfigurationDescriptions().put("fa", new FactoryConfigurationDescription());
+        apiA.getFrameworkPropertyDescriptions().put("pa", new FrameworkPropertyDescription());
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+        
+        final Feature featureB = new Feature(ArtifactId.parse("g:b:1"));
+        final ConfigurationApi apiB = new ConfigurationApi();
+        apiB.getConfigurationDescriptions().put("b", new ConfigurationDescription());
+        apiB.getFactoryConfigurationDescriptions().put("fb", new FactoryConfigurationDescription());
+        apiB.getFrameworkPropertyDescriptions().put("pb", new FrameworkPropertyDescription());
+        ConfigurationApi.setConfigurationApi(featureB, apiB);
+
+        final ArtifactId id = ArtifactId.parse("g:m:1");
+        Feature result = FeatureBuilder.assemble(id, context, featureA, featureB);
+        ConfigurationApi api = ConfigurationApi.getConfigurationApi(result);
+        assertNotNull(api);
+
+        assertEquals(2, api.getConfigurationDescriptions().size());
+        assertNotNull(api.getConfigurationDescriptions().get("a"));
+        assertNotNull(api.getConfigurationDescriptions().get("b"));
+
+        assertEquals(2, api.getFactoryConfigurationDescriptions().size());
+        assertNotNull(api.getFactoryConfigurationDescriptions().get("fa"));
+        assertNotNull(api.getFactoryConfigurationDescriptions().get("fb"));
+
+        assertEquals(2, api.getFrameworkPropertyDescriptions().size());
+        assertNotNull(api.getFrameworkPropertyDescriptions().get("pa"));
+        assertNotNull(api.getFrameworkPropertyDescriptions().get("pb"));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testConfigurationApiMergeSameConfigurations() {
+        final BuilderContext context = new BuilderContext(id -> null);
+        context.addMergeExtensions(new ConfigurationApiMergeHandler());
+
+        final Feature featureA = new Feature(ArtifactId.parse("g:a:1"));
+        final ConfigurationApi apiA = new ConfigurationApi();
+        apiA.getConfigurationDescriptions().put("a", new ConfigurationDescription());
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+        
+        final Feature featureB = new Feature(ArtifactId.parse("g:b:1"));
+        final ConfigurationApi apiB = new ConfigurationApi();
+        apiB.getConfigurationDescriptions().put("a", new ConfigurationDescription());
+        ConfigurationApi.setConfigurationApi(featureB, apiB);
+
+        final ArtifactId id = ArtifactId.parse("g:m:1");
+        FeatureBuilder.assemble(id, context, featureA, featureB);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testConfigurationApiMergeSameFactoryConfigurations() {
+        final BuilderContext context = new BuilderContext(id -> null);
+        context.addMergeExtensions(new ConfigurationApiMergeHandler());
+
+        final Feature featureA = new Feature(ArtifactId.parse("g:a:1"));
+        final ConfigurationApi apiA = new ConfigurationApi();
+        apiA.getFactoryConfigurationDescriptions().put("fa", new FactoryConfigurationDescription());
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+        
+        final Feature featureB = new Feature(ArtifactId.parse("g:b:1"));
+        final ConfigurationApi apiB = new ConfigurationApi();
+        apiB.getFactoryConfigurationDescriptions().put("fa", new FactoryConfigurationDescription());
+        ConfigurationApi.setConfigurationApi(featureB, apiB);
+
+        final ArtifactId id = ArtifactId.parse("g:m:1");
+        FeatureBuilder.assemble(id, context, featureA, featureB);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testConfigurationApiMergeSameFrameworkProperties() {
+        final BuilderContext context = new BuilderContext(id -> null);
+        context.addMergeExtensions(new ConfigurationApiMergeHandler());
+
+        final Feature featureA = new Feature(ArtifactId.parse("g:a:1"));
+        final ConfigurationApi apiA = new ConfigurationApi();
+        apiA.getFrameworkPropertyDescriptions().put("pa", new FrameworkPropertyDescription());
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+        
+        final Feature featureB = new Feature(ArtifactId.parse("g:b:1"));
+        final ConfigurationApi apiB = new ConfigurationApi();
+        apiB.getFrameworkPropertyDescriptions().put("pa", new FrameworkPropertyDescription());
+        ConfigurationApi.setConfigurationApi(featureB, apiB);
+
+        final ArtifactId id = ArtifactId.parse("g:m:1");
+        FeatureBuilder.assemble(id, context, featureA, featureB);
+    }
+
+    @Test public void testConfigurationApiMergeInternalNames() {
+        final BuilderContext context = new BuilderContext(id -> null);
+        context.addMergeExtensions(new ConfigurationApiMergeHandler());
+
+        final Feature featureA = new Feature(ArtifactId.parse("g:a:1"));
+        final ConfigurationApi apiA = new ConfigurationApi();
+        apiA.getInternalConfigurations().add("a");
+        apiA.getInternalFactoryConfigurations().add("fa");
+        apiA.getInternalFrameworkProperties().add("pa");
+
+        apiA.getInternalConfigurations().add("c");
+        apiA.getInternalFactoryConfigurations().add("fc");
+        apiA.getInternalFrameworkProperties().add("pc");
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+        
+        final Feature featureB = new Feature(ArtifactId.parse("g:b:1"));
+        final ConfigurationApi apiB = new ConfigurationApi();
+        apiB.getInternalConfigurations().add("b");
+        apiB.getInternalFactoryConfigurations().add("fb");
+        apiB.getInternalFrameworkProperties().add("pb");
+
+        apiB.getInternalConfigurations().add("c");
+        apiB.getInternalFactoryConfigurations().add("fc");
+        apiB.getInternalFrameworkProperties().add("pc");
+        ConfigurationApi.setConfigurationApi(featureB, apiB);
+
+        final ArtifactId id = ArtifactId.parse("g:m:1");
+        Feature result = FeatureBuilder.assemble(id, context, featureA, featureB);
+        ConfigurationApi api = ConfigurationApi.getConfigurationApi(result);
+        assertNotNull(api);
+
+        assertEquals(3, api.getInternalConfigurations().size());
+        assertTrue(api.getInternalConfigurations().contains("a"));
+        assertTrue(api.getInternalConfigurations().contains("b"));
+        assertTrue(api.getInternalConfigurations().contains("c"));
+
+        assertEquals(3, api.getInternalFactoryConfigurations().size());
+        assertTrue(api.getInternalFactoryConfigurations().contains("fa"));
+        assertTrue(api.getInternalFactoryConfigurations().contains("fb"));
+        assertTrue(api.getInternalFactoryConfigurations().contains("fc"));
+
+        assertEquals(3, api.getInternalFrameworkProperties().size());
+        assertTrue(api.getInternalFrameworkProperties().contains("pa"));
+        assertTrue(api.getInternalFrameworkProperties().contains("pb"));
+        assertTrue(api.getInternalFrameworkProperties().contains("pc"));
     }
 }

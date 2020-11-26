@@ -17,10 +17,10 @@
 package org.apache.sling.feature.extension.apiregions.api.config;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -116,14 +116,14 @@ public class ConfigurationApi extends AttributeableEntity {
     /** The map of framework properties */
     private final Map<String, FrameworkPropertyDescription> frameworkProperties = new LinkedHashMap<>();
 
-    /** The list of internal configuration names */
-    private final List<String> internalConfigurations = new ArrayList<>();
+    /** The set of internal configuration names */
+    private final Set<String> internalConfigurations = new TreeSet<>();
 
-    /** The list of internal factory configuration names */
-    private final List<String> internalFactories = new ArrayList<>();
+    /** The set of internal factory configuration names */
+    private final Set<String> internalFactories = new TreeSet<>();
 
-    /** The list of internal framework property names */
-    private final List<String> internalFrameworkProperties = new ArrayList<>();
+    /** The set of internal framework property names */
+    private final Set<String> internalFrameworkProperties = new TreeSet<>();
     
     /** The configuration region of this feature */
     private Region region;
@@ -237,25 +237,25 @@ public class ConfigurationApi extends AttributeableEntity {
 
 	/**
      * Get the internal configuration pids
-	 * @return Mutable list of internal configuration pids
+	 * @return Mutable set of internal configuration pids
 	 */
-	public List<String> getInternalConfigurations() {
+	public Set<String> getInternalConfigurations() {
 		return internalConfigurations;
 	}
 
 	/**
      * Get the internal factory pids
-	 * @return Mutable list of internal factory configuration pids
+	 * @return Mutable set of internal factory configuration pids
 	 */
-	public List<String> getInternalFactoryConfigurations() {
+	public Set<String> getInternalFactoryConfigurations() {
 		return internalFactories;
 	}
 
 	/**
      * Get the internal framework property names
-	 * @return Mutable list of internal framework property names
+	 * @return Mutable set of internal framework property names
 	 */
-	public List<String> getInternalFrameworkProperties() {
+	public Set<String> getInternalFrameworkProperties() {
 		return internalFrameworkProperties;
     }
 
