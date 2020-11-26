@@ -20,6 +20,7 @@ import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.analyser.Analyser;
 import org.apache.sling.feature.analyser.AnalyserResult;
+import org.apache.sling.feature.analyser.AnalyserResult.ArtifactReport;
 import org.apache.sling.feature.analyser.task.AnalyserTask;
 import org.apache.sling.feature.builder.ArtifactProvider;
 import org.apache.sling.feature.extension.apiregions.scanner.ApiRegionsExtensionScanner;
@@ -55,13 +56,16 @@ public class CheckApiRegionsCrossFeatureDupsTest {
                 Collections.singletonMap("warningPackages", "x.y.z"));
         Analyser a = new Analyser(scanner, configs, at);
         AnalyserResult res = a.analyse(f);
-        assertEquals(1, res.getErrors().size());
-        assertEquals(0, res.getWarnings().size());
+        assertEquals(1, res.getArtifactErrors().size());
+        assertEquals(0, res.getArtifactWarnings().size());
+        assertEquals(0, res.getGlobalWarnings().size());
+        assertEquals(0, res.getGlobalErrors().size());
 
-        String err = res.getErrors().get(0);
-        assertTrue(err.contains("a.b.c"));
-        assertTrue(err.contains("g:f3:1"));
-        assertTrue(err.contains("feature-export2"));
+        ArtifactReport err = res.getArtifactErrors().get(0);
+        assertEquals(ArtifactId.parse("g:exp2:1"), err.getKey());
+        assertTrue(err.getValue().contains("a.b.c"));
+        assertTrue(err.getValue().contains("g:f3:1"));
+        assertTrue(err.getValue().contains("feature-export2"));
     }
 
     @Test
@@ -80,13 +84,16 @@ public class CheckApiRegionsCrossFeatureDupsTest {
             Collections.singletonMap("api-regions-crossfeature-dups", cfg);
         Analyser a = new Analyser(scanner, configs, at);
         AnalyserResult res = a.analyse(f);
-        assertEquals(0, res.getErrors().size());
-        assertEquals(1, res.getWarnings().size());
+        assertEquals(0, res.getArtifactErrors().size());
+        assertEquals(1, res.getArtifactWarnings().size());
+        assertEquals(0, res.getGlobalWarnings().size());
+        assertEquals(0, res.getGlobalErrors().size());
 
-        String err = res.getWarnings().get(0);
-        assertTrue(err.contains("a.b.c"));
-        assertTrue(err.contains("g:f3:1"));
-        assertTrue(err.contains("feature-export2"));
+        ArtifactReport err = res.getArtifactWarnings().get(0);
+        assertEquals(ArtifactId.parse("g:exp2:1"), err.getKey());
+        assertTrue(err.getValue().contains("a.b.c"));
+        assertTrue(err.getValue().contains("g:f3:1"));
+        assertTrue(err.getValue().contains("feature-export2"));
     }
 
     @Test
@@ -104,13 +111,16 @@ public class CheckApiRegionsCrossFeatureDupsTest {
             Collections.singletonMap("api-regions-crossfeature-dups", cfg);
         Analyser a = new Analyser(scanner, configs, at);
         AnalyserResult res = a.analyse(f);
-        assertEquals(0, res.getErrors().size());
-        assertEquals(1, res.getWarnings().size());
+        assertEquals(0, res.getArtifactErrors().size());
+        assertEquals(1, res.getArtifactWarnings().size());
+        assertEquals(0, res.getGlobalWarnings().size());
+        assertEquals(0, res.getGlobalErrors().size());
 
-        String err = res.getWarnings().get(0);
-        assertTrue(err.contains("a.b.c"));
-        assertTrue(err.contains("g:f3:1"));
-        assertTrue(err.contains("feature-export2"));
+        ArtifactReport err = res.getArtifactWarnings().get(0);
+        assertEquals(ArtifactId.parse("g:exp2:1"), err.getKey());
+        assertTrue(err.getValue().contains("a.b.c"));
+        assertTrue(err.getValue().contains("g:f3:1"));
+        assertTrue(err.getValue().contains("feature-export2"));
     }
 
     @Test
@@ -128,8 +138,10 @@ public class CheckApiRegionsCrossFeatureDupsTest {
             Collections.singletonMap("api-regions-crossfeature-dups", cfg);
         Analyser a = new Analyser(scanner, configs, at);
         AnalyserResult res = a.analyse(f);
-        assertEquals(0, res.getErrors().size());
-        assertEquals(0, res.getWarnings().size());
+        assertEquals(0, res.getArtifactErrors().size());
+        assertEquals(0, res.getArtifactWarnings().size());
+        assertEquals(0, res.getGlobalWarnings().size());
+        assertEquals(0, res.getGlobalErrors().size());
     }
 
     @Test
@@ -143,12 +155,18 @@ public class CheckApiRegionsCrossFeatureDupsTest {
         AnalyserTask at = new CheckApiRegionsCrossFeatureDups();
         Analyser a = new Analyser(scanner, at);
         AnalyserResult res = a.analyse(f);
-        assertEquals(2, res.getErrors().size());
-        assertEquals(0, res.getWarnings().size());
+        assertEquals(2, res.getArtifactErrors().size());
+        assertEquals(0, res.getArtifactWarnings().size());
+        assertEquals(0, res.getGlobalWarnings().size());
+        assertEquals(0, res.getGlobalErrors().size());
 
-        String allErrs = res.getErrors().get(0) + res.getErrors().get(1);
-        assertTrue(allErrs.contains("a.b.c"));
-        assertTrue(allErrs.contains("zzz.zzz"));
+        ArtifactReport err1 = res.getArtifactErrors().get(0);
+        assertEquals(ArtifactId.parse("g:extra:1"), err1.getKey());
+        assertTrue(err1.getValue().contains("zzz.zzz"));
+
+        ArtifactReport err2 = res.getArtifactErrors().get(1);
+        assertEquals(ArtifactId.parse("g:exp2:1"), err2.getKey());
+        assertTrue(err2.getValue().contains("a.b.c"));
     }
 
     @Test
@@ -165,11 +183,14 @@ public class CheckApiRegionsCrossFeatureDupsTest {
                 Collections.singletonMap("regions", "something,global"));
         Analyser a = new Analyser(scanner, configs, at);
         AnalyserResult res = a.analyse(f);
-        assertEquals(1, res.getErrors().size());
-        assertEquals(0, res.getWarnings().size());
+        assertEquals(1, res.getArtifactErrors().size());
+        assertEquals(0, res.getArtifactWarnings().size());
+        assertEquals(0, res.getGlobalWarnings().size());
+        assertEquals(0, res.getGlobalErrors().size());
 
-        String err = res.getErrors().get(0);
-        assertTrue(err.contains("zzz.zzz"));
+        ArtifactReport err1 = res.getArtifactErrors().get(0);
+        assertEquals(ArtifactId.parse("g:extra:1"), err1.getKey());
+        assertTrue(err1.getValue().contains("zzz.zzz"));
     }
 
     private Scanner getScanner() throws IOException {
