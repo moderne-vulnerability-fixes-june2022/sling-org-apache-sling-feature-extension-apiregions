@@ -31,7 +31,7 @@ import org.apache.sling.feature.extension.apiregions.api.config.Region;
 import org.osgi.framework.Constants;
 
 /**
- * Validator to validate a configuration
+ * Validator to validate a configuration or factory configuration
  */
 public class ConfigurationValidator {
     
@@ -47,6 +47,7 @@ public class ConfigurationValidator {
 
     /**
      * Validate a configuration
+     * 
      * @param config The OSGi configuration
      * @param desc The configuration description 
      * @param region The optional region for the configuration
@@ -56,15 +57,15 @@ public class ConfigurationValidator {
         final ConfigurationValidationResult result = new ConfigurationValidationResult();
         if ( config.isFactoryConfiguration() ) {
             if ( !(desc instanceof FactoryConfigurationDescription) ) {
-                result.getGlobalErrors().add("Factory configuration cannot be validated against non factory configuration description");
+                result.getErrors().add("Factory configuration cannot be validated against non factory configuration description");
             } else {
-                validateProperties(desc, config, result.getPropertyResults(), region);
+                validateProperties(config, desc, result.getPropertyResults(), region);
             }
         } else {
             if ( !(desc instanceof ConfigurationDescription) ) {
-                result.getGlobalErrors().add("Configuration cannot be validated against factory configuration description");
+                result.getErrors().add("Configuration cannot be validated against factory configuration description");
             } else {
-                validateProperties(desc, config, result.getPropertyResults(), region);
+                validateProperties(config, desc, result.getPropertyResults(), region);
             }
         }
 
@@ -74,16 +75,25 @@ public class ConfigurationValidator {
         return result;
     }
 
-    void validateProperties(final ConfigurableEntity desc, 
-            final Configuration configuration, 
+    /**
+     * Validate all properties
+     * @param configuration The OSGi configuration
+     * @param desc The configuration description
+     * @param results The map of results per property
+     * @param region The configuration region
+     */
+    void validateProperties(final Configuration configuration,
+            final ConfigurableEntity desc,  
             final Map<String, PropertyValidationResult> results,
             final Region region) {
         final Dictionary<String, Object> properties = configuration.getConfigurationProperties();
+        // validate the described properties
         for(final Map.Entry<String, PropertyDescription> propEntry : desc.getPropertyDescriptions().entrySet()) {
             final Object value = properties.get(propEntry.getKey());
             final PropertyValidationResult result = propertyValidator.validate(value, propEntry.getValue());
             results.put(propEntry.getKey(), result);
         }
+        // validate additional properties
         final Enumeration<String> keyEnum = properties.keys();
         while ( keyEnum.hasMoreElements() ) {
             final String propName = keyEnum.nextElement();

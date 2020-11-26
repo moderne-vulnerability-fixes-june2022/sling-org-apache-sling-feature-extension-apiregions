@@ -27,18 +27,20 @@ import org.apache.sling.feature.extension.apiregions.api.config.Option;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
 
 /**
- * Validate a configuration property
+ * Validate a configuration property or framework property
  */
 public class PropertyValidator {
     
 	/**
 	 * Validate the value against the property definition
+     * @param value The value to validate
+     * @param desc The property description
 	 * @return A property validation result
 	 */
-	public PropertyValidationResult validate(final Object value, final PropertyDescription prop) {
+	public PropertyValidationResult validate(final Object value, final PropertyDescription desc) {
 		final PropertyValidationResult result = new PropertyValidationResult();
 		if ( value == null ) {
-            if ( prop.isRequired() ) {
+            if ( desc.isRequired() ) {
                 result.getErrors().add("No value provided");
             }
 		} else {
@@ -59,19 +61,19 @@ public class PropertyValidator {
 			} else {
 				// single value
 				values = null;
-				validateValue(prop, value, result.getErrors());
+				validateValue(desc, value, result.getErrors());
 			}
 
 			if ( values != null ) {
                 // array or collection
                 for(final Object val : values) {
-                    validateValue(prop, val, result.getErrors());
+                    validateValue(desc, val, result.getErrors());
                 }
-                validateList(prop, values, result.getErrors());
+                validateList(desc, values, result.getErrors());
             }
             
-            if ( prop.getDeprecated() != null ) {
-                result.getWarnings().add(prop.getDeprecated());
+            if ( desc.getDeprecated() != null ) {
+                result.getWarnings().add(desc.getDeprecated());
             }
 		}
 		return result;

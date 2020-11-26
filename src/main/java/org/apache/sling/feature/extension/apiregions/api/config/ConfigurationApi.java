@@ -46,7 +46,9 @@ public class ConfigurationApi extends AttributeableEntity {
   
     /**
      * Get the configuration api from the feature - if it exists.
-     * 
+     * If the configuration api is updated, the containing feature is left untouched.
+     * {@link #setConfigurationApi(Feature, ConfigurationApi)} can be used to update
+     * the feature.
      * @param feature The feature
      * @return The configuration api or {@code null}.
      * @throws IllegalArgumentException If the extension is wrongly formatted
@@ -58,7 +60,7 @@ public class ConfigurationApi extends AttributeableEntity {
 
     /**
      * Get the configuration api from the extension.
-     * 
+     * If the configuration api is updated, the containing extension is left untouched.
      * @param ext The extension
      * @return The configuration api or {@code null} if the extension is {@code null}.
      * @throws IllegalArgumentException If the extension is wrongly formatted

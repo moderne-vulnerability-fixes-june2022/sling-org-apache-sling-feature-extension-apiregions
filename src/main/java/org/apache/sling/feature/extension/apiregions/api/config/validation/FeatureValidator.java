@@ -74,7 +74,7 @@ public class FeatureValidator {
 
             if ( regionInfo == null ) {
                 final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
-                cvr.getGlobalErrors().add("Unable to properly validate configuration, region info cannot be determined");
+                cvr.getErrors().add("Unable to properly validate configuration, region info cannot be determined");
                 result.getConfigurationResults().put(config.getPid(), cvr);
             } else {
                 if ( config.isFactoryConfiguration() ) {
@@ -84,22 +84,22 @@ public class FeatureValidator {
                         result.getConfigurationResults().put(config.getPid(), r);
                         if ( regionInfo.region != Region.INTERNAL ) {
                             if ( desc.getOperations().isEmpty() ) {
-                                r.getGlobalErrors().add("No operations allowed for factory configuration");
+                                r.getErrors().add("No operations allowed for factory configuration");
                             } else {
                                 if ( regionInfo.isUpdate && !desc.getOperations().contains(Operation.UPDATE)) {
-                                    r.getGlobalErrors().add("Updating of factory configuration is not allowed");
+                                    r.getErrors().add("Updating of factory configuration is not allowed");
                                 } else if ( !regionInfo.isUpdate && !desc.getOperations().contains(Operation.CREATE)) {
-                                    r.getGlobalErrors().add("Creation of factory configuration is not allowed");
+                                    r.getErrors().add("Creation of factory configuration is not allowed");
                                 }
                             }
                             if ( desc.getInternalNames().contains(config.getName())) {
-                                r.getGlobalErrors().add("Factory configuration with name is not allowed");
+                                r.getErrors().add("Factory configuration with name is not allowed");
                             }
                         }                        
 
                     } else if ( regionInfo.region != Region.INTERNAL && api.getInternalFactoryConfigurations().contains(config.getFactoryPid())) {
                         final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
-                        cvr.getGlobalErrors().add("Factory configuration is not allowed");
+                        cvr.getErrors().add("Factory configuration is not allowed");
                         result.getConfigurationResults().put(config.getPid(), cvr);
                     }
                 } else {
@@ -109,7 +109,7 @@ public class FeatureValidator {
                         result.getConfigurationResults().put(config.getPid(), r);
                     } else if ( regionInfo.region!= Region.INTERNAL && api.getInternalConfigurations().contains(config.getPid())) {
                         final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
-                        cvr.getGlobalErrors().add("Configuration is not allowed");
+                        cvr.getErrors().add("Configuration is not allowed");
                         result.getConfigurationResults().put(config.getPid(), cvr);
                     } 
                 }    

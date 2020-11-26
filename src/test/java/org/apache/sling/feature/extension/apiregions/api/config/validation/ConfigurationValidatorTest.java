@@ -39,7 +39,7 @@ public class ConfigurationValidatorTest {
 
         final ConfigurationValidationResult result = validator.validate(cfg, fcd, null);
         assertFalse(result.isValid());
-        assertEquals(1, result.getGlobalErrors().size());
+        assertEquals(1, result.getErrors().size());
     }
 
     @Test public void testWrongDescriptionTypeForFactoryConfiguration() {
@@ -48,7 +48,7 @@ public class ConfigurationValidatorTest {
 
         final ConfigurationValidationResult result = validator.validate(cfg, fcd, null);
         assertFalse(result.isValid());
-        assertEquals(1, result.getGlobalErrors().size());
+        assertEquals(1, result.getErrors().size());
     }
 
     @Test public void testDeprecated() {

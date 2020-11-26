@@ -19,6 +19,9 @@ package org.apache.sling.feature.extension.apiregions.api.config.validation;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Validation result for a property
+ */
 public class PropertyValidationResult {
 
     private final List<String> errors = new ArrayList<>();

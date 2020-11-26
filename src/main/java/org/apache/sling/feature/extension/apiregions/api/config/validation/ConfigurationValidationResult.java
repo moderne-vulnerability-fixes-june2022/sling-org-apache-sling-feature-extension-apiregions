@@ -21,16 +21,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A configuration validation result is returned by the {@code ConfigurationValidator}.
+ */
 public class ConfigurationValidationResult {
 
     private final Map<String, PropertyValidationResult> propertyResults = new HashMap<>();
 
-    private final List<String> globalErrors = new ArrayList<>();
+    private final List<String> errors = new ArrayList<>();
     
     private final List<String> warnings = new ArrayList<>();
 
+    /**
+     * Is the configuration valid?
+     * @return {@code true} if it is valid
+     */
     public boolean isValid() {
-        boolean valid = globalErrors.isEmpty();
+        boolean valid = errors.isEmpty();
         if ( valid ) {
             for(final PropertyValidationResult r : this.propertyResults.values()) {
                 if ( !r.isValid() ) {
@@ -42,10 +49,18 @@ public class ConfigurationValidationResult {
         return valid;
     }
 
-    public List<String> getGlobalErrors() {
-        return this.globalErrors;
+    /**
+     * Return the list of errors
+     * @return A list of errors. Might be empty.
+     */
+    public List<String> getErrors() {
+        return this.errors;
     }
     
+    /**
+     * Get a property validation result for each property of the configuration
+     * @return A map of property results keyed by property name
+     */
     public Map<String, PropertyValidationResult> getPropertyResults() {
         return propertyResults;
     }
