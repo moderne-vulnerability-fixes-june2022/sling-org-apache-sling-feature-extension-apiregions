@@ -30,7 +30,6 @@ import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationApi
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.FactoryConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.FrameworkPropertyDescription;
-import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.Region;
 import org.junit.Test;
 

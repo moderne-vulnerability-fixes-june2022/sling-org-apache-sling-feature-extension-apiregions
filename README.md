@@ -9,11 +9,11 @@ Read the documentation about [API Regions](docs/api-regions.md) for more informa
 
 ## Feature Model Analysers
 
-This component also contains Feature Model Analysers they are contributed through the Service Loader mechanism to the set of Analysers.
+This component also contains Feature Model Analysers. They are contributed through the Service Loader mechanism to the set of Analysers.
 
-Documentation can be found here: https://github.com/apache/sling-org-apache-sling-feature-analyser . These can be run as part of the 'analyse-features' goal with the [slingfeature-maven-plugin](https://github.com/apache/sling-slingfeature-maven-plugin#analyse-features-analyse-features).  
+Documentation can be found here: [Apache Sling Feature Analyser](https://github.com/apache/sling-org-apache-sling-feature-analyser) . These can be run as part of the 'analyse-features' goal with the [slingfeature-maven-plugin](https://github.com/apache/sling-slingfeature-maven-plugin#analyse-features-analyse-features).  
 
-These analysers relate to API Region definitions in Feature Models.
+These analysers relate to Java API Region definitions in Feature Models:
 
 * `api-regions`: This analyser ensures that packages listed as exports in API-Regions sections are actually exported by a bundle that's part of the feature.
 
@@ -26,7 +26,7 @@ packages in the `exporting-api` cannot depend on any packages from this region.
 * `api-regions-duplicates`: This analyser ensures that packages are only listed in one region
 in a given feature. If the same package is listed in multiple regions this will be an error.
 
-* `api-regions-exportsimports`: Checks bundle import/export package statements for consistency and completeness. If API Regions are used this analyser includes this 
+* `api-regions-exportsimports`: Checks bundle import/export package statements for consistency and completeness. If API Regions are used this analyser includes this
 information as part of the check, to ensure that bundles don't import packages of which they have no visibility because of API Regions restrictions.
 
 * `api-regions-check-order`: This analyser checks that regions are defined in the specified
@@ -50,15 +50,20 @@ is reported.
   * `warningPackages`: if packages listed here are found to overlap, a warning instead of an error is reported. Supports either literal package names (e.g. `javax.servlet`) or wildcards with an asterisk at the end (e.g. `javax.*`).
   * `ignoredPackages`: packages listed here are completely ignored in the analysis. Supports literal package names or wildcards with an asterisk at the end.
 
+These analysers relate to Configuration API Region definitions in Feature Models:
+
+* `configuration-api` : This analyser validates the OSGi configurations and framework properties based on the configuration API described in an extension.
+
 ## Extensions
 
 The following extensions are registered via the ServiceLoader mechanism:
 
 ## `org.apache.sling.feature.builder.MergeHandler`
-Merge handlers are called when features are merged during the aggregation process.
 
-`APIRegionMergeHandler` - This handler knows how to merge API Regions extensions
+Merge handlers are called when features are merged during the aggregation process:
 
+* `APIRegionMergeHandler` - This handler knows how to merge API Regions extensions
+* `ConfigurationApiMergeHandler` - This handlers knows how to merge Configuration API extensions
 
 # Additional Extensions
 
