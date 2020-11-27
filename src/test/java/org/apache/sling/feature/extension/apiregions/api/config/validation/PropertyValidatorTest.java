@@ -50,210 +50,207 @@ public class PropertyValidatorTest {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.BOOLEAN);
 
-        final List<String> messages = new ArrayList<>();
+        PropertyValidationResult result;
+        result = validator.validate(Boolean.TRUE, prop);
+        assertTrue(result.isValid());
 
-        validator.validateBoolean(prop, Boolean.TRUE, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(Boolean.FALSE, prop);
+        assertTrue(result.isValid());
 
-        validator.validateBoolean(prop, Boolean.FALSE, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate("TRUE", prop);
+        assertTrue(result.isValid());
 
-        validator.validateBoolean(prop, "TRUE", messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate("FALSE", prop);
+        assertTrue(result.isValid());
 
-        validator.validateBoolean(prop, "FALSE", messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate("yes", prop);
+        assertEquals(1, result.getErrors().size());
 
-        validator.validateBoolean(prop, "yes", messages);
-        assertEquals(1, messages.size());
-        messages.clear();
-
-        validator.validateBoolean(prop, 1, messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        result = validator.validate(1, prop);
+        assertEquals(1, result.getErrors().size());
     }
 
     @Test public void testValidateByte() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.BYTE);
 
-        final List<String> messages = new ArrayList<>();
+        PropertyValidationResult result;
 
-        validator.validateByte(prop, (byte)1, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate((byte)1, prop);
+        assertTrue(result.isValid());
 
-        validator.validateByte(prop, "1", messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate("1", prop);
+        assertTrue(result.isValid());
 
-        validator.validateByte(prop, "yes", messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        result = validator.validate("yes", prop);
+        assertEquals(1, result.getErrors().size());
 
-        validator.validateByte(prop, 1, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(1, prop);
+        assertTrue(result.isValid());
     }
 
     @Test public void testValidateShort() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.SHORT);
 
-        final List<String> messages = new ArrayList<>();
+        PropertyValidationResult result;
 
-        validator.validateShort(prop, (short)1, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate((short)1, prop);
+        assertTrue(result.isValid());
 
-        validator.validateShort(prop, "1", messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate("1", prop);
+        assertTrue(result.isValid());
 
-        validator.validateShort(prop, "yes", messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        result = validator.validate("yes", prop);
+        assertEquals(1, result.getErrors().size());
 
-        validator.validateShort(prop, 1, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(1, prop);
+        assertTrue(result.isValid());
     }
 
     @Test public void testValidateInteger() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.INTEGER);
 
-        final List<String> messages = new ArrayList<>();
+        PropertyValidationResult result;
 
-        validator.validateInteger(prop, 1, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(1, prop);
+        assertTrue(result.isValid());
 
-        validator.validateInteger(prop, "1", messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate("1", prop);
+        assertTrue(result.isValid());
 
-        validator.validateInteger(prop, "yes", messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        result = validator.validate("yes", prop);
+        assertEquals(1, result.getErrors().size());
 
-        validator.validateInteger(prop, 1, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(1, prop);
+        assertTrue(result.isValid());
     }
 
     @Test public void testValidateLong() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.LONG);
 
-        final List<String> messages = new ArrayList<>();
+        PropertyValidationResult result;
 
-        validator.validateLong(prop, 1L, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(1L, prop);
+        assertTrue(result.isValid());
 
-        validator.validateLong(prop, "1", messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate("1", prop);
+        assertTrue(result.isValid());
 
-        validator.validateLong(prop, "yes", messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        result = validator.validate("yes", prop);
+        assertEquals(1, result.getErrors().size());
 
-        validator.validateLong(prop, 1, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(1, prop);
+        assertTrue(result.isValid());
     }
 
     @Test public void testValidateFloat() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.FLOAT);
 
-        final List<String> messages = new ArrayList<>();
+        PropertyValidationResult result;
 
-        validator.validateFloat(prop, 1.1, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(1.1, prop);
+        assertTrue(result.isValid());
 
-        validator.validateFloat(prop, "1.1", messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate("1.1", prop);
+        assertTrue(result.isValid());
 
-        validator.validateFloat(prop, "yes", messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        result = validator.validate("yes", prop);
+        assertEquals(1, result.getErrors().size());
 
-        validator.validateFloat(prop, 1, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(1, prop);
+        assertTrue(result.isValid());
     }
 
     @Test public void testValidateDouble() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.DOUBLE);
 
-        final List<String> messages = new ArrayList<>();
+        PropertyValidationResult result;
 
-        validator.validateDouble(prop, 1.1d, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(1.1d, prop);
+        assertTrue(result.isValid());
 
-        validator.validateDouble(prop, "1.1", messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate("1.1", prop);
+        assertTrue(result.isValid());
 
-        validator.validateDouble(prop, "yes", messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        result = validator.validate("yes", prop);
+        assertEquals(1, result.getErrors().size());
 
-        validator.validateDouble(prop, 1, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(1, prop);
+        assertTrue(result.isValid());
     }
 
     @Test public void testValidateChar() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.CHARACTER);
 
-        final List<String> messages = new ArrayList<>();
+        PropertyValidationResult result;
 
-        validator.validateCharacter(prop, 'x', messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate('x', prop);
+        assertTrue(result.isValid());
 
-        validator.validateCharacter(prop, "y", messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate("y", prop);
+        assertTrue(result.isValid());
 
-        validator.validateCharacter(prop, "yes", messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        result = validator.validate("yes", prop);
+        assertEquals(1, result.getErrors().size());
     }
 
     @Test public void testValidateUrl() {
-        final List<String> messages = new ArrayList<>();
+        final PropertyDescription prop = new PropertyDescription();
+        prop.setType(PropertyType.URL);
 
-        validator.validateURL(null, "https://sling.apache.org/documentation", messages);
-        assertTrue(messages.isEmpty());
+        PropertyValidationResult result;
 
-        validator.validateURL(null, "hello world", messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        result = validator.validate("https://sling.apache.org/documentation", prop);
+        assertTrue(result.isValid());
+
+        result = validator.validate("hello world", prop);
+        assertEquals(1, result.getErrors().size());
     }
 
     @Test public void testValidateEmail() {
-        final List<String> messages = new ArrayList<>();
+        final PropertyDescription prop = new PropertyDescription();
+        prop.setType(PropertyType.EMAIL);
 
-        validator.validateEmail(null, "a@b.com", messages);
-        assertTrue(messages.isEmpty());
+        PropertyValidationResult result;
 
-        validator.validateEmail(null, "hello world", messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        result = validator.validate("a@b.com", prop);
+        assertTrue(result.isValid());
+
+        result = validator.validate("hello world", prop);
+        assertEquals(1, result.getErrors().size());
     }
 
     @Test public void testValidatePassword() {
         final PropertyDescription prop = new PropertyDescription();
-        final List<String> messages = new ArrayList<>();
+        prop.setType(PropertyType.PASSWORD);
 
-        validator.validatePassword(prop, null, messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        PropertyValidationResult result;
+
+        result = validator.validate(null, prop);
+        assertTrue(result.isValid());
 
         prop.setVariable("secret");
-        validator.validatePassword(prop, null, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(null, prop);
+        assertTrue(result.isValid());
     }
 
     @Test public void testValidatePath() {
-        final List<String> messages = new ArrayList<>();
+        final PropertyDescription prop = new PropertyDescription();
+        prop.setType(PropertyType.PATH);
 
-        validator.validatePath(null, "/a/b/c", messages);
-        assertTrue(messages.isEmpty());
+        PropertyValidationResult result;
 
-        validator.validateEmail(null, "hello world", messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        result = validator.validate("/a/b/c", prop);
+        assertTrue(result.isValid());
+
+        result = validator.validate("hello world", prop);
+        assertEquals(1, result.getErrors().size());
     }
     
     @Test public void testValidateRange() {
@@ -352,7 +349,6 @@ public class PropertyValidatorTest {
     }
     
     @Test public void testValidateList() {
-        final List<String> messages = new ArrayList<>();
         final PropertyDescription prop = new PropertyDescription();
 
         final List<Object> values = new ArrayList<>();
@@ -361,44 +357,83 @@ public class PropertyValidatorTest {
         values.add("c");
 
         // default cardinality - no excludes/includes
-        validator.validateList(prop, values, messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        PropertyValidationResult result;
+        result = validator.validate(values, prop);
+        assertEquals(1, result.getErrors().size());
 
         // cardinality 3 - no excludes/includes
         prop.setCardinality(3);
-        validator.validateList(prop, values, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(values, prop);
+        assertTrue(result.getErrors().isEmpty());
 
         values.add("d");
-        validator.validateList(prop, values, messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        result = validator.validate(values, prop);
+        assertEquals(1, result.getErrors().size());
 
         // excludes
         prop.setExcludes(new String[] {"d", "e"});
-        validator.validateList(prop, values, messages);
-        assertEquals(2, messages.size()); // cardinality and exclude
-        messages.clear();
+        result = validator.validate(values, prop);
+        assertEquals(2, result.getErrors().size()); // cardinality and exclude
 
         values.remove("d");
-        validator.validateList(prop, values, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(values, prop);
+        assertTrue(result.getErrors().isEmpty());
 
         // includes
         prop.setIncludes(new String[] {"b"});
-        validator.validateList(prop, values, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(values, prop);
+        assertTrue(result.getErrors().isEmpty());
 
         prop.setIncludes(new String[] {"x"});
-        validator.validateList(prop, values, messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        result = validator.validate(values, prop);
+        assertEquals(1, result.getErrors().size());
 
         values.add("x");
         values.remove("a");
-        validator.validateList(prop, values, messages);
-        assertTrue(messages.isEmpty());
+        result = validator.validate(values, prop);
+        assertTrue(result.getErrors().isEmpty());
+    }
+
+    @Test public void testValidateArray() {
+        final PropertyDescription prop = new PropertyDescription();
+
+        String[] values = new String[] {"a", "b", "c"};
+
+        // default cardinality - no excludes/includes
+        PropertyValidationResult result;
+        result = validator.validate(values, prop);
+        assertEquals(1, result.getErrors().size());
+
+        // cardinality 3 - no excludes/includes
+        prop.setCardinality(3);
+        result = validator.validate(values, prop);
+        assertTrue(result.getErrors().isEmpty());
+
+        values = new String[] {"a", "b", "c", "d"};
+        result = validator.validate(values, prop);
+        assertEquals(1, result.getErrors().size());
+
+        // excludes
+        prop.setExcludes(new String[] {"d", "e"});
+        result = validator.validate(values, prop);
+        assertEquals(2, result.getErrors().size()); // cardinality and exclude
+
+        values = new String[] {"a", "b", "c"};
+        result = validator.validate(values, prop);
+        assertTrue(result.getErrors().isEmpty());
+
+        // includes
+        prop.setIncludes(new String[] {"b"});
+        result = validator.validate(values, prop);
+        assertTrue(result.getErrors().isEmpty());
+
+        prop.setIncludes(new String[] {"x"});
+        result = validator.validate(values, prop);
+        assertEquals(1, result.getErrors().size());
+
+        values = new String[] {"b", "c", "x"};
+        result = validator.validate(values, prop);
+        assertTrue(result.getErrors().isEmpty());
     }
 
     @Test public void testDeprecation() {
