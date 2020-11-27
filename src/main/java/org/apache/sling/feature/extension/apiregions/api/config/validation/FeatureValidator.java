@@ -42,18 +42,18 @@ public class FeatureValidator {
 
     /**
      * Get the current feature provider
-	 * @return the feature provider or {@code null}
-	 */
-	public FeatureProvider getFeatureProvider() {
-		return featureProvider;
-	}
+     * @return the feature provider or {@code null}
+     */
+    public FeatureProvider getFeatureProvider() {
+	return featureProvider;
+    }
 
-	/**
+    /**
      * Set the feature provider
-	 * @param featureProvider the feature provider to set
-	 */
-	public void setFeatureProvider(final FeatureProvider provider) {
-		this.featureProvider = provider;
+     * @param provider the feature provider to set
+     */
+    public void setFeatureProvider(final FeatureProvider provider) {
+        this.featureProvider = provider;
     }
     
     /**
