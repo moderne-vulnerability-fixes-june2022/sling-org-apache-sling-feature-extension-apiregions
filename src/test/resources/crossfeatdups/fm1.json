@@ -13,7 +13,11 @@
     {
       "id": "g:extra:1",
       "feature-origins":"g:f3:1"
-    }
+    },
+    {
+      "id": "g:extra:2",
+      "feature-origins":"g:f2:1"
+    }    
   ],
   "api-regions:JSON|false":[
     {

@@ -193,6 +193,73 @@ public class CheckApiRegionsCrossFeatureDupsTest {
         assertTrue(err1.getValue().contains("zzz.zzz"));
     }
 
+    @Test
+    public void testDefiningFeatures() throws Exception {
+        Path fp = new File(getClass().getResource("/crossfeatdups/fm2.json").getFile()).toPath();
+        String fm = new String(Files.readAllBytes(fp));
+
+        Feature f = FeatureJSONReader.read(new StringReader(fm), null);
+
+        Scanner scanner = getScanner3();
+        AnalyserTask at = new CheckApiRegionsCrossFeatureDups();
+        Map<String, Map<String,String>> configs =
+                Collections.singletonMap("api-regions-crossfeature-dups",
+                Collections.singletonMap("definingFeatures", "g:f1:1"));
+        Analyser a = new Analyser(scanner, configs, at);
+        AnalyserResult res = a.analyse(f);
+
+        assertEquals(1, res.getErrors().size());
+        assertEquals(0, res.getWarnings().size());
+
+        String err = res.getErrors().get(0);
+        assertTrue(err.contains("org.foo.bar.bingo"));
+        assertTrue(err.contains("g:f2:1"));
+        assertTrue(err.contains("feature-export"));
+    }
+
+    @Test
+    public void testDefiningFeaturesRegex() throws Exception {
+        Path fp = new File(getClass().getResource("/crossfeatdups/fm2.json").getFile()).toPath();
+        String fm = new String(Files.readAllBytes(fp));
+
+        Feature f = FeatureJSONReader.read(new StringReader(fm), null);
+
+        Scanner scanner = getScanner3();
+        AnalyserTask at = new CheckApiRegionsCrossFeatureDups();
+        Map<String, Map<String,String>> configs =
+                Collections.singletonMap("api-regions-crossfeature-dups",
+                Collections.singletonMap("definingFeatures", "g:f1:*"));
+        Analyser a = new Analyser(scanner, configs, at);
+        AnalyserResult res = a.analyse(f);
+
+        assertEquals(1, res.getErrors().size());
+        assertEquals(0, res.getWarnings().size());
+
+        String err = res.getErrors().get(0);
+        assertTrue(err.contains("org.foo.bar.bingo"));
+        assertTrue(err.contains("g:f2:1"));
+        assertTrue(err.contains("feature-export"));
+    }
+
+    @Test
+    public void testMultipleExportsFromNondefiningFeatures() throws Exception {
+        Path fp = new File(getClass().getResource("/crossfeatdups/fm3.json").getFile()).toPath();
+        String fm = new String(Files.readAllBytes(fp));
+
+        Feature f = FeatureJSONReader.read(new StringReader(fm), null);
+
+        Scanner scanner = getScanner3();
+        AnalyserTask at = new CheckApiRegionsCrossFeatureDups();
+        Map<String, Map<String,String>> configs =
+                Collections.singletonMap("api-regions-crossfeature-dups",
+                Collections.singletonMap("definingFeatures", "g:f2:*"));
+        Analyser a = new Analyser(scanner, configs, at);
+        AnalyserResult res = a.analyse(f);
+
+        assertEquals(0, res.getErrors().size());
+        assertEquals(0, res.getWarnings().size());
+    }
+
     private Scanner getScanner() throws IOException {
         ArtifactProvider ap = new ArtifactProvider() {
             @Override
@@ -206,6 +273,8 @@ public class CheckApiRegionsCrossFeatureDupsTest {
                     return getClass().getResource("/crossfeatdups/test-bundles/no-exports.jar");
                 case "g:extra:1":
                     return getClass().getResource("/crossfeatdups/test-bundles/no-exports.jar");
+                case "g:extra:2":
+                    return getClass().getResource("/crossfeatdups/test-bundles/feature-export4.jar");
                 }
                 return null;
             }
@@ -227,6 +296,25 @@ public class CheckApiRegionsCrossFeatureDupsTest {
                     return getClass().getResource("/crossfeatdups/test-bundles/no-exports.jar");
                 case "g:extra:1":
                     return getClass().getResource("/crossfeatdups/test-bundles/feature-export3.jar");
+                case "g:extra:2":
+                    return getClass().getResource("/crossfeatdups/test-bundles/feature-export4.jar");
+                }
+                return null;
+            }
+        };
+        Scanner scanner = new Scanner(ap, Collections.singletonList(new ApiRegionsExtensionScanner()), Collections.emptyList());
+        return scanner;
+    }
+
+    private Scanner getScanner3() throws IOException {
+        ArtifactProvider ap = new ArtifactProvider() {
+            @Override
+            public URL provide(ArtifactId id) {
+                switch (id.toMvnId()) {
+                case "g:exp0:1":
+                    return getClass().getResource("/crossfeatdups/test-bundles/feature-export.jar");
+                case "g:exp1:1":
+                    return getClass().getResource("/crossfeatdups/test-bundles/feature-export1.jar");
                 }
                 return null;
             }
