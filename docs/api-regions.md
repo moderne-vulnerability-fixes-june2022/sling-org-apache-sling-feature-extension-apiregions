@@ -117,57 +117,151 @@ For each configuration and factory configuration, the allowed list of properties
 
 A similar mechanism exists for framework properties.
 
+### Configurations
+
+Each OSGi configuration that is part of the configuration API is listed below the `configurations` object with the PID of the configuration as the key. Each configuration can have the following properties:
+
+* `title` : A human readable title
+* `description` : A human readable description
+* `properties` : An object containing all properties that are allowed to be configured
+* `deprecated` : If this configuration should not be used anymore a human readable message.
+
 ``` json
-"configuration-api:JSON|optional" : {
-  "configurations" : {
-    "PID-A" : {
-      "title":"Configuration XY",
-      "description:":"This configuration...",
-      "properties" : {
-        "a" : {
-           "type" : "string|long|int|short|char|byte|double|float|boolean|password|url|email", // string is default
-           "cardinality" : 1, // optional, defaults to 1; if -1 == unlimited array, otherwise must be > 0; value > 1 == max
-           "title" : "...",    // optional
-           "description" : "...", // optional
-           "options" : [ // optional
-              {"title" : "value"}, {"another title":"another value"}
-            ],
-            "range" : {
-               "min" : 1000,
-               "max" : 5000
-             },
-            "variable" : "APP_PORT" // optional
+"configuration-api:JSON" : {
+    "configurations" : {
+        "org.apache.sling.engine.impl.SlingMainServlet" : {
+            "title" : "Apache Sling Main Servlet",
+            "description" : "The configuration of the main servlet...",
+            "properties" : {
+
+            }
         }
-      }
+    }
+}
+```
+
+### Properties
+
+For each property a JSON object contains additional information about this property. The following keys can be set:
+
+* 'type' : The type of the property, defaults to `STRING`. The following types are supported:
+  * STRING : A string value
+  * LONG : A long value
+  * INTEGER : An integer value
+  * SHORT : A short value
+  * CHARACTER : A single character
+  * BYTE : A byte value
+  * DOUBLE : A double value
+  * FLOAT : A float value
+  * BOOLEAN : A boolean value, either true or false
+  * PASSWORD : A string containing a password/secret
+  * URL : A string containing a URL
+  * EMAIL : A string containing an email address
+  * PATH : A string containing a unix-style path (starts with a slash)
+* `cardinality` : Single value property or multi value. Defaults to 1. If set to -1, the number of values is unlimited. Otherwise the value must be greater than zero and indicates the maximum number of values.
+* `required` : Boolean, whether the property is required and needs a configuration value.
+* `title` : A human readable title
+* `description` : A human readable description
+* `deprecated` : If this configuration should not be used anymore a human readable message.
+* `includes` : An array of values. If configured, these values must be present.
+* `excludes` : An array of values. If configured, these values must not be present.
+* `pattern` : A regular expression to validate the value.
+* `range` : An object which can have a `min` and/or a `max` property to further specify the value range.
+* `options` : An array of objects acting as an enumeration for the allowed values. Each option must have a `value` property. It might also have a `title` or `description` property.
+
+``` json
+"configuration-api:JSON" : {
+  "configurations" : {
+        "org.apache.sling.engine.impl.SlingMainServlet" : {
+            "properties" : {
+                "flag" : {
+                    "type" : "BOOLEAN"
+                },
+                "output" : {
+                    "options" : [
+                        {
+                            "title" : "Output to text file",
+                            "value" : "TEXT
+                        },
+                        {
+                            "title" : "Output to console",
+                            "value" : "CONSOLE
+                        }
+                    ]
+                },
+                "number" : {
+                    "type" : "INTEGER",
+                    "range" : {
+                        "min" : 5,
+                        "max" : 50
+                    }
+                },
+                "array_of_urls" : {
+                    "type" : "URL",
+                    "cardinality" : -1,
+                    "includes": ["https://sling.apache.org"],
+                    "excludes" : ["https://outdated.apache.org"]
+                }
+            }
+        }
     }
   },
-  "factory-configurations" : {
-    "FACTORY_PID_A" : {
-      "title":"Configuration ZY",
-      "description":"...",
-      "properties":{
-         ...,
-         "variable" : "APP_LOG_LEVEL_{name}" // the variable name will contain the name of the factory configuration
-      },
-      "operations":["create", "update"], // add allows customers to create new factory configurations, update allows to change existing ones
-      "internal-names" : ["...", "..."] // optional list of names for factory configurations which are internal and can't be changed by customers
+```
+
+### Factory Configurations
+
+OSGi factory configurations are similarly described in the configuration API. If a factory configuration is part of the public API, it should be listed below the `factory-configurations` property using the factory PID as a key.
+
+``` json
+"configuration-api:JSON" : {
+    "factory-configurations" : {
+        "org.apache.sling.event.jobs.QueueConfiguration" : {
+            "properties" : {
+
+            },
+            "internal-names" : "main",
+            "operations" : ["CREATE"]
+        }
     }
-  },
-  "internal-configurations" : [
-    // list of PIDs
-  ],
-  "internal-factory-configurations" : [
-    // list of factory PIDs
-  ],
-  "framework-properties" : {
-    "prop-a" : {
-      // title, description
-      // same properties as a single configuration property
+}
+```
+
+As with configurations, each public property needs to be described. Factory configurations support two additional properties:
+
+* `internal-names` : A list of factory configuration names that are not public and neither can't be updated or created.
+* `operations` : A list of operations out of `CREATE` and `UPDATE` - both are set by default. If `CREATE` is set, new factory configurations are allowed to be created. If `UPDATE` is set, existing configurations are allowed to be updated. But in both cases `internal-names` needs to be respected.
+
+### Framework Properties
+
+Similar to properties of OSGi configurations, framework properties can be described, providing validation for such properties:
+
+``` json
+"configuration-api:JSON" : {
+    "framework-properties" : {
+        "org.apache.sling.http.port" : {
+            "type" : "INTEGER"
+        }
     }
-  },
-  "internal-framework-properties" : {
-    // list of property names
-  }
+}
+```
+
+A framework property has the same configuration options as a property inside a configuration.
+
+### Internal Configurations
+
+Some OSGi configurations and factory configurations are not part of the public API and cannot be created/updated by application configuration. Same applies to framework properties. The PIDs, factory PIDs and names of these can be specified as well:
+
+``` json
+"configuration-api:JSON" : {
+    "internal-configurations" : [
+        // list of PIDs
+    ],
+    "internal-factory-configurations" : [
+        // list of factory PIDs
+    ],
+    "internal-framework-properties" : {
+        // list of property names
+    }
 }
 ```
 
