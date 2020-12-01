@@ -131,6 +131,7 @@ public class ConfigurationApi extends AttributeableEntity {
     /**
      * Clear the object and reset to defaults
      */
+    @Override
     public void clear() {
         super.clear();
         this.configurations.clear();
@@ -149,6 +150,7 @@ public class ConfigurationApi extends AttributeableEntity {
 	 * @param jsonObj The JSON Object
 	 * @throws IOException If JSON parsing fails
 	 */
+    @Override
     public void fromJSONObject(final JsonObject jsonObj) throws IOException {
         super.fromJSONObject(jsonObj);
         try {
@@ -281,6 +283,7 @@ public class ConfigurationApi extends AttributeableEntity {
      * @return The json object builder
      * @throws IOException If generating the JSON fails
      */
+    @Override
     JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objBuilder = super.createJson();
         if ( this.getRegion() != null ) {

@@ -20,6 +20,7 @@ import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -61,13 +62,13 @@ public class PropertyValidator {
 			} else {
 				// single value
 				values = null;
-				validateValue(desc, value, result.getErrors());
+				validateValue(desc, value, result);
 			}
 
 			if ( values != null ) {
                 // array or collection
                 for(final Object val : values) {
-                    validateValue(desc, val, result.getErrors());
+                    validateValue(desc, val, result);
                 }
                 validateList(desc, values, result.getErrors());
             }
@@ -119,40 +120,58 @@ public class PropertyValidator {
         }
     }
 
-	void validateValue(final PropertyDescription prop, final Object value, final List<String> messages) {
+    private static final List<String> PLACEHOLDERS = Arrays.asList("$[env:", "$[secret:", "$[prop:");
+
+	void validateValue(final PropertyDescription prop, final Object value, final PropertyValidationResult result) {
+        final List<String> messages = result.getErrors();
 		if ( value != null ) {
-			switch ( prop.getType() ) {
-				case BOOLEAN : validateBoolean(prop, value, messages);
-							   break;
-				case BYTE : validateByte(prop, value, messages);
-							break;
-				case CHARACTER : validateCharacter(prop, value, messages);
-							break;
-				case DOUBLE : validateDouble(prop, value, messages); 
-							break;
-				case FLOAT : validateFloat(prop, value, messages); 
-							break;
-				case INTEGER : validateInteger(prop, value, messages);
-							break;
-				case LONG : validateLong(prop, value, messages);
-							break;
-				case SHORT : validateShort(prop, value, messages);
-							break;
-				case STRING : // no special validation for string
-							break;
-				case EMAIL : validateEmail(prop, value, messages); 
-							break;
-				case PASSWORD : validatePassword(prop, value, messages);
-							break;
-                case URL : validateURL(prop, value, messages);
-                           break;
-                case PATH : validatePath(prop, value, messages);
-							break;
-				default : messages.add("Unable to validate value - unknown property type : " + prop.getType());
+            // check for placeholder
+            boolean checkValue = true;
+            if ( value instanceof String ) {
+                final String strVal = (String)value;
+                for(final String p : PLACEHOLDERS) {
+                    if ( strVal.contains(p) ) {
+                        checkValue = false;
+                        break;
+                    }
+                }
             }
-            validateRegex(prop, value, messages);
-            validateOptions(prop, value, messages);
-		} else {
+            if ( checkValue ) {
+                switch ( prop.getType() ) {
+                    case BOOLEAN : validateBoolean(prop, value, messages);
+                                break;
+                    case BYTE : validateByte(prop, value, messages);
+                                break;
+                    case CHARACTER : validateCharacter(prop, value, messages);
+                                break;
+                    case DOUBLE : validateDouble(prop, value, messages); 
+                                break;
+                    case FLOAT : validateFloat(prop, value, messages); 
+                                break;
+                    case INTEGER : validateInteger(prop, value, messages);
+                                break;
+                    case LONG : validateLong(prop, value, messages);
+                                break;
+                    case SHORT : validateShort(prop, value, messages);
+                                break;
+                    case STRING : // no special validation for string
+                                break;
+                    case EMAIL : validateEmail(prop, value, messages); 
+                                break;
+                    case PASSWORD : validatePassword(prop, value, messages);
+                                break;
+                    case URL : validateURL(prop, value, messages);
+                            break;
+                    case PATH : validatePath(prop, value, messages);
+                                break;
+                    default : messages.add("Unable to validate value - unknown property type : " + prop.getType());
+                }
+                validateRegex(prop, value, messages);
+                validateOptions(prop, value, messages);                
+            } else {
+                result.markSkipped();
+            }
+        } else {
 			messages.add("Null value provided for validation");
 		}
 	}

@@ -28,6 +28,8 @@ public class PropertyValidationResult {
 
     private final List<String> warnings = new ArrayList<>();
 
+    private boolean skipped = false;
+
     /**
      * Is the property value valid?
      * @return {@code true} if the value is valid
@@ -51,5 +53,20 @@ public class PropertyValidationResult {
      */
     public List<String> getWarnings() {
         return this.warnings;
+    }
+
+    /**
+     * Has the validation for this property be skipped?
+     * @return {@code true} if it has been skipped
+     */
+    public boolean isSkipped() {
+        return this.skipped;
+    }
+
+    /**
+     * Mark the property to be skipped during validation 
+     */
+    public void markSkipped() {
+        this.skipped = true;
     }
 }

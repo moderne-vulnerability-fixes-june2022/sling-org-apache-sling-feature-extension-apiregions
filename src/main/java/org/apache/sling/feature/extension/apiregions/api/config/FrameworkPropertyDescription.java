@@ -21,4 +21,6 @@ package org.apache.sling.feature.extension.apiregions.api.config;
  */
 public class FrameworkPropertyDescription extends PropertyDescription {
     
+        // marker class to distinguish between different configurable entities
+
 }

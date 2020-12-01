@@ -40,6 +40,7 @@ public abstract class DescribableEntity extends AttributeableEntity {
 	/**
      * Clear the object and reset to defaults
      */
+    @Override
 	public void clear() {
 		super.clear();
 		this.setTitle(null);
@@ -54,6 +55,7 @@ public abstract class DescribableEntity extends AttributeableEntity {
 	 * @param jsonObj The JSON Object
 	 * @throws IOException If JSON parsing fails
 	 */
+    @Override
 	public void fromJSONObject(final JsonObject jsonObj) throws IOException {
 		super.fromJSONObject(jsonObj);
         try {
@@ -119,6 +121,7 @@ public abstract class DescribableEntity extends AttributeableEntity {
      * @return The json object builder
      * @throws IOException If generating the JSON fails
      */
+    @Override
     JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objectBuilder = super.createJson();
 

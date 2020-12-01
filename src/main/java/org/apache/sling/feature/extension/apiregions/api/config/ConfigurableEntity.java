@@ -37,6 +37,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
     /**
      * Clear the object and reset to defaults
      */
+    @Override
 	public void clear() {
         super.clear();
 		this.properties.clear();
@@ -49,6 +50,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
 	 * @param jsonObj The JSON Object
 	 * @throws IOException If JSON parsing fails
 	 */
+    @Override
 	public void fromJSONObject(final JsonObject jsonObj) throws IOException {
         super.fromJSONObject(jsonObj);
         try {
@@ -79,6 +81,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
      * @return The json object builder
      * @throws IOException If generating the JSON fails
      */
+    @Override
 	JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objBuilder = super.createJson();
 

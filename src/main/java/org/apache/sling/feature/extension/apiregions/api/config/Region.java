@@ -16,6 +16,9 @@
  */
 package org.apache.sling.feature.extension.apiregions.api.config;
 
+/**
+ * The configuration api region of the feature
+ */
 public enum Region {
     
     GLOBAL,

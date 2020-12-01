@@ -50,6 +50,7 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
     /**
      * Clear the object and set the defaults
      */
+    @Override
     public void clear() {
         super.clear();
         this.setDefaults();
@@ -63,6 +64,7 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
 	 * @param jsonObj The JSON Object
 	 * @throws IOException If JSON parsing fails
 	 */
+    @Override
     public void fromJSONObject(final JsonObject jsonObj) throws IOException {
         super.fromJSONObject(jsonObj);
         try {
@@ -113,6 +115,7 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
      * @return The json object builder
      * @throws IOException If generating the JSON fails
      */
+    @Override
     JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objBuilder = super.createJson();
 		

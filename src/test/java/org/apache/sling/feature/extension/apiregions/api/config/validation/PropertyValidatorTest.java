@@ -35,15 +35,20 @@ public class PropertyValidatorTest {
     
     @Test public void testValidateWithNull() {
         final PropertyDescription prop = new PropertyDescription();
+        PropertyValidationResult result;
 
         // prop not required - no error
-        assertTrue(validator.validate(null, prop).getErrors().isEmpty());
-        assertTrue(validator.validate(null, prop).isValid());
+        result = validator.validate(null, prop);
+        assertTrue(result.getErrors().isEmpty());
+        assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         // prop required - error
         prop.setRequired(true);
-        assertEquals(1, validator.validate(null, prop).getErrors().size());
-        assertFalse(validator.validate(null, prop).isValid());
+        result = validator.validate(null, prop);
+        assertEquals(1, result.getErrors().size());
+        assertFalse(result.isValid());
+        assertFalse(result.isSkipped());
     }
 
     @Test public void testValidateBoolean() {
@@ -53,21 +58,27 @@ public class PropertyValidatorTest {
         PropertyValidationResult result;
         result = validator.validate(Boolean.TRUE, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate(Boolean.FALSE, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("TRUE", prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("FALSE", prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("yes", prop);
         assertEquals(1, result.getErrors().size());
+        assertFalse(result.isSkipped());
 
         result = validator.validate(1, prop);
         assertEquals(1, result.getErrors().size());
+        assertFalse(result.isSkipped());
     }
 
     @Test public void testValidateByte() {
@@ -78,15 +89,19 @@ public class PropertyValidatorTest {
 
         result = validator.validate((byte)1, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("1", prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("yes", prop);
         assertEquals(1, result.getErrors().size());
+        assertFalse(result.isSkipped());
 
         result = validator.validate(1, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
     }
 
     @Test public void testValidateShort() {
@@ -97,15 +112,19 @@ public class PropertyValidatorTest {
 
         result = validator.validate((short)1, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("1", prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("yes", prop);
         assertEquals(1, result.getErrors().size());
+        assertFalse(result.isSkipped());
 
         result = validator.validate(1, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
     }
 
     @Test public void testValidateInteger() {
@@ -116,15 +135,19 @@ public class PropertyValidatorTest {
 
         result = validator.validate(1, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("1", prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("yes", prop);
         assertEquals(1, result.getErrors().size());
+        assertFalse(result.isSkipped());
 
         result = validator.validate(1, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
     }
 
     @Test public void testValidateLong() {
@@ -135,15 +158,19 @@ public class PropertyValidatorTest {
 
         result = validator.validate(1L, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("1", prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("yes", prop);
         assertEquals(1, result.getErrors().size());
+        assertFalse(result.isSkipped());
 
         result = validator.validate(1, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
     }
 
     @Test public void testValidateFloat() {
@@ -154,15 +181,19 @@ public class PropertyValidatorTest {
 
         result = validator.validate(1.1, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("1.1", prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("yes", prop);
         assertEquals(1, result.getErrors().size());
+        assertFalse(result.isSkipped());
 
         result = validator.validate(1, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
     }
 
     @Test public void testValidateDouble() {
@@ -173,15 +204,19 @@ public class PropertyValidatorTest {
 
         result = validator.validate(1.1d, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("1.1", prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("yes", prop);
         assertEquals(1, result.getErrors().size());
+        assertFalse(result.isSkipped());
 
         result = validator.validate(1, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
     }
 
     @Test public void testValidateChar() {
@@ -192,12 +227,15 @@ public class PropertyValidatorTest {
 
         result = validator.validate('x', prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("y", prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("yes", prop);
         assertEquals(1, result.getErrors().size());
+        assertFalse(result.isSkipped());
     }
 
     @Test public void testValidateUrl() {
@@ -208,9 +246,11 @@ public class PropertyValidatorTest {
 
         result = validator.validate("https://sling.apache.org/documentation", prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("hello world", prop);
         assertEquals(1, result.getErrors().size());
+        assertFalse(result.isSkipped());
     }
 
     @Test public void testValidateEmail() {
@@ -221,9 +261,11 @@ public class PropertyValidatorTest {
 
         result = validator.validate("a@b.com", prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("hello world", prop);
         assertEquals(1, result.getErrors().size());
+        assertFalse(result.isSkipped());
     }
 
     @Test public void testValidatePassword() {
@@ -234,10 +276,12 @@ public class PropertyValidatorTest {
 
         result = validator.validate(null, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         prop.setVariable("secret");
         result = validator.validate(null, prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
     }
 
     @Test public void testValidatePath() {
@@ -248,9 +292,11 @@ public class PropertyValidatorTest {
 
         result = validator.validate("/a/b/c", prop);
         assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
 
         result = validator.validate("hello world", prop);
         assertEquals(1, result.getErrors().size());
+        assertFalse(result.isSkipped());
     }
     
     @Test public void testValidateRange() {
@@ -360,37 +406,45 @@ public class PropertyValidatorTest {
         PropertyValidationResult result;
         result = validator.validate(values, prop);
         assertEquals(1, result.getErrors().size());
+        assertFalse(result.isSkipped());
 
         // cardinality 3 - no excludes/includes
         prop.setCardinality(3);
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertTrue(result.getErrors().isEmpty());
 
         values.add("d");
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertEquals(1, result.getErrors().size());
 
         // excludes
         prop.setExcludes(new String[] {"d", "e"});
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertEquals(2, result.getErrors().size()); // cardinality and exclude
 
         values.remove("d");
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertTrue(result.getErrors().isEmpty());
 
         // includes
         prop.setIncludes(new String[] {"b"});
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertTrue(result.getErrors().isEmpty());
 
         prop.setIncludes(new String[] {"x"});
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertEquals(1, result.getErrors().size());
 
         values.add("x");
         values.remove("a");
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertTrue(result.getErrors().isEmpty());
     }
 
@@ -402,37 +456,45 @@ public class PropertyValidatorTest {
         // default cardinality - no excludes/includes
         PropertyValidationResult result;
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertEquals(1, result.getErrors().size());
 
         // cardinality 3 - no excludes/includes
         prop.setCardinality(3);
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertTrue(result.getErrors().isEmpty());
 
         values = new String[] {"a", "b", "c", "d"};
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertEquals(1, result.getErrors().size());
 
         // excludes
         prop.setExcludes(new String[] {"d", "e"});
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertEquals(2, result.getErrors().size()); // cardinality and exclude
 
         values = new String[] {"a", "b", "c"};
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertTrue(result.getErrors().isEmpty());
 
         // includes
         prop.setIncludes(new String[] {"b"});
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertTrue(result.getErrors().isEmpty());
 
         prop.setIncludes(new String[] {"x"});
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertEquals(1, result.getErrors().size());
 
         values = new String[] {"b", "c", "x"};
         result = validator.validate(values, prop);
+        assertFalse(result.isSkipped());
         assertTrue(result.getErrors().isEmpty());
     }
 
@@ -444,5 +506,58 @@ public class PropertyValidatorTest {
         assertTrue(result.isValid());
         assertEquals(1, result.getWarnings().size());
         assertEquals("This is deprecated", result.getWarnings().get(0));
+    }
+
+    @Test public void testPlaceholdersString() {
+        final PropertyDescription desc = new PropertyDescription();
+
+        PropertyValidationResult result = null;
+
+        result = validator.validate("$[env:variable]", desc);
+        assertTrue(result.isValid());
+        assertTrue(result.isSkipped());
+
+        result = validator.validate("$[prop:variable]", desc);
+        assertTrue(result.isValid());
+        assertTrue(result.isSkipped());
+
+        result = validator.validate("$[secret:variable]", desc);
+        assertTrue(result.isValid());
+        assertTrue(result.isSkipped());
+    }
+
+    @Test public void testPlaceholdersNumber() {
+        final PropertyDescription desc = new PropertyDescription();
+        desc.setType(PropertyType.INTEGER);
+
+        PropertyValidationResult result = null;
+
+        result = validator.validate("$[env:variable]", desc);
+        assertTrue(result.isValid());
+        assertTrue(result.isSkipped());
+
+        result = validator.validate("$[prop:variable]", desc);
+        assertTrue(result.isValid());
+        assertTrue(result.isSkipped());
+
+        result = validator.validate("$[secret:variable]", desc);
+        assertTrue(result.isValid());
+        assertTrue(result.isSkipped());
+    }
+
+    @Test public void testPlaceholdersArray() {
+        final PropertyDescription desc = new PropertyDescription();
+        desc.setType(PropertyType.INTEGER);
+        desc.setCardinality(-1);
+
+        PropertyValidationResult result = null;
+
+        result = validator.validate(new Object[] {5, "$[env:variable]"}, desc);
+        assertTrue(result.isValid());
+        assertTrue(result.isSkipped());
+
+        result = validator.validate(new Object[] {"hello", "$[env:variable]"}, desc);
+        assertFalse(result.isValid());
+        assertTrue(result.isSkipped());
     }
 }
