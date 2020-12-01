@@ -76,7 +76,7 @@ public class CheckConfigurationApi implements AnalyserTask{
                         for(final Map.Entry<String, PropertyValidationResult> propEntry : entry.getValue().getPropertyResults().entrySet()) {
                             if ( !propEntry.getValue().isValid() ) {
                                 for(final String err : propEntry.getValue().getErrors()) {
-                                    context.reportWarning("Configuration " + entry.getKey() + "." + propEntry.getKey() + " : " + err);
+                                    context.reportError("Configuration " + entry.getKey() + "." + propEntry.getKey() + " : " + err);
                                 }
                             }
                         }
