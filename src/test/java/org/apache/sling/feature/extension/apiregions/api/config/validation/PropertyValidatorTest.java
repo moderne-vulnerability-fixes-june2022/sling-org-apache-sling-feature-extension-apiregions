@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.sling.feature.extension.apiregions.api.config.Option;
@@ -278,8 +279,10 @@ public class PropertyValidatorTest {
         assertTrue(result.isValid());
         assertFalse(result.isSkipped());
 
-        prop.setVariable("secret");
-        result = validator.validate(null, prop);
+        result = validator.validate("secret", prop);
+        assertFalse(result.isValid());
+
+        result = validator.validate("$[secret:dbpassword]", prop);
         assertTrue(result.isValid());
         assertFalse(result.isSkipped());
     }
@@ -299,6 +302,52 @@ public class PropertyValidatorTest {
         assertFalse(result.isSkipped());
     }
     
+    @Test public void testValidateString() {
+        final PropertyDescription desc = new PropertyDescription();
+        PropertyValidationResult result;
+
+        result = validator.validate("hello world", desc);
+        assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
+
+        result = validator.validate("$[prop:KEY]", desc);
+        assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
+
+        // skip if required
+        desc.setRequired(true);
+        result = validator.validate("$[prop:KEY]", desc);
+        assertTrue(result.isValid());
+        assertTrue(result.isSkipped());
+        desc.setRequired(false);
+
+        // skip if options
+        desc.setOptions(Collections.singletonList(new Option()));
+        result = validator.validate("$[prop:KEY]", desc);
+        assertTrue(result.isValid());
+        assertTrue(result.isSkipped());
+        desc.setOptions(null);
+
+        // skip if regexp
+        desc.setRegex(".*");        
+        result = validator.validate("$[prop:KEY]", desc);
+        assertTrue(result.isValid());
+        assertTrue(result.isSkipped());
+        desc.setRegex(null);
+
+        // empty string - not required
+        result = validator.validate("", desc);
+        assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
+
+        // empty string - required
+        desc.setRequired(true);
+        result = validator.validate("", desc);
+        assertFalse(result.isValid());
+        assertFalse(result.isSkipped());
+        desc.setRequired(false);
+    }
+
     @Test public void testValidateRange() {
         final List<String> messages = new ArrayList<>();
         final PropertyDescription prop = new PropertyDescription();
@@ -510,6 +559,7 @@ public class PropertyValidatorTest {
 
     @Test public void testPlaceholdersString() {
         final PropertyDescription desc = new PropertyDescription();
+        desc.setType(PropertyType.PATH);
 
         PropertyValidationResult result = null;
 

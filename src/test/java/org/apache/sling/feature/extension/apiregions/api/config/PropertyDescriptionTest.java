@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -132,5 +133,28 @@ public class PropertyDescriptionTest {
         ext.setJSON("{ \"variable\" : \"var\", \"regex\": \".\"}");
 
         assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
+    }
+
+    @Test public void testSetCardinality() {
+        final PropertyDescription desc = new PropertyDescription();
+        desc.setCardinality(5);
+        assertEquals(5, desc.getCardinality());
+        desc.setCardinality(1);
+        assertEquals(1, desc.getCardinality());
+        desc.setCardinality(-1);
+        assertEquals(-1, desc.getCardinality());
+
+        try {
+            desc.setCardinality(0);
+            fail();
+        } catch ( final IllegalArgumentException iae) {
+            // expected
+        }
+        try {
+            desc.setCardinality(-2);
+            fail();
+        } catch ( final IllegalArgumentException iae) {
+            // expected
+        }
     }
 }

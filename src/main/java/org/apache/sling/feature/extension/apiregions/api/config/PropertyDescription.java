@@ -220,10 +220,18 @@ public class PropertyDescription extends DescribableEntity {
 
 	/**
 	 * Set the cardinality
-	 * @param cardinality the cardinality to set
+     * The default cardinality is {@code 1}. If the value is greater than zero
+     * the property can contain up to that number of values.
+     * If the cardinality is {@code -1} the property can hold an unlimited number
+     * of values.
+	 * @param value the cardinality to set
+     * @throws IllegalArgumentException If the value is {@code 0} or below {@code -1}.
 	 */
-	public void setCardinality(final int cardinality) {
-		this.cardinality = cardinality;
+	public void setCardinality(final int value) {
+        if ( value == 0 || value < -1 ) {
+            throw new IllegalArgumentException();
+        }
+		this.cardinality = value;
 	}
 
 	/**

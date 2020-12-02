@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.sling.feature.extension.apiregions.api.config.Option;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
+import org.apache.sling.feature.extension.apiregions.api.config.PropertyType;
 
 /**
  * Validate a configuration property or framework property
@@ -122,61 +123,80 @@ public class PropertyValidator {
 
     private static final List<String> PLACEHOLDERS = Arrays.asList("$[env:", "$[secret:", "$[prop:");
 
-	void validateValue(final PropertyDescription prop, final Object value, final PropertyValidationResult result) {
+	void validateValue(final PropertyDescription desc, final Object value, final PropertyValidationResult result) {
         final List<String> messages = result.getErrors();
 		if ( value != null ) {
             // check for placeholder
-            boolean checkValue = true;
+            boolean hasPlaceholder = false;
             if ( value instanceof String ) {
                 final String strVal = (String)value;
                 for(final String p : PLACEHOLDERS) {
                     if ( strVal.contains(p) ) {
-                        checkValue = false;
+                        hasPlaceholder = true;
                         break;
                     }
                 }
             }
-            if ( checkValue ) {
-                switch ( prop.getType() ) {
-                    case BOOLEAN : validateBoolean(prop, value, messages);
+            if ( !hasPlaceholder ) {
+                switch ( desc.getType() ) {
+                    case BOOLEAN : validateBoolean(desc, value, messages);
                                 break;
-                    case BYTE : validateByte(prop, value, messages);
+                    case BYTE : validateByte(desc, value, messages);
                                 break;
-                    case CHARACTER : validateCharacter(prop, value, messages);
+                    case CHARACTER : validateCharacter(desc, value, messages);
                                 break;
-                    case DOUBLE : validateDouble(prop, value, messages); 
+                    case DOUBLE : validateDouble(desc, value, messages); 
                                 break;
-                    case FLOAT : validateFloat(prop, value, messages); 
+                    case FLOAT : validateFloat(desc, value, messages); 
                                 break;
-                    case INTEGER : validateInteger(prop, value, messages);
+                    case INTEGER : validateInteger(desc, value, messages);
                                 break;
-                    case LONG : validateLong(prop, value, messages);
+                    case LONG : validateLong(desc, value, messages);
                                 break;
-                    case SHORT : validateShort(prop, value, messages);
+                    case SHORT : validateShort(desc, value, messages);
                                 break;
-                    case STRING : // no special validation for string
+                    case STRING : validateRequired(desc, value, messages);
                                 break;
-                    case EMAIL : validateEmail(prop, value, messages); 
+                    case EMAIL : validateEmail(desc, value, messages); 
                                 break;
-                    case PASSWORD : validatePassword(prop, value, messages);
+                    case PASSWORD : validatePassword(desc, value, messages, false);
                                 break;
-                    case URL : validateURL(prop, value, messages);
+                    case URL : validateURL(desc, value, messages);
                             break;
-                    case PATH : validatePath(prop, value, messages);
+                    case PATH : validatePath(desc, value, messages);
                                 break;
-                    default : messages.add("Unable to validate value - unknown property type : " + prop.getType());
+                    default : messages.add("Unable to validate value - unknown property type : " + desc.getType());
                 }
-                validateRegex(prop, value, messages);
-                validateOptions(prop, value, messages);                
+                validateRegex(desc, value, messages);
+                validateOptions(desc, value, messages);                
             } else {
-                result.markSkipped();
+                // placeholder is present
+                if ( desc.getType() == PropertyType.PASSWORD ) {
+                    validatePassword(desc, value, messages, true);
+                } else if ( desc.getType() == PropertyType.STRING ) {
+                    // any string is valid, we only mark the result as skipped if a regex or options are set
+                    if ( desc.getRegex() != null || desc.getOptions() != null || desc.isRequired() ) {
+                        result.markSkipped();
+                    }
+                } else {
+                    result.markSkipped();
+                }
             }
         } else {
 			messages.add("Null value provided for validation");
 		}
 	}
 	
-	void validateBoolean(final PropertyDescription prop, final Object value, final List<String> messages) {
+	void validateRequired(final PropertyDescription prop, final Object value, final List<String> messages) {
+        if ( prop.isRequired() ) {
+            final String val = value.toString();
+            if ( val.isEmpty() ) {
+                messages.add("Value is required");
+            }
+        }
+    }
+
+    void validateBoolean(final PropertyDescription prop, final Object value, final List<String> messages) {
         if ( ! (value instanceof Boolean) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
@@ -333,10 +353,10 @@ public class PropertyValidator {
 		}
 	}
 
-	void validatePassword(final PropertyDescription prop, final Object value, final List<String> messages) {
-		if ( prop.getVariable() == null ) {
-			messages.add("Value for a password must use a variable");
-		}
+	void validatePassword(final PropertyDescription desc, final Object value, final List<String> messages, final boolean hasPlaceholder) {
+        if ( !hasPlaceholder ) {
+            messages.add("Value for a password must use a placeholder");
+        }
 	}
 
 	void validatePath(final PropertyDescription prop, final Object value, final List<String> messages) {
