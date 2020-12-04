@@ -31,6 +31,7 @@ import javax.json.JsonValue;
 
 /**
  * Description of an OSGi factory configuration
+ * This class is not thread safe.
  */
 public class FactoryConfigurationDescription extends ConfigurableEntity {
     

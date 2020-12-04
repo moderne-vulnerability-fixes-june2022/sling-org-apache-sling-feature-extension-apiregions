@@ -38,6 +38,7 @@ import org.apache.sling.feature.Feature;
  * A configuration api describes the set of supported OSGi
  * configurations and framework properties. This object can be
  * stored as an extension inside a feature model.
+ * This class is not thread safe.
  */
 public class ConfigurationApi extends AttributeableEntity {
     

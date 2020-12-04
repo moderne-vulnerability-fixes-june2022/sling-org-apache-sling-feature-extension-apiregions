@@ -30,6 +30,7 @@ import javax.json.JsonValue;
 
 /**
  * Instances of this class represent a single configuration property
+ * This class is not thread safe.
  */
 public class PropertyDescription extends DescribableEntity {
 	

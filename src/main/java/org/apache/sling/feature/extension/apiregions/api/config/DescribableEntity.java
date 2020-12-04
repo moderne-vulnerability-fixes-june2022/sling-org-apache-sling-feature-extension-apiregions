@@ -25,6 +25,7 @@ import javax.json.JsonObjectBuilder;
 /**
  * Abstract class for all describable entities, having an optional title,
  * description and deprecation info.
+ * This class is not thread safe.
  */
 public abstract class DescribableEntity extends AttributeableEntity {
 	

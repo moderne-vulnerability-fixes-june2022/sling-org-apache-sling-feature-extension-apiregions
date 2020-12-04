@@ -34,6 +34,7 @@ import org.apache.sling.feature.Feature;
 
 /**
  * Extension to hold information about deprecated JDK API
+ * This class is not thread safe.
  * @since 1.1.0
  */
 public class JDKDeprecationExtension {

@@ -48,7 +48,9 @@ import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 
 /**
- * An api regions configuration
+ * Configuration of API regions for Java API.
+ * 
+ * This class is not thread safe.
  */
 public class ApiRegions {
 

@@ -24,6 +24,7 @@ import java.util.Objects;
  * Deprecation state for a package
  *
  * Either the whole package is deprecated or some members.
+ * This class is not thread safe.
  * @since 1.1
  */
 public class Deprecation {

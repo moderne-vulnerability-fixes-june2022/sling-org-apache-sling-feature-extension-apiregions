@@ -23,6 +23,7 @@ import java.util.Map;
 
 /**
  * A configuration validation result is returned by the {@code ConfigurationValidator}.
+ * This class is not thread safe.
  */
 public class ConfigurationValidationResult {
 

@@ -1,0 +1,16 @@
+[
+    {
+      "name" : "global",
+      "exports" : [
+        {
+            "name" : "org.apache.sling.global",
+            "toggle" : "sling_enabled"
+        },
+        {
+            "name" : "org.apache.felix.global",
+            "toggle" : "global_enabled",
+            "previous" : "org.apache.felix:api:1.1"
+        }
+      ]
+    }
+ ]

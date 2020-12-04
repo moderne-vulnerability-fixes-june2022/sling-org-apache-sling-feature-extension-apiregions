@@ -18,6 +18,7 @@ package org.apache.sling.feature.extension.apiregions.api.config;
 
 /**
  * A framework property description
+ * This class is not thread safe.
  */
 public class FrameworkPropertyDescription extends PropertyDescription {
     

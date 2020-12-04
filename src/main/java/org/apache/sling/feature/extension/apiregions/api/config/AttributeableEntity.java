@@ -30,6 +30,7 @@ import org.apache.felix.cm.json.Configurations;
 
 /**
  * Abstract class used by all entities which allow additional attributes to be stored.
+ * This class is not thread safe.
  */
 public abstract class AttributeableEntity {
 	

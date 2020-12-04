@@ -21,6 +21,7 @@ import java.util.List;
 
 /**
  * Validation result for a property
+ * This class is not thread safe.
  */
 public class PropertyValidationResult {
 

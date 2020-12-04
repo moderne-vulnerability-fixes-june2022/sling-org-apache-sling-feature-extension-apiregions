@@ -28,6 +28,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Iterator;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -186,6 +187,34 @@ public class ApiRegionsTest {
             final JsonArray orig = reader.readArray();
             assertEquals(orig, array);
         }
- 
+    }
+
+    @Test public void testToggles() throws Exception {
+        final String json = readJSON("apis-toggles");
+
+        final ApiRegions regions = ApiRegions.parse(json);
+        assertNotNull(regions);
+
+        assertEquals(1, regions.listRegions().size());
+
+        final ApiRegion global = regions.listRegions().get(0);
+        assertEquals("global", global.getName());
+
+        assertEquals(2, global.listExports().size());
+
+        final Iterator<ApiExport> iter = global.listExports().iterator();
+        final ApiExport exp1 = iter.next();
+        assertEquals("org.apache.sling.global", exp1.getName());
+        assertEquals("sling_enabled", exp1.getToggle());
+        assertNull(exp1.getPrevious());
+
+        final ApiExport exp2 = iter.next();
+        assertEquals("org.apache.felix.global", exp2.getName());
+        assertEquals("global_enabled", exp2.getToggle());
+        assertEquals(ArtifactId.parse("org.apache.felix:api:1.1"), exp2.getPrevious());
+
+        // create json and parse
+        final ApiRegions regions2 = ApiRegions.parse(regions.toJSONArray());
+        assertEquals(regions, regions2);
     }
 }

@@ -21,6 +21,7 @@ import java.util.Map;
 
 /**
  * Validation result for a feature
+ * This class is not thread safe.
  */
 public class FeatureValidationResult {
 

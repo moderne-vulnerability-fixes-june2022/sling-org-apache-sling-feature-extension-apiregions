@@ -20,13 +20,14 @@ import java.util.Objects;
 
 /**
  * Deprecation info for a package or member.
+ * This class is not thread safe.
  * @since 1.1
  */
 public class DeprecationInfo {
 
     private final String message;
 
-    private volatile String since;
+    private String since;
 
     /**
      * Create a new info

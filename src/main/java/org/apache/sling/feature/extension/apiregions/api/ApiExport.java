@@ -32,6 +32,8 @@ import org.apache.sling.feature.ArtifactId;
 
 /**
  * Describes an exported package.
+ * 
+ * This class is not thread safe.
  */
 public class ApiExport implements Comparable<ApiExport> {
 
@@ -45,9 +47,9 @@ public class ApiExport implements Comparable<ApiExport> {
 
     private final String name;
 
-    private volatile String toggle;
+    private String toggle;
 
-    private volatile ArtifactId previous;
+    private ArtifactId previous;
 
     private final Map<String, String> properties = new HashMap<>();
 

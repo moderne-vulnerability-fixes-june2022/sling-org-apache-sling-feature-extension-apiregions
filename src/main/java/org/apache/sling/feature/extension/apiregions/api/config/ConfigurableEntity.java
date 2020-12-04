@@ -28,6 +28,7 @@ import javax.json.JsonValue;
 
 /** 
  * A configurable entity has properties
+ * This class is not thread safe.
  */
 public abstract class ConfigurableEntity extends DescribableEntity {
 	

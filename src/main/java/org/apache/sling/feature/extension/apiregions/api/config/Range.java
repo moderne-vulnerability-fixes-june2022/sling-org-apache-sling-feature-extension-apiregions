@@ -26,6 +26,7 @@ import org.apache.felix.cm.json.Configurations;
 
 /**
  * A numerical value range
+ * This class is not thread safe.
  */
 public class Range extends AttributeableEntity {
 

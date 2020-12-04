@@ -18,6 +18,7 @@ package org.apache.sling.feature.extension.apiregions.api.config;
 
 /**
  * A description of an OSGi configuration
+ * This class is not thread safe.
  */
 public class ConfigurationDescription extends ConfigurableEntity {
 

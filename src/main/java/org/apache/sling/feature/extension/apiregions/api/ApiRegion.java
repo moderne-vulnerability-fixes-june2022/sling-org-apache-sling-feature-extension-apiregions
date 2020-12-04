@@ -29,7 +29,9 @@ import java.util.stream.Stream;
 import org.apache.sling.feature.ArtifactId;
 
 /**
- * Describes an api region
+ * Describes an api region for Java API
+ * 
+ * This class is not thread safe.
  */
 public class ApiRegion {
 
@@ -44,7 +46,7 @@ public class ApiRegion {
 
     private final String name;
 
-    private volatile ApiRegion parent;
+    private ApiRegion parent;
 
     /**
      * Create a new named region

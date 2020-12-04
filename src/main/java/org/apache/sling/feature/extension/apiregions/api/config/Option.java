@@ -24,6 +24,7 @@ import javax.json.JsonObjectBuilder;
 
 /**
  * Option for a property value
+ * This class is not thread safe.
  */
 public class Option extends DescribableEntity {
 
