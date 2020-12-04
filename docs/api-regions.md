@@ -66,6 +66,45 @@ If a feature exports no packages and only wants to have visibility of packages f
     ]
 ```
 
+## Java API Behind a Toggle
+
+API Regions support the usage of toggles, where API can be hidden behind a toggle and that API is only available in the region, if the toggle is enabled. For this, a package in a region can be configured with a toggle. In this case an object is used per package:
+
+``` json
+    "api-regions:JSON|optional" : [
+        {
+            "name": "global",
+            "exports": [
+                {
+                    "name" : "org.apache.sling.api",
+                    "toggle" : "SLING_API"
+                }
+            ]
+        }
+    ]
+```
+
+In the above example, the package *org.apache.sling.api* is only available if the toggle *SLING_API* is enabled.
+
+While the above example enables a complete package based on a toggle, it is also possible to enable a new version of an existing API with a toggle:
+
+``` json
+    "api-regions:JSON|optional" : [
+        {
+            "name": "global",
+            "exports": [
+                {
+                    "name" : "org.apache.sling.api",
+                    "toggle" : "NEW_SLING_API",
+                    "previous" : "org.apache.sling:org.apache.sling.api:1.1"
+                }
+            ]
+        }
+    ]
+```
+
+In the above example, if the toggle *NEW_SLING_API* is enabled, the package *org.apache.sling.api* is available based on the artifact in the feature model providing this package. If the toggle *NEW_SLING_API* is not enabled, the package *org.apache.sling.api* is available based on the artifact mentioned in the `previous` property. Usually that points to an older version of the API.
+
 ## Deprecation of Java API
 
 The usual process for deprecating Java API is to mark it with a corresponding annotation and javadoc tag. However, in cases where changing the source code of an API is not possible to add such a marker, the deprecation can be specified through an API region. This information can be used by tooling to mark and report usage of such API.
