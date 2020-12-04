@@ -29,7 +29,7 @@ import java.util.Objects;
  */
 public class Deprecation {
 
-    private volatile DeprecationInfo packageInfo;
+    private DeprecationInfo packageInfo;
 
     private final Map<String, DeprecationInfo> memberInfos = new LinkedHashMap<>();
 
