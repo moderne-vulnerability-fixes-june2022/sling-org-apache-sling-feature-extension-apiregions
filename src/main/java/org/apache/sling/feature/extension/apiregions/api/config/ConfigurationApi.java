@@ -29,6 +29,7 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
+import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionState;
 import org.apache.sling.feature.ExtensionType;
@@ -129,6 +130,9 @@ public class ConfigurationApi extends AttributeableEntity {
     /** The configuration region of this feature */
     private Region region;
 
+    /** The cached region information for feature origins */
+    private final Map<ArtifactId, Region> regionCache = new LinkedHashMap<>();
+
     /**
      * Clear the object and reset to defaults
      */
@@ -142,6 +146,7 @@ public class ConfigurationApi extends AttributeableEntity {
         this.internalFactories.clear();
         this.internalFrameworkProperties.clear();
         this.setRegion(null);
+        this.getFeatureToRegionCache().clear();
     }
 
 	/**
@@ -206,6 +211,14 @@ public class ConfigurationApi extends AttributeableEntity {
             if ( val != null ) {
                 for(final JsonValue innerVal : val.asJsonArray()) {
                     this.getInternalFrameworkProperties().add(getString(innerVal));
+                }
+            }
+
+            val = this.getAttributes().remove(InternalConstants.KEY_REGION_CACHE);
+            if ( val != null ) {
+                for(final Map.Entry<String, JsonValue> innerEntry : val.asJsonObject().entrySet()) {
+                    this.getFeatureToRegionCache().put(ArtifactId.parse(innerEntry.getKey()), 
+                        Region.valueOf(getString(innerEntry.getValue()).toUpperCase()));
                 }
             }
 
@@ -279,6 +292,27 @@ public class ConfigurationApi extends AttributeableEntity {
     }
 
     /**
+     * Detect the region, either return the stored region or the default (GLOBAL)
+     * @return The region
+     * @since 1.1
+     */
+    public Region detectRegion() {
+        if ( this.getRegion() != null ) {
+            return this.getRegion();
+        }
+        return Region.GLOBAL;
+    }
+
+    /**
+     * Get the feature to region cache to keep track of regions for origin features
+     * @return The cache
+     * @since 1.1.
+     */
+    public Map<ArtifactId, Region> getFeatureToRegionCache() {
+        return this.regionCache;
+    }
+
+    /**
      * Convert this object into JSON
      *
      * @return The json object builder
@@ -331,6 +365,13 @@ public class ConfigurationApi extends AttributeableEntity {
                 arrayBuilder.add(n);
             }
 			objBuilder.add(InternalConstants.KEY_INTERNAL_FWK_PROPERTIES, arrayBuilder);
+        }
+        if ( !this.getFeatureToRegionCache().isEmpty()) {
+            final JsonObjectBuilder cacheBuilder = Json.createObjectBuilder();
+            for(final Map.Entry<ArtifactId, Region> entry : this.getFeatureToRegionCache().entrySet()) {
+                cacheBuilder.add(entry.getKey().toMvnId(), entry.getValue().name());
+            }
+            objBuilder.add(InternalConstants.KEY_REGION_CACHE, cacheBuilder);
         }
 
 		return objBuilder;

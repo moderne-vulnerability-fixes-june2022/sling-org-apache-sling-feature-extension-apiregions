@@ -19,7 +19,6 @@ package org.apache.sling.feature.extension.apiregions;
 import java.util.Map;
 
 import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.builder.HandlerContext;
 import org.apache.sling.feature.builder.MergeHandler;
@@ -47,10 +46,11 @@ public class ConfigurationApiMergeHandler implements MergeHandler {
         final Extension sourceExtension) {
 
         if ( targetExtension == null ) {
-            // no target available yet, just copy source
-            final Extension ext = new Extension(ExtensionType.JSON, ConfigurationApi.EXTENSION_NAME, sourceExtension.getState());
-            ext.setJSON(sourceExtension.getJSON());
-            targetFeature.getExtensions().add(ext);
+            // no target available yet, just copy source and update cache
+            final ConfigurationApi sourceApi = ConfigurationApi.getConfigurationApi(sourceExtension);
+            sourceApi.getFeatureToRegionCache().put(sourceFeature.getId(), sourceApi.detectRegion());
+
+            ConfigurationApi.setConfigurationApi(targetFeature, sourceApi);
         } else {
             final ConfigurationApi sourceApi = ConfigurationApi.getConfigurationApi(sourceExtension);
             final ConfigurationApi targetApi = ConfigurationApi.getConfigurationApi(targetExtension);
@@ -94,6 +94,11 @@ public class ConfigurationApiMergeHandler implements MergeHandler {
             targetApi.getInternalFactoryConfigurations().addAll(sourceApi.getInternalFactoryConfigurations());
             targetApi.getInternalFrameworkProperties().addAll(sourceApi.getInternalFrameworkProperties());
 
+            // update cache
+            if ( !context.isPrototypeMerge() ) {
+                targetApi.getFeatureToRegionCache().put(sourceFeature.getId(), sourceApi.detectRegion());
+            }
+            
             ConfigurationApi.setConfigurationApi(targetFeature, targetApi);
         }
     }

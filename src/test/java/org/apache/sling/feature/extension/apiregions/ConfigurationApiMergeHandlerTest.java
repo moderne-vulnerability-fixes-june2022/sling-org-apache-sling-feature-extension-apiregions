@@ -54,6 +54,8 @@ public class ConfigurationApiMergeHandlerTest {
         ConfigurationApi api = ConfigurationApi.getConfigurationApi(result);
         assertNotNull(api);
         assertNull(api.getRegion());
+        assertEquals(1, api.getFeatureToRegionCache().size());
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(prototype.getId()));
 
         // prototype has region
         prototypeApi.setRegion(Region.INTERNAL);
@@ -61,12 +63,16 @@ public class ConfigurationApiMergeHandlerTest {
         result = FeatureBuilder.assemble(feature, context);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.INTERNAL, api.getRegion());
+        assertEquals(1, api.getFeatureToRegionCache().size());
+        assertEquals(Region.INTERNAL, api.getFeatureToRegionCache().get(prototype.getId()));
 
         prototypeApi.setRegion(Region.GLOBAL);
         ConfigurationApi.setConfigurationApi(prototype, prototypeApi);
         result = FeatureBuilder.assemble(feature, context);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.GLOBAL, api.getRegion());
+        assertEquals(1, api.getFeatureToRegionCache().size());
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(prototype.getId()));
 
         // feature has region
         prototypeApi.setRegion(null);
@@ -76,12 +82,16 @@ public class ConfigurationApiMergeHandlerTest {
         result = FeatureBuilder.assemble(feature, context);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.INTERNAL, api.getRegion());
+        assertEquals(1, api.getFeatureToRegionCache().size());
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(prototype.getId()));
 
         featureApi.setRegion(Region.GLOBAL);
         ConfigurationApi.setConfigurationApi(feature, featureApi);
         result = FeatureBuilder.assemble(feature, context);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.GLOBAL, api.getRegion());
+        assertEquals(1, api.getFeatureToRegionCache().size());
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(prototype.getId()));
 
         // both have region
         prototypeApi.setRegion(Region.INTERNAL);
@@ -91,6 +101,8 @@ public class ConfigurationApiMergeHandlerTest {
         result = FeatureBuilder.assemble(feature, context);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.INTERNAL, api.getRegion());
+        assertEquals(1, api.getFeatureToRegionCache().size());
+        assertEquals(Region.INTERNAL, api.getFeatureToRegionCache().get(prototype.getId()));
 
         prototypeApi.setRegion(Region.GLOBAL);
         ConfigurationApi.setConfigurationApi(prototype, prototypeApi);
@@ -99,6 +111,8 @@ public class ConfigurationApiMergeHandlerTest {
         result = FeatureBuilder.assemble(feature, context);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.INTERNAL, api.getRegion());
+        assertEquals(1, api.getFeatureToRegionCache().size());
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(prototype.getId()));
 
         prototypeApi.setRegion(Region.INTERNAL);
         ConfigurationApi.setConfigurationApi(prototype, prototypeApi);
@@ -107,6 +121,8 @@ public class ConfigurationApiMergeHandlerTest {
         result = FeatureBuilder.assemble(feature, context);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.GLOBAL, api.getRegion());
+        assertEquals(1, api.getFeatureToRegionCache().size());
+        assertEquals(Region.INTERNAL, api.getFeatureToRegionCache().get(prototype.getId()));
 
         prototypeApi.setRegion(Region.GLOBAL);
         ConfigurationApi.setConfigurationApi(prototype, prototypeApi);
@@ -115,6 +131,8 @@ public class ConfigurationApiMergeHandlerTest {
         result = FeatureBuilder.assemble(feature, context);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.GLOBAL, api.getRegion());
+        assertEquals(1, api.getFeatureToRegionCache().size());
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(prototype.getId()));
     }
  
     @Test public void testRegionMerge() {
@@ -135,6 +153,9 @@ public class ConfigurationApiMergeHandlerTest {
         ConfigurationApi api = ConfigurationApi.getConfigurationApi(result);
         assertNotNull(api);
         assertNull(api.getRegion());
+        assertEquals(2, api.getFeatureToRegionCache().size());
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(featureA.getId()));
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(featureB.getId()));
 
         // only A has region
         apiA.setRegion(Region.INTERNAL);
@@ -142,12 +163,18 @@ public class ConfigurationApiMergeHandlerTest {
         result = FeatureBuilder.assemble(id, context, featureA, featureB);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.GLOBAL, api.getRegion());
+        assertEquals(2, api.getFeatureToRegionCache().size());
+        assertEquals(Region.INTERNAL, api.getFeatureToRegionCache().get(featureA.getId()));
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(featureB.getId()));
 
         apiA.setRegion(Region.GLOBAL);
         ConfigurationApi.setConfigurationApi(featureA, apiA);
         result = FeatureBuilder.assemble(id, context, featureA, featureB);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.GLOBAL, api.getRegion());
+        assertEquals(2, api.getFeatureToRegionCache().size());
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(featureA.getId()));
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(featureB.getId()));
 
         // only B has region
         apiA.setRegion(null);
@@ -157,12 +184,18 @@ public class ConfigurationApiMergeHandlerTest {
         result = FeatureBuilder.assemble(id, context, featureA, featureB);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.GLOBAL, api.getRegion());
+        assertEquals(2, api.getFeatureToRegionCache().size());
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(featureA.getId()));
+        assertEquals(Region.INTERNAL, api.getFeatureToRegionCache().get(featureB.getId()));
 
         apiB.setRegion(Region.GLOBAL);
         ConfigurationApi.setConfigurationApi(featureB, apiB);
         result = FeatureBuilder.assemble(id, context, featureA, featureB);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.GLOBAL, api.getRegion());
+        assertEquals(2, api.getFeatureToRegionCache().size());
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(featureA.getId()));
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(featureB.getId()));
 
         // both have region
         apiA.setRegion(Region.INTERNAL);
@@ -172,6 +205,9 @@ public class ConfigurationApiMergeHandlerTest {
         result = FeatureBuilder.assemble(id, context, featureA, featureB);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.INTERNAL, api.getRegion());
+        assertEquals(2, api.getFeatureToRegionCache().size());
+        assertEquals(Region.INTERNAL, api.getFeatureToRegionCache().get(featureA.getId()));
+        assertEquals(Region.INTERNAL, api.getFeatureToRegionCache().get(featureB.getId()));
 
         apiA.setRegion(Region.GLOBAL);
         ConfigurationApi.setConfigurationApi(featureA, apiA);
@@ -180,6 +216,9 @@ public class ConfigurationApiMergeHandlerTest {
         result = FeatureBuilder.assemble(id, context, featureA, featureB);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.GLOBAL, api.getRegion());
+        assertEquals(2, api.getFeatureToRegionCache().size());
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(featureA.getId()));
+        assertEquals(Region.INTERNAL, api.getFeatureToRegionCache().get(featureB.getId()));
 
         apiA.setRegion(Region.INTERNAL);
         ConfigurationApi.setConfigurationApi(featureA, apiA);
@@ -188,6 +227,9 @@ public class ConfigurationApiMergeHandlerTest {
         result = FeatureBuilder.assemble(id, context, featureA, featureB);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.GLOBAL, api.getRegion());
+        assertEquals(2, api.getFeatureToRegionCache().size());
+        assertEquals(Region.INTERNAL, api.getFeatureToRegionCache().get(featureA.getId()));
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(featureB.getId()));
 
         apiA.setRegion(Region.GLOBAL);
         ConfigurationApi.setConfigurationApi(featureA, apiA);
@@ -196,6 +238,9 @@ public class ConfigurationApiMergeHandlerTest {
         result = FeatureBuilder.assemble(id, context, featureA, featureB);
         api = ConfigurationApi.getConfigurationApi(result);
         assertEquals(Region.GLOBAL, api.getRegion());
+        assertEquals(2, api.getFeatureToRegionCache().size());
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(featureA.getId()));
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(featureB.getId()));
     }
 
     @Test public void testConfigurationApiMergeDifferentConfig() {

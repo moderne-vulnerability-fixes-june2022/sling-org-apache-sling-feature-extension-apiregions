@@ -16,7 +16,9 @@
  */
 package org.apache.sling.feature.extension.apiregions.api.config.validation;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Configuration;
@@ -45,7 +47,7 @@ public class FeatureValidator {
      * @return the feature provider or {@code null}
      */
     public FeatureProvider getFeatureProvider() {
-	return featureProvider;
+        return featureProvider;
     }
 
     /**
@@ -55,7 +57,18 @@ public class FeatureValidator {
     public void setFeatureProvider(final FeatureProvider provider) {
         this.featureProvider = provider;
     }
-    
+
+    /**
+     * Validate the feature against its configuration API
+     * @param feature The feature
+     * @return A {@code FeatureValidationResult}
+     * @throws IllegalArgumentException If api is not available
+     * @since 1.1
+     */
+    public FeatureValidationResult validate(final Feature feature) {
+        return validate(feature, ConfigurationApi.getConfigurationApi(feature));
+    }
+
     /**
      * Validate the feature against the configuration API
      * @param feature The feature
@@ -69,8 +82,11 @@ public class FeatureValidator {
             throw new IllegalArgumentException();
         }
 
+        final Map<ArtifactId, Region> cache = new HashMap<>(api.getFeatureToRegionCache());
+        cache.put(feature.getId(), api.detectRegion());
+
         for(final Configuration config : feature.getConfigurations()) {
-            final RegionInfo regionInfo = getRegionInfo(feature, config);
+            final RegionInfo regionInfo = getRegionInfo(feature, config, cache);
 
             if ( regionInfo == null ) {
                 final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
@@ -120,7 +136,7 @@ public class FeatureValidator {
         }
 
         for(final String frameworkProperty : feature.getFrameworkProperties().keySet()) {
-            final RegionInfo regionInfo = getRegionInfo(feature, frameworkProperty);
+            final RegionInfo regionInfo = getRegionInfo(feature, frameworkProperty, cache);
             if ( regionInfo == null ) {
                 final PropertyValidationResult pvr = new PropertyValidationResult();
                 pvr.getErrors().add("Unable to properly validate framework property, region info cannot be determined");
@@ -143,6 +159,26 @@ public class FeatureValidator {
         return result;
     }
 
+    Region getConfigurationApiRegion(final ArtifactId id, final Map<ArtifactId, Region> cache) {
+        Region result = cache.get(id);
+        if ( result == null ) {
+            final FeatureProvider provider = this.getFeatureProvider();
+            final Feature f = provider == null ? null : provider.provide(id);
+            if ( f == null ) {
+                return null;
+            }
+            final ConfigurationApi api = ConfigurationApi.getConfigurationApi(f);
+            if ( api != null ) {
+                result = api.getRegion();
+            }
+            if ( result == null ) {
+                result = Region.GLOBAL;
+            }
+            cache.put(id, result);
+        }
+        return result;
+    }
+
     static final class RegionInfo {
         
         public Region region;
@@ -150,20 +186,18 @@ public class FeatureValidator {
         public boolean isUpdate;
     }
 
-    RegionInfo getRegionInfo(final Feature feature, final Configuration cfg) {
-        final FeatureProvider provider = this.getFeatureProvider();
+    RegionInfo getRegionInfo(final Feature feature, final Configuration cfg, final Map<ArtifactId, Region> cache) {
         final RegionInfo result = new RegionInfo();
         
         final List<ArtifactId> list = cfg.getFeatureOrigins();
         if ( !list.isEmpty() ) {
             boolean global = false;
             for(final ArtifactId id : list) {
-                final Feature f = provider == null ? null : provider.provide(id);
-                if ( f == null ) {
+                final Region region = getConfigurationApiRegion(id, cache);
+                if ( region == null ) {
                     return null;
                 }
-                final ConfigurationApi api = ConfigurationApi.getConfigurationApi(f);
-                if ( api == null || api.getRegion() != Region.INTERNAL ) {
+                if ( region == Region.GLOBAL ) {
                     global = true;
                     break;
                 }
@@ -171,38 +205,26 @@ public class FeatureValidator {
             result.region = global ? Region.GLOBAL : Region.INTERNAL;
             result.isUpdate = list.size() > 1;
         } else {
-            final ConfigurationApi api = ConfigurationApi.getConfigurationApi(feature);
-            if ( api == null || api.getRegion() == null || api.getRegion() == Region.GLOBAL ) {
-                result.region = Region.GLOBAL;
-            } else {
-                result.region = Region.INTERNAL;
-            }
+            final Region region = getConfigurationApiRegion(feature.getId(), cache);
+            result.region = region == Region.INTERNAL ? Region.INTERNAL : Region.GLOBAL;
             result.isUpdate = false;
         }
         return result;
     }
 
-    RegionInfo getRegionInfo(final Feature feature, final String frameworkProperty) {
-        final FeatureProvider provider = this.getFeatureProvider();
-        
+    RegionInfo getRegionInfo(final Feature feature, final String frameworkProperty, final Map<ArtifactId, Region> cache) {
         final List<ArtifactId> list = feature.getFeatureOrigins(feature.getFrameworkPropertyMetadata(frameworkProperty));
         boolean global = false;
         for(final ArtifactId id : list) {
-            Feature found = null;
-            if ( feature.getId().equals(id) ) {
-                found = feature;
-            } else {
-                found = provider == null ? null : provider.provide(id);
-            }
-            if ( found == null ) {
+            final Region region = getConfigurationApiRegion(id, cache);
+            if ( region == null ) {
                 return null;
             }
-            final ConfigurationApi api = ConfigurationApi.getConfigurationApi(found);
-            if ( api == null || api.getRegion() != Region.INTERNAL ) {
+            if ( region == Region.GLOBAL ) {
                 global = true;
                 break;
             }
-        }
+    }
         final RegionInfo result = new RegionInfo();
         result.region = global ? Region.GLOBAL : Region.INTERNAL;
         result.isUpdate = list.size() > 1;

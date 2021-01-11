@@ -132,5 +132,5 @@ public class ConfigurationValidatorTest {
         assertEquals(2, result.getPropertyResults().size());
         assertTrue(result.getPropertyResults().get("a").isValid());
         assertFalse(result.getPropertyResults().get("b").isValid());
-     }
+    }
 }

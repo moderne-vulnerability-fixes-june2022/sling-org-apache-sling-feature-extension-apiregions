@@ -76,6 +76,7 @@ public class ConfigurationApiTest {
         entity.getInternalFactoryConfigurations().add("ifactory");
         entity.getInternalFrameworkProperties().add("iprop");
         entity.setRegion(Region.GLOBAL);
+        entity.getFeatureToRegionCache().put(ArtifactId.parse("g:a:1"), Region.GLOBAL);
         entity.clear();
         assertTrue(entity.getAttributes().isEmpty());
         assertTrue(entity.getConfigurationDescriptions().isEmpty());
@@ -85,6 +86,7 @@ public class ConfigurationApiTest {
         assertTrue(entity.getInternalFactoryConfigurations().isEmpty());
         assertTrue(entity.getInternalFrameworkProperties().isEmpty());
         assertNull(entity.getRegion());
+        assertTrue(entity.getFeatureToRegionCache().isEmpty());
     }
 
     @Test public void testFromJSONObject() throws IOException {
@@ -95,7 +97,8 @@ public class ConfigurationApiTest {
             "\"internal-configurations\" : [\"ipid\"],"+
             "\"internal-factory-configurations\" : [\"ifactory\"],"+
             "\"internal-framework-properties\" : [\"iprop\"],"+
-            "\"region\" : \"INTERNAL\"}");
+            "\"region\" : \"INTERNAL\","+
+            "\"region-cache\" : {\"g:a1:feature:1.0.0\" : \"INTERNAL\", \"g:a2:feature:1.7.3\" : \"GLOBAL\"}}");
 
         final ConfigurationApi entity = new ConfigurationApi();
         entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
@@ -105,6 +108,7 @@ public class ConfigurationApiTest {
         assertEquals(1, entity.getInternalConfigurations().size());
         assertEquals(1, entity.getInternalFactoryConfigurations().size());
         assertEquals(1, entity.getInternalFrameworkProperties().size());
+        assertEquals(2, entity.getFeatureToRegionCache().size());
         assertTrue(entity.getConfigurationDescriptions().containsKey("pid"));
         assertTrue(entity.getFactoryConfigurationDescriptions().containsKey("factory"));
         assertTrue(entity.getFrameworkPropertyDescriptions().containsKey("prop"));
@@ -112,6 +116,8 @@ public class ConfigurationApiTest {
         assertTrue(entity.getInternalFactoryConfigurations().contains("ifactory"));
         assertTrue(entity.getInternalFrameworkProperties().contains("iprop"));
         assertEquals(Region.INTERNAL, entity.getRegion());
+        assertEquals(Region.INTERNAL, entity.getFeatureToRegionCache().get(ArtifactId.parse("g:a1:feature:1.0.0")));
+        assertEquals(Region.GLOBAL, entity.getFeatureToRegionCache().get(ArtifactId.parse("g:a2:feature:1.7.3")));
     }
 
     @Test public void testToJSONObject() throws IOException {
@@ -124,6 +130,8 @@ public class ConfigurationApiTest {
         entity.getInternalFactoryConfigurations().add("ifactory");
         entity.getInternalFrameworkProperties().add("iprop");
         entity.setRegion(Region.INTERNAL);
+        entity.getFeatureToRegionCache().put(ArtifactId.parse("g:a1:feature:1.0.0"), Region.INTERNAL);
+        entity.getFeatureToRegionCache().put(ArtifactId.parse("g:a2:feature:1.7.3"), Region.GLOBAL);
 
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
         ext.setJSON("{ \"a\" : 5, \"configurations\" : { \"pid\": {}}, " +
@@ -132,8 +140,18 @@ public class ConfigurationApiTest {
             "\"internal-configurations\" : [\"ipid\"],"+
             "\"internal-factory-configurations\" : [\"ifactory\"],"+
             "\"internal-framework-properties\" : [\"iprop\"],"+
-            "\"region\" : \"INTERNAL\"}");
+            "\"region\" : \"INTERNAL\","+
+            "\"region-cache\" : {\"g:a1:feature:1.0.0\" : \"INTERNAL\", \"g:a2:feature:1.7.3\" : \"GLOBAL\"}}");
 
         assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());        
+    }
+
+    @Test public void testDetectRegion() {
+        final ConfigurationApi entity = new ConfigurationApi();
+        assertEquals(Region.GLOBAL, entity.detectRegion());
+        entity.setRegion(Region.GLOBAL);
+        assertEquals(Region.GLOBAL, entity.detectRegion());
+        entity.setRegion(Region.INTERNAL);
+        assertEquals(Region.INTERNAL, entity.detectRegion());
     }
 }
