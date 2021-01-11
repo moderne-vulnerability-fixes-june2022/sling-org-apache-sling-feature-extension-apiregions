@@ -94,6 +94,9 @@ public class FeatureValidatorTest {
     private FeatureValidator.RegionInfo getRegionInfo(final Feature f, final Configuration c) {
         final Map<ArtifactId, Region> cache = new HashMap<>();
         final ConfigurationApi api = ConfigurationApi.getConfigurationApi(f);
+        if ( api != null ) {
+            cache.putAll(api.getFeatureToRegionCache());
+        }
         if ( api == null || api.getRegion() == null ) {
             cache.put(f.getId(), Region.GLOBAL);
         } else {
@@ -105,6 +108,9 @@ public class FeatureValidatorTest {
     private FeatureValidator.RegionInfo getRegionInfo(final Feature f, final String name) {
         final Map<ArtifactId, Region> cache = new HashMap<>();
         final ConfigurationApi api = ConfigurationApi.getConfigurationApi(f);
+        if ( api != null ) {
+            cache.putAll(api.getFeatureToRegionCache());
+        }
         if ( api == null || api.getRegion() == null ) {
             cache.put(f.getId(), Region.GLOBAL);
         } else {
@@ -175,6 +181,9 @@ public class FeatureValidatorTest {
         // internal in api
         api2.setRegion(Region.INTERNAL);
         ConfigurationApi.setConfigurationApi(f2, api2);
+        ConfigurationApi f1Api = new ConfigurationApi();
+        f1Api.getFeatureToRegionCache().put(f2.getId(), Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(f1, f1Api);
         info = getRegionInfo(f1, cfg);
         assertEquals(Region.INTERNAL, info.region);
         assertFalse(info.isUpdate);
@@ -183,7 +192,7 @@ public class FeatureValidatorTest {
         this.validator.setFeatureProvider(id -> null);
         cfg.setFeatureOrigins(Collections.singletonList(ArtifactId.parse("g:xy:1")));
         info = getRegionInfo(f1, cfg);
-        assertNull(info);
+        assertEquals(Region.GLOBAL, info.region);
     }
 
     @Test public void testGetRegionInfoConfigurationMultipleOrigins() {
@@ -244,6 +253,10 @@ public class FeatureValidatorTest {
         api3.setRegion(Region.INTERNAL);        
         ConfigurationApi.setConfigurationApi(f2, api2);
         ConfigurationApi.setConfigurationApi(f3, api3);
+        ConfigurationApi f1Api = new ConfigurationApi();
+        f1Api.getFeatureToRegionCache().put(f2.getId(), Region.INTERNAL);
+        f1Api.getFeatureToRegionCache().put(f3.getId(), Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(f1, f1Api);
 
         info = getRegionInfo(f1, cfg);
         assertEquals(Region.INTERNAL, info.region);
@@ -254,6 +267,10 @@ public class FeatureValidatorTest {
         api3.setRegion(Region.GLOBAL);        
         ConfigurationApi.setConfigurationApi(f2, api2);
         ConfigurationApi.setConfigurationApi(f3, api3);
+        f1Api = new ConfigurationApi();
+        f1Api.getFeatureToRegionCache().put(f2.getId(), Region.INTERNAL);
+        f1Api.getFeatureToRegionCache().put(f3.getId(), Region.GLOBAL);
+        ConfigurationApi.setConfigurationApi(f1, f1Api);
 
         info = getRegionInfo(f1, cfg);
         assertEquals(Region.GLOBAL, info.region);
@@ -320,6 +337,9 @@ public class FeatureValidatorTest {
         // internal in api
         api2.setRegion(Region.INTERNAL);
         ConfigurationApi.setConfigurationApi(f2, api2);
+        ConfigurationApi f1Api = new ConfigurationApi();
+        f1Api.getFeatureToRegionCache().put(f2.getId(), Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(f1, f1Api);
         info = getRegionInfo(f1, "prop");
         assertEquals(Region.INTERNAL, info.region);
         assertFalse(info.isUpdate);
@@ -328,7 +348,7 @@ public class FeatureValidatorTest {
         this.validator.setFeatureProvider(id -> null);
         f1.setFeatureOrigins(f1.getFrameworkPropertyMetadata("prop"), Collections.singletonList(ArtifactId.parse("g:xy:1")));
         info = getRegionInfo(f1, "prop");
-        assertNull(info);
+        assertEquals(Region.GLOBAL, info.region);
     }
 
     @Test public void testGetRegionInfoFrameworkPropertyMultipleOrigins() {
@@ -388,6 +408,10 @@ public class FeatureValidatorTest {
         api3.setRegion(Region.INTERNAL);        
         ConfigurationApi.setConfigurationApi(f2, api2);
         ConfigurationApi.setConfigurationApi(f3, api3);
+        ConfigurationApi f1Api = new ConfigurationApi();
+        f1Api.getFeatureToRegionCache().put(f2.getId(), Region.INTERNAL);
+        f1Api.getFeatureToRegionCache().put(f3.getId(), Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(f1, f1Api);
 
         info = getRegionInfo(f1, "prop");
         assertEquals(Region.INTERNAL, info.region);
@@ -398,6 +422,10 @@ public class FeatureValidatorTest {
         api3.setRegion(Region.GLOBAL);        
         ConfigurationApi.setConfigurationApi(f2, api2);
         ConfigurationApi.setConfigurationApi(f3, api3);
+        f1Api = new ConfigurationApi();
+        f1Api.getFeatureToRegionCache().put(f2.getId(), Region.INTERNAL);
+        f1Api.getFeatureToRegionCache().put(f3.getId(), Region.GLOBAL);
+        ConfigurationApi.setConfigurationApi(f1, f1Api);
 
         info = getRegionInfo(f1, "prop");
         assertEquals(Region.GLOBAL, info.region);
@@ -590,9 +618,13 @@ public class FeatureValidatorTest {
 
         // internal region -> always success
         api.setRegion(Region.INTERNAL);
-        ConfigurationApi.setConfigurationApi(f1, api);
         ConfigurationApi.setConfigurationApi(f2, api);
         ConfigurationApi.setConfigurationApi(f3, api);
+        // need to fill cache
+        api.getFeatureToRegionCache().put(f1.getId(), Region.INTERNAL);
+        api.getFeatureToRegionCache().put(f2.getId(), Region.INTERNAL);
+        api.getFeatureToRegionCache().put(f3.getId(), Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(f1, api);
         result = validator.validate(f1, api);
         assertTrue(result.isValid());
 
@@ -659,30 +691,26 @@ public class FeatureValidatorTest {
         assertFalse(result.isValid());
         assertFalse(result.getFrameworkPropertyResults().get("prop").isValid());
     }
-   
+
     @Test public void testRegionCache() {
         final BuilderContext context = new BuilderContext(id -> null);
         context.addMergeExtensions(new ConfigurationApiMergeHandler());
 
         final Feature f1 = createFeature("g:a:1");
         f1.getConfigurations().clear();
-        final ConfigurationApi a1 = new ConfigurationApi();
-        a1.setRegion(Region.GLOBAL);
-        ConfigurationApi.setConfigurationApi(f1, a1);
         final Feature f2 = createFeature("g:b:1");
-        final ConfigurationApi a2 = createApi();
-        ConfigurationApi.setConfigurationApi(f2, a2);
 
-        final Feature feature = FeatureBuilder.assemble(ArtifactId.parse("g:f:1"), context, f1, f2);
+        final Feature aggregate = FeatureBuilder.assemble(ArtifactId.parse("g:agg:1"), context, f1, f2);
+        ConfigurationApi api = ConfigurationApi.getConfigurationApi(aggregate);
+        assertNull(api);
+
+        final Feature f3 = createFeature("g:c:1");
+        f3.getConfigurations().clear();
+        api = this.createApi();
+        ConfigurationApi.setConfigurationApi(f3, api);
+        final Feature feature = FeatureBuilder.assemble(ArtifactId.parse("g:f:1"), context, f3, aggregate);
 
         FeatureValidationResult result = validator.validate(feature);
         assertTrue(result.isValid());
-
-        // clear cache and make sure it fails now
-        ConfigurationApi api = ConfigurationApi.getConfigurationApi(feature);
-        api.getFeatureToRegionCache().clear();
-        ConfigurationApi.setConfigurationApi(feature, api);
-        result = validator.validate(feature);
-        assertFalse(result.isValid());
     }
 }

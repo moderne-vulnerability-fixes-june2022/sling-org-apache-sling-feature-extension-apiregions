@@ -162,18 +162,7 @@ public class FeatureValidator {
     Region getConfigurationApiRegion(final ArtifactId id, final Map<ArtifactId, Region> cache) {
         Region result = cache.get(id);
         if ( result == null ) {
-            final FeatureProvider provider = this.getFeatureProvider();
-            final Feature f = provider == null ? null : provider.provide(id);
-            if ( f == null ) {
-                return null;
-            }
-            final ConfigurationApi api = ConfigurationApi.getConfigurationApi(f);
-            if ( api != null ) {
-                result = api.getRegion();
-            }
-            if ( result == null ) {
-                result = Region.GLOBAL;
-            }
+            result = Region.GLOBAL;
             cache.put(id, result);
         }
         return result;
