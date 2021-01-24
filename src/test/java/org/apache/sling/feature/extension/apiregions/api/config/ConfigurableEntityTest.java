@@ -72,4 +72,13 @@ public class ConfigurableEntityTest {
 
         assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
     }
+
+    @Test(expected = IOException.class) 
+    public void testDuplicateCaseInsensitiveKeys() throws IOException {
+        final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
+        ext.setJSON("{ \"properties\" : { \"a\" : {}, \"A\" : {}}}");
+
+        final CE entity = new CE();
+        entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
+    }
 }
