@@ -17,7 +17,6 @@
 package org.apache.sling.feature.extension.apiregions.api.config;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.json.Json;
@@ -33,7 +32,7 @@ import javax.json.JsonValue;
 public abstract class ConfigurableEntity extends DescribableEntity {
 	
 	/** The properties */
-    private final Map<String, PropertyDescription> properties = new LinkedHashMap<>();
+    private final Map<String, PropertyDescription> properties = new CaseInsensitiveMap<>();
 
     /**
      * Clear the object and reset to defaults
@@ -60,7 +59,9 @@ public abstract class ConfigurableEntity extends DescribableEntity {
                 for(final Map.Entry<String, JsonValue> innerEntry : val.asJsonObject().entrySet()) {
 					final PropertyDescription prop = new PropertyDescription();
 					prop.fromJSONObject(innerEntry.getValue().asJsonObject());
-                    this.getPropertyDescriptions().put(innerEntry.getKey(), prop);
+                    if ( this.getPropertyDescriptions().put(innerEntry.getKey(), prop) != null )  {
+                        throw new IOException("Duplicate key for property description (keys are case-insensitive) : ".concat(innerEntry.getKey()));
+                    }
                 }
             }            
         } catch (final JsonException | IllegalArgumentException e) {

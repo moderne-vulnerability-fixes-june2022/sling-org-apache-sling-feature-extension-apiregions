@@ -89,7 +89,8 @@ public class ConfigurationValidator {
         final Dictionary<String, Object> properties = configuration.getConfigurationProperties();
         // validate the described properties
         for(final Map.Entry<String, PropertyDescription> propEntry : desc.getPropertyDescriptions().entrySet()) {
-            final Object value = properties.get(propEntry.getKey());
+           // TODO - we need to make a case-insensitive lookup (see SLING-10084)
+           final Object value = properties.get(propEntry.getKey());
             final PropertyValidationResult result = propertyValidator.validate(value, propEntry.getValue());
             results.put(propEntry.getKey(), result);
         }
@@ -100,15 +101,24 @@ public class ConfigurationValidator {
             if ( !desc.getPropertyDescriptions().containsKey(propName) ) {
                 final PropertyValidationResult result = new PropertyValidationResult();
                 results.put(propName, result);
-                if ( Constants.SERVICE_RANKING.equals(propName) ) {
+                if ( Constants.SERVICE_RANKING.equalsIgnoreCase(propName) ) {
                     final Object value = properties.get(propName);
                     if ( !(value instanceof Integer) ) {
                         result.getErrors().add("service.ranking must be of type Integer");
                     }    
-                } else if ( !ALLOWED_PROPERTIES.contains(propName) && region != Region.INTERNAL ) {
+                } else if ( !isAllowedProperty(propName) && region != Region.INTERNAL ) {
                     result.getErrors().add("Property is not allowed");
                 }
             }
         }
     }
+
+    private boolean isAllowedProperty(final String name) {
+        for(final String allowed : ALLOWED_PROPERTIES) {
+            if ( allowed.equalsIgnoreCase(name) ) {
+                return true;
+            }
+        }
+        return false;
+    } 
 }
