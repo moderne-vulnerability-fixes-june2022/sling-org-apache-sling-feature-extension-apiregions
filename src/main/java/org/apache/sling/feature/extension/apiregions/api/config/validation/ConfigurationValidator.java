@@ -89,8 +89,7 @@ public class ConfigurationValidator {
         final Dictionary<String, Object> properties = configuration.getConfigurationProperties();
         // validate the described properties
         for(final Map.Entry<String, PropertyDescription> propEntry : desc.getPropertyDescriptions().entrySet()) {
-           // TODO - we need to make a case-insensitive lookup (see SLING-10084)
-           final Object value = properties.get(propEntry.getKey());
+            final Object value = properties.get(propEntry.getKey());
             final PropertyValidationResult result = propertyValidator.validate(value, propEntry.getValue());
             results.put(propEntry.getKey(), result);
         }

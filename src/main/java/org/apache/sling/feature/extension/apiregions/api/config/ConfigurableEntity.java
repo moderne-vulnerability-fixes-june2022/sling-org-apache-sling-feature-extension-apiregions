@@ -25,14 +25,16 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
+import org.apache.felix.cm.json.Configurations;
+
 /** 
  * A configurable entity has properties
  * This class is not thread safe.
  */
 public abstract class ConfigurableEntity extends DescribableEntity {
 	
-	/** The properties */
-    private final Map<String, PropertyDescription> properties = new CaseInsensitiveMap<>();
+    /** The properties */
+    private final Map<String, PropertyDescription> properties = (Map)Configurations.newConfiguration();
 
     /**
      * Clear the object and reset to defaults
