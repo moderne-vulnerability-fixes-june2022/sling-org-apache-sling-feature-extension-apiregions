@@ -34,6 +34,7 @@ import org.apache.felix.cm.json.Configurations;
 public abstract class ConfigurableEntity extends DescribableEntity {
 	
     /** The properties */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private final Map<String, PropertyDescription> properties = (Map)Configurations.newConfiguration();
 
     /**
