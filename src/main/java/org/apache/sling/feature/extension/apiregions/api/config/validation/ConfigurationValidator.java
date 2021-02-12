@@ -70,18 +70,20 @@ public class ConfigurationValidator {
      */
     public ConfigurationValidationResult validate(final Configuration config, final ConfigurableEntity desc, 
             final Region region, final Mode mode) {
+        final Mode validationMode = desc.getMode() != null ? desc.getMode() : (mode != null ? mode : Mode.STRICT);
+        
         final ConfigurationValidationResult result = new ConfigurationValidationResult();
         if ( config.isFactoryConfiguration() ) {
             if ( !(desc instanceof FactoryConfigurationDescription) ) {
                 result.getErrors().add("Factory configuration cannot be validated against non factory configuration description");
             } else {
-                validateProperties(config, desc, result.getPropertyResults(), region, mode);
+                validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
             }
         } else {
             if ( !(desc instanceof ConfigurationDescription) ) {
                 result.getErrors().add("Configuration cannot be validated against factory configuration description");
             } else {
-                validateProperties(config, desc, result.getPropertyResults(), region, mode);
+                validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
             }
         }
 
@@ -120,7 +122,7 @@ public class ConfigurationValidator {
                 if ( Constants.SERVICE_RANKING.equalsIgnoreCase(propName) ) {
                     final Object value = properties.get(propName);
                     if ( !(value instanceof Integer) ) {
-                        result.getErrors().add("service.ranking must be of type Integer");
+                        setResult(result, mode, "service.ranking must be of type Integer");
                     }    
                 } else if ( !isAllowedProperty(propName) && region != Region.INTERNAL ) {
                     result.getErrors().add("Property is not allowed");
@@ -129,6 +131,14 @@ public class ConfigurationValidator {
         }
     }
 
+    void setResult(final PropertyValidationResult result, final Mode validationMode, final String msg) {
+        if ( validationMode == Mode.STRICT ) {
+            result.getErrors().add(msg);
+        } else if ( validationMode == Mode.LENIENT || validationMode == Mode.DEFINITIVE ) {
+            result.getWarnings().add(msg);
+        }
+    }
+    
     private boolean isAllowedProperty(final String name) {
         for(final String allowed : ALLOWED_PROPERTIES) {
             if ( allowed.equalsIgnoreCase(name) ) {
