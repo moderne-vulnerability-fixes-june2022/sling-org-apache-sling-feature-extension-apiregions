@@ -51,6 +51,7 @@ public class PropertyDescriptionTest {
         entity.setRequired(true);
         entity.setVariable("var");
         entity.setType(PropertyType.BYTE);        
+        entity.setDefaultValue("default");
         entity.clear();
         assertTrue(entity.getAttributes().isEmpty());
         assertNull(entity.getDeprecated());
@@ -66,12 +67,14 @@ public class PropertyDescriptionTest {
         assertNull(entity.getVariable());
         assertFalse(entity.isRequired());
         assertEquals(PropertyType.STRING, entity.getType());
+        assertNull(entity.getDefaultValue());
     }
 
     @Test public void testFromJSONObject() throws IOException {
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
         ext.setJSON("{ \"type\" : \"BYTE\", \"cardinality\": 5, \"required\" : true, \"variable\" : \"var\"," +
-        "\"range\" : {}, \"includes\" : [\"in\"], \"excludes\" : [\"ex\"] , \"options\": [{}], \"regex\": \".\"}");
+        "\"range\" : {}, \"includes\" : [\"in\"], \"excludes\" : [\"ex\"] , \"options\": [{}], \"regex\": \".\"," +
+        "\"default\" : \"def\"}");
 
         final PropertyDescription entity = new PropertyDescription();
         entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
@@ -86,6 +89,7 @@ public class PropertyDescriptionTest {
         assertEquals(1, entity.getOptions().size());
         assertEquals(".", entity.getRegex());
         assertNotNull(entity.getRegexPattern());
+        assertEquals("def", entity.getDefaultValue());
 
         // test defaults and empty values
         ext.setJSON("{ \"variable\" : \"var\", \"regex\": \".\"}");
@@ -114,10 +118,12 @@ public class PropertyDescriptionTest {
         entity.setRequired(true);
         entity.setVariable("var");
         entity.setType(PropertyType.BYTE);
+        entity.setDefaultValue("def");
 
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
         ext.setJSON("{ \"type\" : \"BYTE\", \"cardinality\": 5, \"required\" : true, \"variable\" : \"var\"," +
-            "\"range\" : {}, \"includes\" : [\"in\"], \"excludes\" : [\"ex\"] , \"options\": [{}], \"regex\": \".\"}");
+            "\"range\" : {}, \"includes\" : [\"in\"], \"excludes\" : [\"ex\"] , \"options\": [{}], \"regex\": \".\"," +
+            "\"default\" : \"def\"}");
 
         assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
 
@@ -129,7 +135,8 @@ public class PropertyDescriptionTest {
         entity.setOptions(null);
         entity.setExcludes(null);
         entity.setIncludes(null);
-
+        entity.setDefaultValue(null);
+        
         ext.setJSON("{ \"variable\" : \"var\", \"regex\": \".\"}");
 
         assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());

@@ -28,6 +28,8 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
+import org.apache.felix.cm.json.Configurations;
+
 /**
  * Instances of this class represent a single configuration property
  * This class is not thread safe.
@@ -61,6 +63,12 @@ public class PropertyDescription extends DescribableEntity {
 	/** Required? */
 	private boolean required;
     
+    /** 
+     * The optional default value 
+     * @since 1.2
+     */
+    private Object defaultValue;
+
     /**
      * Create a new description
      */
@@ -87,6 +95,7 @@ public class PropertyDescription extends DescribableEntity {
 		this.setExcludes(null);
 		this.setOptions(null);
 		this.setRegex(null);
+        this.setDefaultValue(null);
     }
 
 	/**
@@ -140,6 +149,10 @@ public class PropertyDescription extends DescribableEntity {
 				this.setOptions(list);
 			}
 			this.setRegex(this.getString(InternalConstants.KEY_REGEX));
+            final JsonValue dv = this.getAttributes().remove(InternalConstants.KEY_DEFAULT);
+            if ( dv != null ) {
+                this.setDefaultValue(Configurations.convertToObject(dv));
+            }
  		} catch (final JsonException | IllegalArgumentException e) {
             throw new IOException(e);
         }
@@ -166,32 +179,34 @@ public class PropertyDescription extends DescribableEntity {
 		}
 	    this.setString(objectBuilder, InternalConstants.KEY_VARIABLE, this.getVariable());
 		
-		if ( this.range != null ) {
-			objectBuilder.add(InternalConstants.KEY_RANGE, this.range.toJSONObject());
+		if ( this.getRange() != null ) {
+			objectBuilder.add(InternalConstants.KEY_RANGE, this.getRange().toJSONObject());
 		}
-		if ( this.includes != null && this.includes.length > 0 ) {
+		if ( this.getIncludes() != null && this.getIncludes().length > 0 ) {
 			final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
-			for(final String v : this.includes) {
+			for(final String v : this.getIncludes()) {
 				arrayBuilder.add(v);
 			}
 			objectBuilder.add(InternalConstants.KEY_INCLUDES, arrayBuilder);
 		}
-		if ( this.excludes != null && this.excludes.length > 0 ) {
+		if ( this.getExcludes() != null && this.getExcludes().length > 0 ) {
 			final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
-			for(final String v : this.excludes) {
+			for(final String v : this.getExcludes()) {
 				arrayBuilder.add(v);
 			}
 			objectBuilder.add(InternalConstants.KEY_EXCLUDES, arrayBuilder);
 		}
-		if ( this.options != null && !this.options.isEmpty()) {
+		if ( this.getOptions() != null && !this.getOptions().isEmpty()) {
 			final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
-            for(final Option o : this.options) {
+            for(final Option o : this.getOptions()) {
 				arrayBuilder.add(o.toJSONObject());
 			}
 			objectBuilder.add(InternalConstants.KEY_OPTIONS, arrayBuilder);
 		}
 		this.setString(objectBuilder, InternalConstants.KEY_REGEX, this.getRegex());
-		
+		if ( this.getDefaultValue() != null ) {
+            objectBuilder.add(InternalConstants.KEY_DEFAULT, Configurations.convertToJsonValue(this.getDefaultValue()));
+        }
 		return objectBuilder;
 	}
 
@@ -359,4 +374,22 @@ public class PropertyDescription extends DescribableEntity {
 	public void setRequired(final boolean flag) {
 		this.required = flag;
 	}
+
+    /**
+     * Get the optional default value.
+     * @return The default value or {@code null}
+     * @since 1.2
+     */
+    public Object getDefaultValue() {
+        return this.defaultValue;
+    }
+    
+    /**
+     * Set the optional default value.
+     * @param val The default value
+     * @since 1.2
+     */
+    public void setDefaultValue(final Object val) {
+        this.defaultValue = val;
+    }
 }
