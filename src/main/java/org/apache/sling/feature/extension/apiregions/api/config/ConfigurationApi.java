@@ -133,6 +133,12 @@ public class ConfigurationApi extends AttributeableEntity {
     /** The cached region information for feature origins */
     private final Map<ArtifactId, Region> regionCache = new LinkedHashMap<>();
 
+    /** 
+     * The default validation mode. 
+     * @since 1.2
+     */
+    private Mode mode = Mode.STRICT;
+    
     /**
      * Clear the object and reset to defaults
      */
@@ -147,6 +153,7 @@ public class ConfigurationApi extends AttributeableEntity {
         this.internalFrameworkProperties.clear();
         this.setRegion(null);
         this.getFeatureToRegionCache().clear();
+        this.setMode(Mode.STRICT);
     }
 
 	/**
@@ -221,6 +228,11 @@ public class ConfigurationApi extends AttributeableEntity {
                         Region.valueOf(getString(innerEntry.getValue()).toUpperCase()));
                 }
             }
+            
+			final String modeVal = this.getString(InternalConstants.KEY_MODE);
+			if ( modeVal != null ) {
+                this.setMode(Mode.valueOf(modeVal.toUpperCase()));				
+			}
 
         } catch (final JsonException | IllegalArgumentException e) {
             throw new IOException(e);
@@ -313,6 +325,25 @@ public class ConfigurationApi extends AttributeableEntity {
     }
 
     /**
+     * Get the validation mode.
+     * The default is {@link Mode#STRICT}
+     * @return The mode
+     * @since 1.2
+     */
+    public Mode getMode() {
+        return this.mode;
+    }
+
+    /**
+     * Set the validation mode
+     * @value The validation mode
+     * @since 1.2
+     */
+    public void setMode(final Mode value) {
+        this.mode = value == null ? Mode.STRICT : value;
+    }
+
+    /**
      * Convert this object into JSON
      *
      * @return The json object builder
@@ -372,6 +403,9 @@ public class ConfigurationApi extends AttributeableEntity {
                 cacheBuilder.add(entry.getKey().toMvnId(), entry.getValue().name());
             }
             objBuilder.add(InternalConstants.KEY_REGION_CACHE, cacheBuilder);
+        }
+        if ( this.getMode() != Mode.STRICT ) {
+            objBuilder.add(InternalConstants.KEY_MODE, this.getMode().name());
         }
 
 		return objBuilder;

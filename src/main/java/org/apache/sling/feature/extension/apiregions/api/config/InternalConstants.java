@@ -74,4 +74,6 @@ abstract class InternalConstants {
     static final String KEY_REGION_CACHE = "region-cache";
 
     static final String KEY_DEFAULT = "default";
+
+    static final String KEY_MODE = "mode";
 }

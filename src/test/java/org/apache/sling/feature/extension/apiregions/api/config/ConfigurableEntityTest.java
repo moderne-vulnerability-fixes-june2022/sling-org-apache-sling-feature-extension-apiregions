@@ -43,12 +43,14 @@ public class ConfigurableEntityTest {
         entity.setTitle("t");
         entity.setDescription("x");
         entity.getPropertyDescriptions().put("a", new PropertyDescription());
+        entity.setMode(Mode.SILENT);
         entity.clear();
         assertTrue(entity.getAttributes().isEmpty());
         assertNull(entity.getDeprecated());
         assertNull(entity.getTitle());
         assertNull(entity.getDescription());
         assertTrue(entity.getPropertyDescriptions().isEmpty());
+        assertNull(entity.getMode());
     }
 
     @Test public void testFromJSONObject() throws IOException {
@@ -80,5 +82,18 @@ public class ConfigurableEntityTest {
 
         final CE entity = new CE();
         entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
+    }
+
+    @Test public void testSerialisingMode() throws IOException {
+        final CE entity = new CE();
+        entity.setMode(Mode.SILENT);
+
+        final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
+        ext.setJSON("{ \"mode\" : \"SILENT\"}");
+
+        assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
+        entity.clear();
+        entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
+        assertEquals(Mode.SILENT, entity.getMode());
     }
 }

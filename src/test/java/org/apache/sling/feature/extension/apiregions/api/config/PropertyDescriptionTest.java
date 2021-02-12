@@ -52,6 +52,7 @@ public class PropertyDescriptionTest {
         entity.setVariable("var");
         entity.setType(PropertyType.BYTE);        
         entity.setDefaultValue("default");
+        entity.setMode(Mode.SILENT);
         entity.clear();
         assertTrue(entity.getAttributes().isEmpty());
         assertNull(entity.getDeprecated());
@@ -68,6 +69,7 @@ public class PropertyDescriptionTest {
         assertFalse(entity.isRequired());
         assertEquals(PropertyType.STRING, entity.getType());
         assertNull(entity.getDefaultValue());
+        assertNull(entity.getMode());
     }
 
     @Test public void testFromJSONObject() throws IOException {
@@ -163,5 +165,18 @@ public class PropertyDescriptionTest {
         } catch ( final IllegalArgumentException iae) {
             // expected
         }
+    }
+
+    @Test public void testSerialisingMode() throws IOException {
+        final PropertyDescription entity = new PropertyDescription();
+        entity.setMode(Mode.SILENT);
+
+        final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
+        ext.setJSON("{ \"mode\" : \"SILENT\"}");
+
+        assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
+        entity.clear();
+        entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
+        assertEquals(Mode.SILENT, entity.getMode());
     }
 }

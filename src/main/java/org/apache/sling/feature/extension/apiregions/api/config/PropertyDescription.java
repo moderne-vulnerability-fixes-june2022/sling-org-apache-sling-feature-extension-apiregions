@@ -69,6 +69,12 @@ public class PropertyDescription extends DescribableEntity {
      */
     private Object defaultValue;
 
+    /** 
+     * The validation mode. 
+     * @since 1.2
+     */
+    private Mode mode;
+
     /**
      * Create a new description
      */
@@ -96,6 +102,7 @@ public class PropertyDescription extends DescribableEntity {
 		this.setOptions(null);
 		this.setRegex(null);
         this.setDefaultValue(null);
+        this.setMode(null);
     }
 
 	/**
@@ -153,6 +160,10 @@ public class PropertyDescription extends DescribableEntity {
             if ( dv != null ) {
                 this.setDefaultValue(Configurations.convertToObject(dv));
             }
+			final String modeVal = this.getString(InternalConstants.KEY_MODE);
+			if ( modeVal != null ) {
+                this.setMode(Mode.valueOf(modeVal.toUpperCase()));				
+			}
  		} catch (final JsonException | IllegalArgumentException e) {
             throw new IOException(e);
         }
@@ -207,7 +218,11 @@ public class PropertyDescription extends DescribableEntity {
 		if ( this.getDefaultValue() != null ) {
             objectBuilder.add(InternalConstants.KEY_DEFAULT, Configurations.convertToJsonValue(this.getDefaultValue()));
         }
-		return objectBuilder;
+        if ( this.getMode() != null ) {
+            objectBuilder.add(InternalConstants.KEY_MODE, this.getMode().name());
+        }
+
+        return objectBuilder;
 	}
 
     /**
@@ -392,4 +407,22 @@ public class PropertyDescription extends DescribableEntity {
     public void setDefaultValue(final Object val) {
         this.defaultValue = val;
     }
-}
+
+    /**
+     * Get the validation mode.
+     * @return The mode or {@code null}
+     * @since 1.2
+     */
+    public Mode getMode() {
+        return this.mode;
+    }
+
+    /**
+     * Set the validation mode
+     * @value The validation mode
+     * @since 1.2
+     */
+    public void setMode(final Mode value) {
+        this.mode = value;
+    }
+ }

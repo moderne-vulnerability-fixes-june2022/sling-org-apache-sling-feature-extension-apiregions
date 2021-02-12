@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.sling.feature.extension.apiregions.api.config.Mode;
 import org.apache.sling.feature.extension.apiregions.api.config.Option;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyType;
@@ -34,289 +35,205 @@ public class PropertyValidatorTest {
     
     private final PropertyValidator validator = new PropertyValidator();
     
-    @Test public void testValidateWithNull() {
-        final PropertyDescription prop = new PropertyDescription();
+    /**
+     * Helper method to validate an error based on the validation mode
+     */
+    private void validateError(final PropertyDescription prop, final Object value) {
+        validateError(prop, value, 1);
+    }
+    
+    /**
+     * Helper method to validate an error based on the validation mode
+     */
+    private void validateError(final PropertyDescription prop, final Object value, final int errors) {
         PropertyValidationResult result;
 
-        // prop not required - no error
-        result = validator.validate(null, prop);
-        assertTrue(result.getErrors().isEmpty());
+        // error - strict mode 
+        result = validator.validate(value, prop, Mode.STRICT);
+        assertEquals(errors, result.getErrors().size());
+        assertFalse(result.isValid());
+        assertFalse(result.isSkipped());
+
+        // error - mode lenient
+        result = validator.validate(value, prop, Mode.LENIENT);
+        assertEquals(errors, result.getWarnings().size());
         assertTrue(result.isValid());
         assertFalse(result.isSkipped());
 
+        // error - mode silent
+        result = validator.validate(value, prop, Mode.SILENT);
+        assertTrue(result.getWarnings().isEmpty());
+        assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
+
+        // error - mode definitive
+        result = validator.validate(value, prop, Mode.DEFINITIVE);
+        assertEquals(errors, result.getWarnings().size());
+        assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
+
+        // error - mode silent definitive 
+        result = validator.validate(value, prop, Mode.SILENT_DEFINITIVE);
+        assertTrue(result.getWarnings().isEmpty());
+        assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
+    }
+
+    /**
+     * Helper method to validate that a value is valid and not skipped
+     */
+    private void validateValid(final PropertyDescription prop, final Object value) {
+        final PropertyValidationResult result = validator.validate(value, prop);
+        assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
+        assertTrue(result.getErrors().isEmpty());
+    }
+
+    @Test public void testValidateWithNull() {
+        final PropertyDescription prop = new PropertyDescription();
+
+        // prop not required - no error
+        validateValid(prop, null);
+
         // prop required - error
         prop.setRequired(true);
-        result = validator.validate(null, prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isValid());
-        assertFalse(result.isSkipped());
+        validateError(prop, null);
     }
 
     @Test public void testValidateBoolean() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.BOOLEAN);
 
-        PropertyValidationResult result;
-        result = validator.validate(Boolean.TRUE, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
+        validateValid(prop, Boolean.TRUE);
+        validateValid(prop, Boolean.FALSE);
+        validateValid(prop, "TRUE");
+        validateValid(prop, "FALSE");
 
-        result = validator.validate(Boolean.FALSE, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("TRUE", prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("FALSE", prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("yes", prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate(1, prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isSkipped());
+        validateError(prop, "yes");
+        validateError(prop, 1);
     }
 
     @Test public void testValidateByte() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.BYTE);
 
-        PropertyValidationResult result;
+        validateValid(prop, (byte)1);
+        validateValid(prop, "1");
+        validateValid(prop, 1);
 
-        result = validator.validate((byte)1, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("1", prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("yes", prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate(1, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
+        validateError(prop, "yes");
     }
 
     @Test public void testValidateShort() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.SHORT);
 
-        PropertyValidationResult result;
+        validateValid(prop, (short)1);
+        validateValid(prop, "1");
+        validateValid(prop, 1);
 
-        result = validator.validate((short)1, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("1", prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("yes", prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate(1, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
+        validateError(prop, "yes");
     }
 
     @Test public void testValidateInteger() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.INTEGER);
 
-        PropertyValidationResult result;
+        validateValid(prop, "1");
+        validateValid(prop, 1);
 
-        result = validator.validate(1, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("1", prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("yes", prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate(1, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
+        validateError(prop, "yes");
     }
 
     @Test public void testValidateLong() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.LONG);
 
-        PropertyValidationResult result;
+        validateValid(prop, 1L);
+        validateValid(prop, "1");
+        validateValid(prop, 1);
 
-        result = validator.validate(1L, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("1", prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("yes", prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate(1, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
+        validateError(prop, "yes");
     }
 
     @Test public void testValidateFloat() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.FLOAT);
 
-        PropertyValidationResult result;
+        validateValid(prop, 1.1);
+        validateValid(prop, "1.1");
+        validateValid(prop, 1);
 
-        result = validator.validate(1.1, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("1.1", prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("yes", prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate(1, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
+        validateError(prop, "yes");
     }
 
     @Test public void testValidateDouble() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.DOUBLE);
 
-        PropertyValidationResult result;
+        validateValid(prop, 1.1d);
+        validateValid(prop, "1.1");
+        validateValid(prop, 1);
 
-        result = validator.validate(1.1d, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("1.1", prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("yes", prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate(1, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
+        validateError(prop, "yes");
     }
 
     @Test public void testValidateChar() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.CHARACTER);
 
-        PropertyValidationResult result;
+        validateValid(prop, 'x');
+        validateValid(prop, "y");
 
-        result = validator.validate('x', prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("y", prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("yes", prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isSkipped());
+        validateError(prop, "yes");
     }
 
     @Test public void testValidateUrl() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.URL);
 
-        PropertyValidationResult result;
+        validateValid(prop, "https://sling.apache.org/documentation");
 
-        result = validator.validate("https://sling.apache.org/documentation", prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("hello world", prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isSkipped());
+        validateError(prop, "hello world");
     }
 
     @Test public void testValidateEmail() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.EMAIL);
 
-        PropertyValidationResult result;
+        validateValid(prop, "a@b.com");
 
-        result = validator.validate("a@b.com", prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("hello world", prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isSkipped());
+        validateError(prop, "hello world");
     }
 
     @Test public void testValidatePassword() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.PASSWORD);
 
-        PropertyValidationResult result;
+        validateValid(prop, null);
+        validateValid(prop, "$[secret:dbpassword]");
 
-        result = validator.validate(null, prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("secret", prop);
-        assertFalse(result.isValid());
-
-        result = validator.validate("$[secret:dbpassword]", prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
+        validateError(prop, "secret");
     }
 
     @Test public void testValidatePath() {
         final PropertyDescription prop = new PropertyDescription();
         prop.setType(PropertyType.PATH);
 
-        PropertyValidationResult result;
+        validateValid(prop, "/a/b/c");
 
-        result = validator.validate("/a/b/c", prop);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("hello world", prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isSkipped());
+        validateError(prop, "hello world");
     }
     
     @Test public void testValidateString() {
         final PropertyDescription desc = new PropertyDescription();
-        PropertyValidationResult result;
 
-        result = validator.validate("hello world", desc);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
-
-        result = validator.validate("$[prop:KEY]", desc);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
+        validateValid(desc, "hello world");
+        validateValid(desc, "$[prop:KEY]");
 
         // skip if required
         desc.setRequired(true);
-        result = validator.validate("$[prop:KEY]", desc);
+        PropertyValidationResult result = validator.validate("$[prop:KEY]", desc);
         assertTrue(result.isValid());
         assertTrue(result.isSkipped());
         desc.setRequired(false);
@@ -336,96 +253,72 @@ public class PropertyValidatorTest {
         desc.setRegex(null);
 
         // empty string - not required
-        result = validator.validate("", desc);
-        assertTrue(result.isValid());
-        assertFalse(result.isSkipped());
+        validateValid(desc, "");
 
         // empty string - required
         desc.setRequired(true);
-        result = validator.validate("", desc);
-        assertFalse(result.isValid());
-        assertFalse(result.isSkipped());
+        validateError(desc, "");
         desc.setRequired(false);
     }
 
     @Test public void testValidateRange() {
-        final List<String> messages = new ArrayList<>();
-        final PropertyDescription prop = new PropertyDescription();
-
+        final PropertyDescription description = new PropertyDescription();
+        description.setType(PropertyType.INTEGER);
+         
         // no range set
-        validator.validateRange(prop, 2, messages);
-        assertTrue(messages.isEmpty());
+        validateValid(description, 2);
 
         // empty range set
-        prop.setRange(new Range());
-        validator.validateRange(prop, 2, messages);
-        assertTrue(messages.isEmpty());
+        description.setRange(new Range());
+        validateValid(description, 2);
 
         // min set
-        prop.getRange().setMin(5);
-        validator.validateRange(prop, 5, messages);
-        assertTrue(messages.isEmpty());
-        validator.validateRange(prop, 6, messages);
-        assertTrue(messages.isEmpty());
-        validator.validateRange(prop, 4, messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        description.getRange().setMin(5);
+        validateValid(description, 5);
+        validateValid(description, 6);
 
-        validator.validateRange(prop, 5.0, messages);
-        assertTrue(messages.isEmpty());
-        validator.validateRange(prop, 6.0, messages);
-        assertTrue(messages.isEmpty());
-        validator.validateRange(prop, 4.0, messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        validateError(description, 4);
+
+        validateValid(description, 5.0);
+        validateValid(description, 6.0);
+
+        validateError(description, 4.0);
 
         // max set
-        prop.getRange().setMax(6);
-        validator.validateRange(prop, 5, messages);
-        assertTrue(messages.isEmpty());
-        validator.validateRange(prop, 6, messages);
-        assertTrue(messages.isEmpty());
-        validator.validateRange(prop, 7, messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        description.getRange().setMax(6);
+        validateValid(description, 5);
+        validateValid(description, 6);
 
-        validator.validateRange(prop, 5.0, messages);
-        assertTrue(messages.isEmpty());
-        validator.validateRange(prop, 6.0, messages);
-        assertTrue(messages.isEmpty());
-        validator.validateRange(prop, 7.0, messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        validateError(description, 7);
+
+        validateValid(description, 5.0);
+        validateValid(description, 6.0);
+
+        validateError(description, 7.0);
     }   
     
     @Test public void testValidateRegex() {
-        final List<String> messages = new ArrayList<>();
         final PropertyDescription prop = new PropertyDescription();
 
         // no regex
-        validator.validateRegex(prop, "hello world", messages);
-        validator.validateRegex(prop, "world", messages);
-        assertTrue(messages.isEmpty());
+        validateValid(prop, "hello world");
+        validateValid(prop, "world");
 
         // regex
         prop.setRegex("h(.*)");
-        validator.validateRegex(prop, "hello world", messages);
-        assertTrue(messages.isEmpty());
-        validator.validateRegex(prop, "world", messages);
-        assertEquals(1, messages.size());
-        messages.clear();
+        validateValid(prop, "hello world");
+
+        validateError(prop, "world");
     }
 
     @Test public void testValidateOptions() {
-        final List<String> messages = new ArrayList<>();
         final PropertyDescription prop = new PropertyDescription();
 
         // no options
-        validator.validateOptions(prop, "foo", messages);
-        validator.validateOptions(prop, "bar", messages);
-        assertTrue(messages.isEmpty());
+        validateValid(prop, "foo");
+        validateValid(prop, "bar");
 
-        // options
+        // options - with foo
         final List<Option> options = new ArrayList<>();
         final Option o1 = new Option();
         o1.setValue("foo");
@@ -434,13 +327,10 @@ public class PropertyValidatorTest {
         options.add(o1);
         options.add(o2);
         prop.setOptions(options);
-        validator.validateOptions(prop, "foo", messages);
-        assertTrue(messages.isEmpty());
-        validator.validateOptions(prop, "bar", messages);
-        assertEquals(1, messages.size());
-        messages.clear();
-        validator.validateOptions(prop, 7, messages);
-        assertTrue(messages.isEmpty());
+
+        validateValid(prop, "foo");
+        validateError(prop, "bar");
+        validateValid(prop, 7);
     }
     
     @Test public void testValidateList() {
@@ -452,49 +342,32 @@ public class PropertyValidatorTest {
         values.add("c");
 
         // default cardinality - no excludes/includes
-        PropertyValidationResult result;
-        result = validator.validate(values, prop);
-        assertEquals(1, result.getErrors().size());
-        assertFalse(result.isSkipped());
+        validateError(prop, values);
 
         // cardinality 3 - no excludes/includes
         prop.setCardinality(3);
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertTrue(result.getErrors().isEmpty());
+        validateValid(prop, values);
 
         values.add("d");
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertEquals(1, result.getErrors().size());
+        validateError(prop, values);
 
         // excludes
         prop.setExcludes(new String[] {"d", "e"});
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertEquals(2, result.getErrors().size()); // cardinality and exclude
+        validateError(prop, values, 2);
 
         values.remove("d");
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertTrue(result.getErrors().isEmpty());
+        validateValid(prop, values);
 
         // includes
         prop.setIncludes(new String[] {"b"});
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertTrue(result.getErrors().isEmpty());
+        validateValid(prop, values);
 
         prop.setIncludes(new String[] {"x"});
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertEquals(1, result.getErrors().size());
+        validateError(prop, values);
 
         values.add("x");
         values.remove("a");
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertTrue(result.getErrors().isEmpty());
+        validateValid(prop, values);
     }
 
     @Test public void testValidateArray() {
@@ -503,48 +376,31 @@ public class PropertyValidatorTest {
         String[] values = new String[] {"a", "b", "c"};
 
         // default cardinality - no excludes/includes
-        PropertyValidationResult result;
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertEquals(1, result.getErrors().size());
+        validateError(prop, values);
 
         // cardinality 3 - no excludes/includes
         prop.setCardinality(3);
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertTrue(result.getErrors().isEmpty());
+        validateValid(prop, values);
 
         values = new String[] {"a", "b", "c", "d"};
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertEquals(1, result.getErrors().size());
+        validateError(prop, values);
 
         // excludes
         prop.setExcludes(new String[] {"d", "e"});
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertEquals(2, result.getErrors().size()); // cardinality and exclude
+        validateError(prop, values, 2);
 
         values = new String[] {"a", "b", "c"};
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertTrue(result.getErrors().isEmpty());
+        validateValid(prop, values);
 
         // includes
         prop.setIncludes(new String[] {"b"});
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertTrue(result.getErrors().isEmpty());
+        validateValid(prop, values);
 
         prop.setIncludes(new String[] {"x"});
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertEquals(1, result.getErrors().size());
+        validateError(prop, values);
 
         values = new String[] {"b", "c", "x"};
-        result = validator.validate(values, prop);
-        assertFalse(result.isSkipped());
-        assertTrue(result.getErrors().isEmpty());
+        validateValid(prop, values);
     }
 
     @Test public void testDeprecation() {

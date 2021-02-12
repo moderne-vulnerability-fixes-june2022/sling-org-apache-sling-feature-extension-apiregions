@@ -96,7 +96,7 @@ public class FeatureValidator {
                 if ( config.isFactoryConfiguration() ) {
                     final FactoryConfigurationDescription desc = api.getFactoryConfigurationDescriptions().get(config.getFactoryPid());
                     if ( desc != null ) {
-                        final ConfigurationValidationResult r = configurationValidator.validate(config, desc, regionInfo.region);
+                        final ConfigurationValidationResult r = configurationValidator.validate(config, desc, regionInfo.region, api.getMode());
                         result.getConfigurationResults().put(config.getPid(), r);
                         if ( regionInfo.region != Region.INTERNAL ) {
                             if ( desc.getOperations().isEmpty() ) {
@@ -121,7 +121,7 @@ public class FeatureValidator {
                 } else {
                     final ConfigurationDescription desc = api.getConfigurationDescriptions().get(config.getPid());
                     if ( desc != null ) {
-                        final ConfigurationValidationResult r = configurationValidator.validate(config, desc, regionInfo.region);
+                        final ConfigurationValidationResult r = configurationValidator.validate(config, desc, regionInfo.region, api.getMode());
                         result.getConfigurationResults().put(config.getPid(), r);
                     } else if ( regionInfo.region!= Region.INTERNAL && api.getInternalConfigurations().contains(config.getPid())) {
                         final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
@@ -144,7 +144,7 @@ public class FeatureValidator {
             } else {
                 final FrameworkPropertyDescription fpd = api.getFrameworkPropertyDescriptions().get(frameworkProperty);
                 if ( fpd != null ) {
-                    final PropertyValidationResult pvr = propertyValidator.validate(feature.getFrameworkProperties().get(frameworkProperty), fpd);
+                    final PropertyValidationResult pvr = propertyValidator.validate(feature.getFrameworkProperties().get(frameworkProperty), fpd, api.getMode());
                     result.getFrameworkPropertyResults().put(frameworkProperty, pvr);
                 } else if ( regionInfo.region != Region.INTERNAL && api.getInternalFrameworkProperties().contains(frameworkProperty) ) {
                     final PropertyValidationResult pvr = new PropertyValidationResult();

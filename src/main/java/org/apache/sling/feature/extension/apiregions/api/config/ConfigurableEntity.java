@@ -37,6 +37,12 @@ public abstract class ConfigurableEntity extends DescribableEntity {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private final Map<String, PropertyDescription> properties = (Map)Configurations.newConfiguration();
 
+    /** 
+     * The validation mode. 
+     * @since 1.2
+     */
+    private Mode mode;
+    
     /**
      * Clear the object and reset to defaults
      */
@@ -44,6 +50,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
 	public void clear() {
         super.clear();
 		this.properties.clear();
+        this.setMode(null);
     }
 
 	/**
@@ -67,6 +74,10 @@ public abstract class ConfigurableEntity extends DescribableEntity {
                     }
                 }
             }            
+			final String modeVal = this.getString(InternalConstants.KEY_MODE);
+			if ( modeVal != null ) {
+                this.setMode(Mode.valueOf(modeVal.toUpperCase()));				
+			}
         } catch (final JsonException | IllegalArgumentException e) {
             throw new IOException(e);
         }
@@ -78,6 +89,24 @@ public abstract class ConfigurableEntity extends DescribableEntity {
 	 */
     public Map<String, PropertyDescription> getPropertyDescriptions() {
         return this.properties;
+    }
+
+    /**
+     * Get the validation mode.
+     * @return The mode or {@code null}
+     * @since 1.2
+     */
+    public Mode getMode() {
+        return this.mode;
+    }
+
+    /**
+     * Set the validation mode
+     * @value The validation mode
+     * @since 1.2
+     */
+    public void setMode(final Mode value) {
+        this.mode = value;
     }
 
     /**
@@ -97,6 +126,9 @@ public abstract class ConfigurableEntity extends DescribableEntity {
 			}
 			objBuilder.add(InternalConstants.KEY_PROPERTIES, propBuilder);
 		}
+        if ( this.getMode() != null ) {
+            objBuilder.add(InternalConstants.KEY_MODE, this.getMode().name());
+        }
 
 		return objBuilder;
    }

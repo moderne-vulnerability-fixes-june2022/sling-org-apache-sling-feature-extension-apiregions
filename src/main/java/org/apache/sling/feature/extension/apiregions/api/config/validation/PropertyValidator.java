@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.sling.feature.extension.apiregions.api.config.Mode;
 import org.apache.sling.feature.extension.apiregions.api.config.Option;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyType;
@@ -40,10 +41,25 @@ public class PropertyValidator {
 	 * @return A property validation result
 	 */
 	public PropertyValidationResult validate(final Object value, final PropertyDescription desc) {
-		final PropertyValidationResult result = new PropertyValidationResult();
-		if ( value == null ) {
+        return this.validate(value, desc, Mode.STRICT);
+    }
+
+    /**
+	 * Validate the value against the property definition
+     * @param value The value to validate
+     * @param desc The property description
+     * @param mode Optional validation mode - this mode is used if the description does not define a mode. Defaults to {@link Mode#STRICT}.
+	 * @return A property validation result
+     * @since 1.2.0
+	 */
+	public PropertyValidationResult validate(final Object value, final PropertyDescription desc, final Mode mode) {
+        final Context context = new Context();
+        context.description = desc;
+        context.validationMode = desc.getMode() != null ? desc.getMode() : (mode != null ? mode : Mode.STRICT);
+
+        if ( value == null ) {
             if ( desc.isRequired() ) {
-                result.getErrors().add("No value provided");
+                setResult(context, "No value provided");
             }
 		} else {
 			final List<Object> values;
@@ -63,23 +79,31 @@ public class PropertyValidator {
 			} else {
 				// single value
 				values = null;
-				validateValue(desc, value, result);
+				validateValue(context, value);
 			}
 
 			if ( values != null ) {
                 // array or collection
                 for(final Object val : values) {
-                    validateValue(desc, val, result);
+                    validateValue(context, val);
                 }
-                validateList(desc, values, result.getErrors());
+                validateList(context, values);
             }
             
             if ( desc.getDeprecated() != null ) {
-                result.getWarnings().add(desc.getDeprecated());
+                context.result.getWarnings().add(desc.getDeprecated());
             }
 		}
-		return result;
+		return context.result;
 	}
+
+    void setResult(final Context context, final String msg) {
+        if ( context.validationMode == Mode.STRICT ) {
+            context.result.getErrors().add(msg);
+        } else if ( context.validationMode == Mode.LENIENT || context.validationMode == Mode.DEFINITIVE ) {
+            context.result.getWarnings().add(msg);
+        }
+    }
 
     /**
      * Validate a multi value
@@ -87,12 +111,12 @@ public class PropertyValidator {
      * @param values The values
      * @param messages The messages to record errors
      */
-    void validateList(final PropertyDescription prop, final List<Object> values, final List<String> messages) {
-        if ( prop.getCardinality() > 0 && values.size() > prop.getCardinality() ) {
-            messages.add("Array/collection contains too many elements, only " + prop.getCardinality() + " allowed");
+    void validateList(final Context context, final List<Object> values) {
+        if ( context.description.getCardinality() > 0 && values.size() > context.description.getCardinality() ) {
+            setResult(context, "Array/collection contains too many elements, only " + context.description.getCardinality() + " allowed");
         }
-        if ( prop.getIncludes() != null ) {
-            for(final String inc : prop.getIncludes()) {
+        if ( context.description.getIncludes() != null ) {
+            for(final String inc : context.description.getIncludes()) {
                 boolean found = false;
                 for(final Object val : values) {
                     if ( inc.equals(val.toString())) {
@@ -101,12 +125,12 @@ public class PropertyValidator {
                     }
                 }
                 if ( !found ) {
-                    messages.add("Required included value " + inc + " not found");
+                    setResult(context, "Required included value " + inc + " not found");
                 }
             }
         }
-        if ( prop.getExcludes() != null ) {
-            for(final String exc : prop.getExcludes()) {
+        if ( context.description.getExcludes() != null ) {
+            for(final String exc : context.description.getExcludes()) {
                 boolean found = false;
                 for(final Object val : values) {
                     if ( exc.equals(val.toString())) {
@@ -115,7 +139,7 @@ public class PropertyValidator {
                     }
                 }
                 if ( found ) {
-                    messages.add("Required excluded value " + exc + " found");
+                    setResult(context, "Required excluded value " + exc + " found");
                 }
             }
         }
@@ -123,8 +147,7 @@ public class PropertyValidator {
 
     private static final List<String> PLACEHOLDERS = Arrays.asList("$[env:", "$[secret:", "$[prop:");
 
-	void validateValue(final PropertyDescription desc, final Object value, final PropertyValidationResult result) {
-        final List<String> messages = result.getErrors();
+	void validateValue(final Context context, final Object value) {
 		if ( value != null ) {
             // check for placeholder
             boolean hasPlaceholder = false;
@@ -138,285 +161,294 @@ public class PropertyValidator {
                 }
             }
             if ( !hasPlaceholder ) {
-                switch ( desc.getType() ) {
-                    case BOOLEAN : validateBoolean(desc, value, messages);
+                switch ( context.description.getType() ) {
+                    case BOOLEAN : validateBoolean(context, value);
                                 break;
-                    case BYTE : validateByte(desc, value, messages);
+                    case BYTE : validateByte(context, value);
                                 break;
-                    case CHARACTER : validateCharacter(desc, value, messages);
+                    case CHARACTER : validateCharacter(context, value);
                                 break;
-                    case DOUBLE : validateDouble(desc, value, messages); 
+                    case DOUBLE : validateDouble(context, value); 
                                 break;
-                    case FLOAT : validateFloat(desc, value, messages); 
+                    case FLOAT : validateFloat(context, value); 
                                 break;
-                    case INTEGER : validateInteger(desc, value, messages);
+                    case INTEGER : validateInteger(context, value);
                                 break;
-                    case LONG : validateLong(desc, value, messages);
+                    case LONG : validateLong(context, value);
                                 break;
-                    case SHORT : validateShort(desc, value, messages);
+                    case SHORT : validateShort(context, value);
                                 break;
-                    case STRING : validateRequired(desc, value, messages);
+                    case STRING : validateRequired(context, value);
                                 break;
-                    case EMAIL : validateEmail(desc, value, messages); 
+                    case EMAIL : validateEmail(context, value); 
                                 break;
-                    case PASSWORD : validatePassword(desc, value, messages, false);
+                    case PASSWORD : validatePassword(context, value, false);
                                 break;
-                    case URL : validateURL(desc, value, messages);
+                    case URL : validateURL(context, value);
                             break;
-                    case PATH : validatePath(desc, value, messages);
+                    case PATH : validatePath(context, value);
                                 break;
-                    default : messages.add("Unable to validate value - unknown property type : " + desc.getType());
+                    default : context.result.getErrors().add("Unable to validate value - unknown property type : " + context.description.getType());
                 }
-                validateRegex(desc, value, messages);
-                validateOptions(desc, value, messages);                
+                validateRegex(context, value);
+                validateOptions(context, value);                
             } else {
                 // placeholder is present
-                if ( desc.getType() == PropertyType.PASSWORD ) {
-                    validatePassword(desc, value, messages, true);
-                } else if ( desc.getType() == PropertyType.STRING ) {
+                if ( context.description.getType() == PropertyType.PASSWORD ) {
+                    validatePassword(context, value, true);
+                } else if ( context.description.getType() == PropertyType.STRING ) {
                     // any string is valid, we only mark the result as skipped if a regex or options are set
-                    if ( desc.getRegex() != null || desc.getOptions() != null || desc.isRequired() ) {
-                        result.markSkipped();
+                    if ( context.description.getRegex() != null || context.description.getOptions() != null || context.description.isRequired() ) {
+                        context.result.markSkipped();
                     }
                 } else {
-                    result.markSkipped();
+                    context.result.markSkipped();
                 }
             }
         } else {
-			messages.add("Null value provided for validation");
+			setResult(context, "Null value provided for validation");
 		}
 	}
 	
-	void validateRequired(final PropertyDescription prop, final Object value, final List<String> messages) {
-        if ( prop.isRequired() ) {
+	void validateRequired(final Context context, final Object value) {
+        if ( context.description.isRequired() ) {
             final String val = value.toString();
             if ( val.isEmpty() ) {
-                messages.add("Value is required");
+                setResult(context, "Value is required");
             }
         }
     }
 
-    void validateBoolean(final PropertyDescription prop, final Object value, final List<String> messages) {
+    void validateBoolean(final Context context, final Object value) {
         if ( ! (value instanceof Boolean) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
 				if ( ! v.equalsIgnoreCase("true") && !v.equalsIgnoreCase("false") ) {
-					messages.add("Boolean value must either be true or false, but not " + value);
+                    setResult(context, "Boolean value must either be true or false, but not " + value);
 				}
 			} else {
-				messages.add("Boolean value must either be of type Boolean or String : " + value);
+				setResult(context, "Boolean value must either be of type Boolean or String : " + value);
 			}
 		}
 	}
 
-	void validateByte(final PropertyDescription prop, final Object value, final List<String> messages) {
+	void validateByte(final Context context, final Object value) {
         if ( ! (value instanceof Byte) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
 				try {
-					validateRange(prop, Byte.valueOf(v), messages);
+					validateRange(context, Byte.valueOf(v));
 				} catch ( final NumberFormatException nfe ) {
-                    messages.add("Value is not a valid Byte : " + value);
+                    setResult(context, "Value is not a valid Byte : " + value);
                 }
             } else if ( value instanceof Number ) {
-                validateRange(prop, ((Number)value).byteValue(), messages);            
+                validateRange(context, ((Number)value).byteValue());            
 			} else {
-				messages.add("Byte value must either be of type Byte or String : " + value);
+				setResult(context, "Byte value must either be of type Byte or String : " + value);
 			}
 		} else {
-			validateRange(prop, (Byte)value, messages);
+			validateRange(context, (Byte)value);
 		}
 	}
 
-	void validateShort(final PropertyDescription prop, final Object value, final List<String> messages) {
+	void validateShort(final Context context, final Object value) {
         if ( ! (value instanceof Short) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
 				try {
-					validateRange(prop, Short.valueOf(v), messages);
+					validateRange(context, Short.valueOf(v));
 				} catch ( final NumberFormatException nfe ) {
-                    messages.add("Value is not a valid Short : " + value);
+                    setResult(context, "Value is not a valid Short : " + value);
 				}
             } else if ( value instanceof Number ) {
-                validateRange(prop, ((Number)value).shortValue(), messages);            
+                validateRange(context, ((Number)value).shortValue());            
 			} else {
-				messages.add("Short value must either be of type Short or String : " + value);
+				setResult(context, "Short value must either be of type Short or String : " + value);
 			}
 		} else {
-			validateRange(prop, (Short)value, messages);
+			validateRange(context, (Short)value);
 		}
 	}
 
-	void validateInteger(final PropertyDescription prop, final Object value, final List<String> messages) {
+	void validateInteger(final Context context, final Object value) {
         if ( ! (value instanceof Integer) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
 				try {
-					validateRange(prop, Integer.valueOf(v), messages);
+					validateRange(context, Integer.valueOf(v));
 				} catch ( final NumberFormatException nfe ) {
-                    messages.add("Value is not a valid Integer : " + value);
+                    setResult(context, "Value is not a valid Integer : " + value);
 				}
             } else if ( value instanceof Number ) {
-                validateRange(prop, ((Number)value).intValue(), messages);            
+                validateRange(context, ((Number)value).intValue());            
 			} else {
-				messages.add("Integer value must either be of type Integer or String : " + value);
+				setResult(context, "Integer value must either be of type Integer or String : " + value);
 			}
 		} else {
-			validateRange(prop, (Integer)value, messages);
+			validateRange(context, (Integer)value);
 		}
 	}
 
-	void validateLong(final PropertyDescription prop, final Object value, final List<String> messages) {
+	void validateLong(final Context context, final Object value) {
         if ( ! (value instanceof Long) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
 				try {
-					validateRange(prop, Long.valueOf(v), messages);
+					validateRange(context, Long.valueOf(v));
 				} catch ( final NumberFormatException nfe ) {
-                    messages.add("Value is not a valid Long : " + value);
+                    setResult(context, "Value is not a valid Long : " + value);
 				}
             } else if ( value instanceof Number ) {
-                validateRange(prop, ((Number)value).longValue(), messages);            
+                validateRange(context, ((Number)value).longValue());            
 			} else {
-				messages.add("Long value must either be of type Long or String : " + value);
+				setResult(context, "Long value must either be of type Long or String : " + value);
 			}
 		} else {
-			validateRange(prop, (Long)value, messages);
+			validateRange(context, (Long)value);
 		}
 	}
 
-	void validateFloat(final PropertyDescription prop, final Object value, final List<String> messages) {
+	void validateFloat(final Context context, final Object value) {
         if ( ! (value instanceof Float) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
 				try {
-					validateRange(prop, Float.valueOf(v), messages);
+					validateRange(context, Float.valueOf(v));
 				} catch ( final NumberFormatException nfe ) {
-                    messages.add("Value is not a valid Float : " + value);
+                    setResult(context, "Value is not a valid Float : " + value);
 				}
             } else if ( value instanceof Number ) {
-                validateRange(prop, ((Number)value).floatValue(), messages);            
+                validateRange(context, ((Number)value).floatValue());            
 			} else {
-				messages.add("Float value must either be of type Float or String : " + value);
+				setResult(context, "Float value must either be of type Float or String : " + value);
 			}
 		} else {
-			validateRange(prop, (Float)value, messages);
+			validateRange(context, (Float)value);
 		}
 	}
 
-	void validateDouble(final PropertyDescription prop, final Object value, final List<String> messages) {
+	void validateDouble(final Context context, final Object value) {
         if ( ! (value instanceof Double) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
 				try {
-					validateRange(prop, Double.valueOf(v), messages);
+					validateRange(context, Double.valueOf(v));
 				} catch ( final NumberFormatException nfe ) {
-                    messages.add("Value is not a valid Double : " + value);
+                    setResult(context, "Value is not a valid Double : " + value);
 				}
             } else if ( value instanceof Number ) {
-                validateRange(prop, ((Number)value).doubleValue(), messages);            
+                validateRange(context, ((Number)value).doubleValue());            
 			} else {
-				messages.add("Double value must either be of type Double or String : " + value);
+				setResult(context, "Double value must either be of type Double or String : " + value);
 			}
 		} else {
-			validateRange(prop, (Double)value, messages);
+			validateRange(context, (Double)value);
 		}
 	}
 
-	void validateCharacter(final PropertyDescription prop, final Object value, final List<String> messages) {
+	void validateCharacter(final Context context, final Object value) {
         if ( ! (value instanceof Character) ) {
 			if ( value instanceof String ) {
 				final String v = (String)value;
 				if ( v.length() > 1 ) {
-                    messages.add("Value is not a valid Character : " + value);
+                    setResult(context, "Value is not a valid Character : " + value);
 				}
 			} else {
-				messages.add("Character value must either be of type Character or String : " + value);
+				setResult(context, "Character value must either be of type Character or String : " + value);
 			}
 		}
 	}
 
-	void validateURL(final PropertyDescription prop, final Object value, final List<String> messages) {
+	void validateURL(final Context context, final Object value) {
 		final String val = value.toString();
 		try {
 			new URL(val);
 		} catch ( final MalformedURLException mue) {
-			messages.add("Value is not a valid URL : " + val);
+			setResult(context, "Value is not a valid URL : " + val);
 		}
 	}
 
-	void validateEmail(final PropertyDescription prop, final Object value, final List<String> messages) {
+	void validateEmail(final Context context, final Object value) {
 		final String val = value.toString();
 		// poor man's validation (should probably use InternetAddress)
 		if ( !val.contains("@") ) {
-			messages.add("Not a valid email address " + val);
+			setResult(context, "Not a valid email address " + val);
 		}
 	}
 
-	void validatePassword(final PropertyDescription desc, final Object value, final List<String> messages, final boolean hasPlaceholder) {
+	void validatePassword(final Context context, final Object value, final boolean hasPlaceholder) {
         if ( !hasPlaceholder ) {
-            messages.add("Value for a password must use a placeholder");
+            setResult(context, "Value for a password must use a placeholder");
         }
 	}
 
-	void validatePath(final PropertyDescription prop, final Object value, final List<String> messages) {
+	void validatePath(final Context context, final Object value) {
 		final String val = value.toString();
 		// poor man's validation 
 		if ( !val.startsWith("/") ) {
-			messages.add("Not a valid path " + val);
+			setResult(context, "Not a valid path " + val);
 		}
 	}
 
-    void validateRange(final PropertyDescription prop, final Number value, final List<String> messages) {
-	    if ( prop.getRange() != null ) {
-            if ( prop.getRange().getMin() != null ) {
+    void validateRange(final Context context, final Number value) {
+	    if ( context.description.getRange() != null ) {
+            if ( context.description.getRange().getMin() != null ) {
                 if ( value instanceof Float || value instanceof Double ) {
-                    final double min = prop.getRange().getMin().doubleValue();
+                    final double min = context.description.getRange().getMin().doubleValue();
                     if ( value.doubleValue() < min ) {
-                            messages.add("Value " + value + " is too low; should not be lower than " + prop.getRange().getMin());
+                            setResult(context, "Value " + value + " is too low; should not be lower than " + context.description.getRange().getMin());
                     }    
                 } else {
-                    final long min = prop.getRange().getMin().longValue();
+                    final long min = context.description.getRange().getMin().longValue();
                     if ( value.longValue() < min ) {
-                            messages.add("Value " + value + " is too low; should not be lower than " + prop.getRange().getMin());
+                        setResult(context, "Value " + value + " is too low; should not be lower than " + context.description.getRange().getMin());
                     }    
                 }
             }
-            if ( prop.getRange().getMax() != null ) {
+            if ( context.description.getRange().getMax() != null ) {
                 if ( value instanceof Float || value instanceof Double ) {
-                    final double max = prop.getRange().getMax().doubleValue();
+                    final double max = context.description.getRange().getMax().doubleValue();
                     if ( value.doubleValue() > max ) {
-                        messages.add("Value " + value + " is too high; should not be higher than " + prop.getRange().getMax());
+                        setResult(context, "Value " + value + " is too high; should not be higher than " + context.description.getRange().getMax());
                     }    
                 } else {
-                    final long max = prop.getRange().getMax().longValue();
+                    final long max = context.description.getRange().getMax().longValue();
                     if ( value.longValue() > max ) {
-                        messages.add("Value " + value + " is too high; should not be higher than " + prop.getRange().getMax());
+                        setResult(context, "Value " + value + " is too high; should not be higher than " + context.description.getRange().getMax());
                     }    
                 }
             }
 		}
 	}
 
-    void validateRegex(final PropertyDescription prop, final Object value, final List<String> messages) {
-        if ( prop.getRegexPattern() != null ) {
-            if ( !prop.getRegexPattern().matcher(value.toString()).matches() ) {
-                messages.add("Value " + value + " does not match regex " + prop.getRegex());
+    void validateRegex(final Context context, final Object value) {
+        if ( context.description.getRegexPattern() != null ) {
+            if ( !context.description.getRegexPattern().matcher(value.toString()).matches() ) {
+                setResult(context, "Value " + value + " does not match regex " + context.description.getRegex());
             }
         }
     }
 
-    void validateOptions(final PropertyDescription prop, final Object value, final List<String> messages) {
-        if ( prop.getOptions() != null ) {
+    void validateOptions(final Context context, final Object value) {
+        if ( context.description.getOptions() != null ) {
             boolean found = false;
-            for(final Option opt : prop.getOptions()) {
+            for(final Option opt : context.description.getOptions()) {
                 if ( opt.getValue().equals(value.toString() ) ) {
                     found = true; 
                 }
             }
             if ( !found ) {
-                messages.add("Value " + value + " does not match provided options");
+                setResult(context, "Value " + value + " does not match provided options");
             }
         }
+    }
+
+    static final class Context {
+
+        public final PropertyValidationResult result = new PropertyValidationResult();
+
+        public PropertyDescription description;
+
+        public Mode validationMode;
     }
 }
