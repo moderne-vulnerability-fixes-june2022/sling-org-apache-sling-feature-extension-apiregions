@@ -37,9 +37,11 @@ import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationApi
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.FactoryConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.FrameworkPropertyDescription;
+import org.apache.sling.feature.extension.apiregions.api.config.Mode;
 import org.apache.sling.feature.extension.apiregions.api.config.Operation;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyType;
+import org.apache.sling.feature.extension.apiregions.api.config.Range;
 import org.apache.sling.feature.extension.apiregions.api.config.Region;
 import org.junit.Before;
 import org.junit.Test;
@@ -712,5 +714,84 @@ public class FeatureValidatorTest {
 
         FeatureValidationResult result = validator.validate(feature);
         assertTrue(result.isValid());
+    }
+
+    @Test public void testDefinitiveModeForConfigurationProperties() {
+        for(int i=0; i<2;i++) {
+            final Feature f = new Feature(ArtifactId.parse("g:a:1"));
+            final Configuration cfg = new Configuration("org.apache.sling");
+            cfg.getProperties().put("a", 1);
+            cfg.getProperties().put("b", 1);
+            cfg.getProperties().put("c", 1);
+            f.getConfigurations().add(cfg);
+
+            final ConfigurationApi api = new ConfigurationApi();
+            api.setMode(i == 0 ? Mode.DEFINITIVE : Mode.SILENT_DEFINITIVE);
+            final ConfigurationDescription desc = new ConfigurationDescription();
+            final PropertyDescription pda = new PropertyDescription();
+            pda.setType(PropertyType.INTEGER);
+            final PropertyDescription pdb = new PropertyDescription();
+            pdb.setType(PropertyType.INTEGER);
+            pdb.setRange(new Range());
+            pdb.getRange().setMin(2);
+            final PropertyDescription pdc = new PropertyDescription();
+            pdc.setType(PropertyType.INTEGER);
+            pdc.setRange(new Range());
+            pdc.getRange().setMin(2);
+            pdc.setDefaultValue(4);
+            desc.getPropertyDescriptions().put("a", pda);
+            desc.getPropertyDescriptions().put("b", pdb);
+            desc.getPropertyDescriptions().put("c", pdc);
+            api.getConfigurationDescriptions().put("org.apache.sling", desc);
+
+            final FeatureValidationResult result = this.validator.validate(f, api);
+            assertTrue(result.isValid());
+
+            // values have not changed
+            assertEquals(1, cfg.getConfigurationProperties().get("a"));
+            assertEquals(1, cfg.getConfigurationProperties().get("b"));
+            assertEquals(1, cfg.getConfigurationProperties().get("c"));
+
+            // apply changes
+            this.validator.applyDefaultValues(f, result);
+            assertEquals(1, cfg.getConfigurationProperties().get("a"));
+            assertNull(cfg.getConfigurationProperties().get("b"));
+            assertEquals(4, cfg.getConfigurationProperties().get("c"));
+        }
+    }
+
+    @Test public void testDefinitiveModeForFrameworkProperties() {
+        for(int i=0; i<2;i++) {
+            final Feature f = new Feature(ArtifactId.parse("g:a:1"));
+            f.getFrameworkProperties().put("a", "hello");
+            f.getFrameworkProperties().put("b", "world");
+            f.getFrameworkProperties().put("c", "world");
+
+            final ConfigurationApi api = new ConfigurationApi();
+            api.setMode(i == 0 ? Mode.DEFINITIVE : Mode.SILENT_DEFINITIVE);
+            final FrameworkPropertyDescription pda = new FrameworkPropertyDescription();
+            final FrameworkPropertyDescription pdb = new FrameworkPropertyDescription();
+            pdb.setRegex("h(.*)");
+            final FrameworkPropertyDescription pdc = new FrameworkPropertyDescription();
+            pdc.setRegex("h(.*)");
+            pdc.setDefaultValue("hi");
+            api.getFrameworkPropertyDescriptions().put("a", pda);
+            api.getFrameworkPropertyDescriptions().put("b", pdb);
+            api.getFrameworkPropertyDescriptions().put("c", pdc);
+
+            final FeatureValidationResult result = this.validator.validate(f, api);
+            assertTrue(result.isValid());
+
+            // values have not changed
+            assertEquals("hello", f.getFrameworkProperties().get("a"));
+            assertEquals("world", f.getFrameworkProperties().get("b"));
+            assertEquals("world", f.getFrameworkProperties().get("c"));
+
+            // apply changes
+            this.validator.applyDefaultValues(f, result);
+            assertEquals("hello", f.getFrameworkProperties().get("a"));
+            assertNull(f.getFrameworkProperties().get("b"));
+            assertEquals("hi", f.getFrameworkProperties().get("c"));
+        }
     }
 }

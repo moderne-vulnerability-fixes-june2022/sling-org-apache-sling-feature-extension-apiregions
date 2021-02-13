@@ -159,6 +159,48 @@ public class FeatureValidator {
         return result;
     }
 
+    /**
+     * Apply default values from the result of a validation run.
+     * Defaults should be applied, if configuration properties are invalid and the validation mode
+     * for such a properties is definitive.
+     * @param feature The feature containing the configurations
+     * @param result The result
+     * @return {@code true} if a default value has been applied (the feature has been changed)
+     * @since 1.2
+     */
+    public boolean applyDefaultValues(final Feature feature, final FeatureValidationResult result) {
+        boolean changed = false;
+
+        for(final Map.Entry<String, ConfigurationValidationResult> entry : result.getConfigurationResults().entrySet()) {
+            for(final Map.Entry<String, PropertyValidationResult> propEntry : entry.getValue().getPropertyResults().entrySet()) {
+                if ( propEntry.getValue().isUseDefaultValue() ) {
+                    final Configuration cfg = feature.getConfigurations().getConfiguration(entry.getKey());
+                    if ( cfg != null ) {
+                        if ( propEntry.getValue().getDefaultValue() == null ) {
+                            cfg.getProperties().remove(propEntry.getKey());
+                        } else {
+                            cfg.getProperties().put(propEntry.getKey(), propEntry.getValue().getDefaultValue());
+                        }
+                        changed = true;
+                    }
+                }
+            }
+        }
+
+        for(final Map.Entry<String, PropertyValidationResult> propEntry : result.getFrameworkPropertyResults().entrySet()) {
+            if ( propEntry.getValue().isUseDefaultValue() ) {
+                if ( propEntry.getValue().getDefaultValue() == null ) {
+                    feature.getFrameworkProperties().remove(propEntry.getKey());
+                } else {
+                    feature.getFrameworkProperties().put(propEntry.getKey(), propEntry.getValue().getDefaultValue().toString());
+                }
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
+
     Region getConfigurationApiRegion(final ArtifactId id, final Map<ArtifactId, Region> cache) {
         Region result = cache.get(id);
         if ( result == null ) {

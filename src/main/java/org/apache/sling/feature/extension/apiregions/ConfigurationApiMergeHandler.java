@@ -58,6 +58,7 @@ public class ConfigurationApiMergeHandler implements MergeHandler {
             // region merging
             if ( context.isInitialMerge() ) {
                 targetApi.setRegion(sourceApi.getRegion());
+                targetApi.setMode(sourceApi.getMode());
             } else {
                 // region merging is different for prototypes
                 if ( sourceApi.getRegion() != targetApi.getRegion() ) {
@@ -68,6 +69,9 @@ public class ConfigurationApiMergeHandler implements MergeHandler {
                     } else {                    
                         targetApi.setRegion(Region.GLOBAL);
                     }
+                }
+                if ( targetApi.getMode().ordinal() > sourceApi.getMode().ordinal() ) {
+                    targetApi.setMode(sourceApi.getMode());
                 }
             }
 

@@ -18,6 +18,7 @@ package org.apache.sling.feature.extension.apiregions.api.config.validation;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -71,12 +72,16 @@ public class PropertyValidatorTest {
         assertEquals(errors, result.getWarnings().size());
         assertTrue(result.isValid());
         assertFalse(result.isSkipped());
+        assertTrue(result.isUseDefaultValue());
+        assertEquals(result.getDefaultValue(), prop.getDefaultValue());
 
         // error - mode silent definitive 
         result = validator.validate(value, prop, Mode.SILENT_DEFINITIVE);
         assertTrue(result.getWarnings().isEmpty());
         assertTrue(result.isValid());
         assertFalse(result.isSkipped());
+        assertTrue(result.isUseDefaultValue());
+        assertEquals(result.getDefaultValue(), prop.getDefaultValue());
     }
 
     /**
@@ -87,6 +92,8 @@ public class PropertyValidatorTest {
         assertTrue(result.isValid());
         assertFalse(result.isSkipped());
         assertTrue(result.getErrors().isEmpty());
+        assertFalse(result.isUseDefaultValue());
+        assertNull(result.getDefaultValue());
     }
 
     @Test public void testValidateWithNull() {
@@ -308,6 +315,10 @@ public class PropertyValidatorTest {
         prop.setRegex("h(.*)");
         validateValid(prop, "hello world");
 
+        validateError(prop, "world");
+
+        // apply default
+        prop.setDefaultValue("hello world");
         validateError(prop, "world");
     }
 

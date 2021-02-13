@@ -31,6 +31,18 @@ public class PropertyValidationResult {
 
     private boolean skipped = false;
 
+    /** 
+     * Should the default be used?
+     * @since 1.2
+     */
+    private boolean useDefault = false;
+
+    /**
+     * The default value
+     * @since 1.2
+     */
+    private Object defaultValue;
+
     /**
      * Is the property value valid?
      * @return {@code true} if the value is valid
@@ -70,4 +82,43 @@ public class PropertyValidationResult {
     public void markSkipped() {
         this.skipped = true;
     }
+
+	/**
+     * Should the default be used instead of the configuration value?
+	 * @return {@code true} if the default should be used.
+     * @see #getDefaultValue()
+     * @since 1.2
+	 */
+	public boolean isUseDefaultValue() {
+		return useDefault;
+	}
+
+	/**
+     * Set whether the default value should be used
+	 * @param useDefault boolean flag
+     * @since 1.2
+	 */
+	public void setUseDefaultValue(final boolean useDefault) {
+		this.useDefault = useDefault;
+	}
+
+	/**
+     * Get the default value. The default value is only returned
+     * if {@link #isUseDefaultValue()} returns {@code true}.
+	 * @return the defaultValue (it might be {@code null})
+     * @since 1.2
+	 */
+	public Object getDefaultValue() {
+		return defaultValue;
+	}
+
+	/**
+     * Set the default value
+	 * @param defaultValue the defaultValue to set
+     * @since 1.2
+	 */
+	public void setDefaultValue(final Object defaultValue) {
+		this.defaultValue = defaultValue;
+	}
+    
 }

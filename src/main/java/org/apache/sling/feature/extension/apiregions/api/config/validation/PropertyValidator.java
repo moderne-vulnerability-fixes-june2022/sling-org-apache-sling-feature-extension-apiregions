@@ -103,6 +103,10 @@ public class PropertyValidator {
         } else if ( context.validationMode == Mode.LENIENT || context.validationMode == Mode.DEFINITIVE ) {
             context.result.getWarnings().add(msg);
         }
+        if ( context.validationMode == Mode.DEFINITIVE || context.validationMode == Mode.SILENT_DEFINITIVE ) {
+            context.result.setUseDefaultValue(true);
+            context.result.setDefaultValue(context.description.getDefaultValue());
+        }
     }
 
     /**

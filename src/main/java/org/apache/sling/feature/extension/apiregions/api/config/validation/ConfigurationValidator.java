@@ -137,6 +137,9 @@ public class ConfigurationValidator {
         } else if ( validationMode == Mode.LENIENT || validationMode == Mode.DEFINITIVE ) {
             result.getWarnings().add(msg);
         }
+        if ( validationMode == Mode.DEFINITIVE || validationMode == Mode.SILENT_DEFINITIVE ) {
+            result.setUseDefaultValue(true);
+        }
     }
     
     private boolean isAllowedProperty(final String name) {
