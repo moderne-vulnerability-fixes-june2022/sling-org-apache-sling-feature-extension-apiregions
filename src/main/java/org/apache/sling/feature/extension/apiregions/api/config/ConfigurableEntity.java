@@ -102,7 +102,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
 
     /**
      * Set the validation mode
-     * @value The validation mode
+     * @param value The validation mode
      * @since 1.2
      */
     public void setMode(final Mode value) {
