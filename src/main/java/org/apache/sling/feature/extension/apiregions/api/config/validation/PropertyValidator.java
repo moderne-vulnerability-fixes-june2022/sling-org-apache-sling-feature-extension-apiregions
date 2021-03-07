@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.sling.feature.extension.apiregions.api.config.Mode;
 import org.apache.sling.feature.extension.apiregions.api.config.Option;
+import org.apache.sling.feature.extension.apiregions.api.config.PlaceholderPolicy;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyType;
 
@@ -195,7 +196,10 @@ public class PropertyValidator {
                     default : context.result.getErrors().add("Unable to validate value - unknown property type : " + context.description.getType());
                 }
                 validateRegex(context, value);
-                validateOptions(context, value);                
+                validateOptions(context, value);
+                if ( context.description.getType() != PropertyType.PASSWORD ) {
+                    validatePlaceholderPolicy(context, value, false);              
+                }
             } else {
                 // placeholder is present
                 if ( context.description.getType() == PropertyType.PASSWORD ) {
@@ -207,6 +211,9 @@ public class PropertyValidator {
                     }
                 } else {
                     context.result.markSkipped();
+                }
+                if ( context.description.getType() != PropertyType.PASSWORD ) {
+                    validatePlaceholderPolicy(context, value, true);              
                 }
             }
         } else {
@@ -381,7 +388,7 @@ public class PropertyValidator {
 	}
 
 	void validatePassword(final Context context, final Object value, final boolean hasPlaceholder) {
-        if ( !hasPlaceholder ) {
+        if ( !hasPlaceholder && context.description.getPlaceholderPolicy() != PlaceholderPolicy.DENY ) {
             setResult(context, "Value for a password must use a placeholder");
         }
 	}
@@ -446,6 +453,15 @@ public class PropertyValidator {
             }
         }
     }
+
+    void validatePlaceholderPolicy(final Context context, final Object value, final boolean hasPlaceholder) {
+        // for policy default and allow nothing needs to be validated
+        if ( context.description.getPlaceholderPolicy() == PlaceholderPolicy.DENY && hasPlaceholder ) {
+            setResult(context, "Placeholder in value is not allowed");
+        }  else if ( context.description.getPlaceholderPolicy() == PlaceholderPolicy.REQUIRE && !hasPlaceholder ) {
+            setResult(context, "Value must use a placeholder");
+        }
+    }         
 
     static final class Context {
 

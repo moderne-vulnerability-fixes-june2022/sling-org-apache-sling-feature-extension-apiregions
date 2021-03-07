@@ -53,6 +53,7 @@ public class PropertyDescriptionTest {
         entity.setType(PropertyType.BYTE);        
         entity.setDefaultValue("default");
         entity.setMode(Mode.SILENT);
+        entity.setPlaceholderPolicy(PlaceholderPolicy.ALLOW);
         entity.clear();
         assertTrue(entity.getAttributes().isEmpty());
         assertNull(entity.getDeprecated());
@@ -70,13 +71,14 @@ public class PropertyDescriptionTest {
         assertEquals(PropertyType.STRING, entity.getType());
         assertNull(entity.getDefaultValue());
         assertNull(entity.getMode());
+        assertEquals(PlaceholderPolicy.DEFAULT, entity.getPlaceholderPolicy());
     }
 
     @Test public void testFromJSONObject() throws IOException {
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
         ext.setJSON("{ \"type\" : \"BYTE\", \"cardinality\": 5, \"required\" : true, \"variable\" : \"var\"," +
         "\"range\" : {}, \"includes\" : [\"in\"], \"excludes\" : [\"ex\"] , \"options\": [{}], \"regex\": \".\"," +
-        "\"default\" : \"def\"}");
+        "\"default\" : \"def\", \"placeholder-policy\" : \"DENY\"}");
 
         final PropertyDescription entity = new PropertyDescription();
         entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
@@ -92,6 +94,7 @@ public class PropertyDescriptionTest {
         assertEquals(".", entity.getRegex());
         assertNotNull(entity.getRegexPattern());
         assertEquals("def", entity.getDefaultValue());
+        assertEquals(PlaceholderPolicy.DENY, entity.getPlaceholderPolicy());
 
         // test defaults and empty values
         ext.setJSON("{ \"variable\" : \"var\", \"regex\": \".\"}");
@@ -107,6 +110,7 @@ public class PropertyDescriptionTest {
         assertNull(entity.getOptions());
         assertEquals(".", entity.getRegex());
         assertNotNull(entity.getRegexPattern());
+        assertEquals(PlaceholderPolicy.DEFAULT, entity.getPlaceholderPolicy());
    }
 
     @Test public void testToJSONObject() throws IOException {
@@ -121,11 +125,12 @@ public class PropertyDescriptionTest {
         entity.setVariable("var");
         entity.setType(PropertyType.BYTE);
         entity.setDefaultValue("def");
+        entity.setPlaceholderPolicy(PlaceholderPolicy.DENY);
 
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
         ext.setJSON("{ \"type\" : \"BYTE\", \"cardinality\": 5, \"required\" : true, \"variable\" : \"var\"," +
             "\"range\" : {}, \"includes\" : [\"in\"], \"excludes\" : [\"ex\"] , \"options\": [{}], \"regex\": \".\"," +
-            "\"default\" : \"def\"}");
+            "\"default\" : \"def\", \"placeholder-policy\" : \"DENY\"}");
 
         assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
 
@@ -138,6 +143,7 @@ public class PropertyDescriptionTest {
         entity.setExcludes(null);
         entity.setIncludes(null);
         entity.setDefaultValue(null);
+        entity.setPlaceholderPolicy(null);
         
         ext.setJSON("{ \"variable\" : \"var\", \"regex\": \".\"}");
 

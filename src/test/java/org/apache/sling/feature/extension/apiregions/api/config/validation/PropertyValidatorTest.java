@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.apache.sling.feature.extension.apiregions.api.config.Mode;
 import org.apache.sling.feature.extension.apiregions.api.config.Option;
+import org.apache.sling.feature.extension.apiregions.api.config.PlaceholderPolicy;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyType;
 import org.apache.sling.feature.extension.apiregions.api.config.Range;
@@ -476,5 +477,35 @@ public class PropertyValidatorTest {
         result = validator.validate(new Object[] {"hello", "$[env:variable]"}, desc);
         assertFalse(result.isValid());
         assertTrue(result.isSkipped());
+    }
+
+    @Test public void testPlaceholderPolicyRequire() {
+        final PropertyDescription desc = new PropertyDescription();
+        desc.setPlaceholderPolicy(PlaceholderPolicy.REQUIRE);
+
+        PropertyValidationResult result = null;
+
+        result = validator.validate("$[env:variable]", desc);
+        assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
+
+        result = validator.validate("hello", desc);
+        assertFalse(result.isValid());
+        assertFalse(result.isSkipped());
+    }
+
+    @Test public void testPlaceholderPolicyDeny() {
+        final PropertyDescription desc = new PropertyDescription();
+        desc.setPlaceholderPolicy(PlaceholderPolicy.DENY);
+
+        PropertyValidationResult result = null;
+
+        result = validator.validate("$[env:variable]", desc);
+        assertFalse(result.isValid());
+        assertFalse(result.isSkipped());
+
+        result = validator.validate("hello", desc);
+        assertTrue(result.isValid());
+        assertFalse(result.isSkipped());
     }
 }

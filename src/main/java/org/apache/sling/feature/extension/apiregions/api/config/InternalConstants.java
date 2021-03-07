@@ -76,4 +76,6 @@ abstract class InternalConstants {
     static final String KEY_DEFAULT = "default";
 
     static final String KEY_MODE = "mode";
+
+    static final String KEY_PLACEHOLDER_POLICY = "placeholder-policy";
 }

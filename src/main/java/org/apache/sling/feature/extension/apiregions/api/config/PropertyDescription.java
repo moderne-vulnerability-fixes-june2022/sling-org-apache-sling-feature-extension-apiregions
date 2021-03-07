@@ -76,6 +76,12 @@ public class PropertyDescription extends DescribableEntity {
     private Mode mode;
 
     /**
+     * The placeholder policy
+     * @since 1.3
+     */
+    private PlaceholderPolicy placeholderPolicy;
+
+    /**
      * Create a new description
      */
     public PropertyDescription() {
@@ -86,6 +92,7 @@ public class PropertyDescription extends DescribableEntity {
 		this.setType(PropertyType.STRING);
         this.setCardinality(1);
         this.setRequired(false);
+        this.setPlaceholderPolicy(PlaceholderPolicy.DEFAULT);
     }
 
     /**
@@ -164,6 +171,10 @@ public class PropertyDescription extends DescribableEntity {
 			if ( modeVal != null ) {
                 this.setMode(Mode.valueOf(modeVal.toUpperCase()));				
 			}
+			final String policyVal = this.getString(InternalConstants.KEY_PLACEHOLDER_POLICY);
+			if ( policyVal != null ) {
+                this.setPlaceholderPolicy(PlaceholderPolicy.valueOf(policyVal.toUpperCase()));
+			}
  		} catch (final JsonException | IllegalArgumentException e) {
             throw new IOException(e);
         }
@@ -220,6 +231,9 @@ public class PropertyDescription extends DescribableEntity {
         }
         if ( this.getMode() != null ) {
             objectBuilder.add(InternalConstants.KEY_MODE, this.getMode().name());
+        }
+        if ( this.getPlaceholderPolicy() != PlaceholderPolicy.DEFAULT ) {
+            objectBuilder.add(InternalConstants.KEY_PLACEHOLDER_POLICY, this.getPlaceholderPolicy().name());
         }
 
         return objectBuilder;
@@ -425,4 +439,22 @@ public class PropertyDescription extends DescribableEntity {
     public void setMode(final Mode value) {
         this.mode = value;
     }
- }
+ 
+    /**
+     * Get the placeholder policy.
+     * @return The policy
+     * @since 1.3
+     */
+    public PlaceholderPolicy getPlaceholderPolicy() {
+        return this.placeholderPolicy;
+    }
+
+    /**
+     * Set the placeholder policy
+     * @param policy The new policy
+     * @since 1.3
+     */
+    public void setPlaceholderPolicy(final PlaceholderPolicy policy) {
+        this.placeholderPolicy = policy == null ? PlaceholderPolicy.DEFAULT : policy;
+    }
+}
