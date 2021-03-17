@@ -1,6 +1,6 @@
 # API Regions for the Feature Model
 
-If you're assembling a platform (in contrast to a final application) out of several features and provide this platform for customers to build their application on top of, additional control of the API provided by the platform is needed. The bundles within the features provide all kinds of APIs but you might not want to expose all of these as extension points. You would rather want to use some of them internally within either a single feature or share within your platform features.
+If you're assembling a platform (in contrast to a final application) out of several features and provide this platform for customers to build their application on top of it, additional control of the API provided by the platform is needed. The bundles within the features provide all kinds of APIs but you might not want to expose all of these as extension points. You would rather want to use some of them internally within either a single feature or share within your platform features.
 
 ## Visibility of Java API
 
@@ -148,22 +148,44 @@ The usual process for deprecating Java API is to mark it with a corresponding an
 
 ## OSGi Configurations
 
-Apart from defining the Java API surface, for some applications it is benefitial to describe the OSGi configuration surface, too. For example, a framework might not allow an application to set some configurations or update existing configurations.
+Apart from defining the Java API surface, for some applications it is beneficial to describe the OSGi configuration surface, too. For example, a framework might not allow an application to set some configurations or update existing configurations.
 
 While the [OSGi metatype specification](https://docs.osgi.org/specification/osgi.cmpn/7.0.0/service.metatype.html) allows to specify some type information for OSGi configurations, it does not allow to specify validation rules or differentiate between a private and a public configuration or configuration property.
 
-For each configuration and factory configuration, the allowed list of properties can be specified together with a type and additional validation rules (like a range or a regualr expression). Properties not mentioned for a configuration are considered internal. In addition, configuration PIDs and factory configuration PIDs can be specified as internal as well.
+### The OSGi Configuration API
+
+The OSGi configuration API allows to define specific rules for configurations down to individual properties. The API definition is an extension of the feature model named `configuration-api`. For each configuration and factory configuration, the allowed list of properties can be specified together with a type and additional validation rules (like a range or a regular expression). All properties not mentioned for a configuration are considered internal. In addition, configuration PIDs and factory configuration PIDs can be specified as internal, too.
 
 A similar mechanism exists for framework properties.
 
+### Validation Mode
+
+The configuration API establish the public API surface for OSGi configurations. It defines which configurations are allowed to be created, updated - and for such configurations which properties are allowed together with validation rules.
+
+The validation mode defines the behaviour of the validation in case of an invalid value. It can be set globally for the configuration API and might be overwritten for single configurations or single properties. The modes are:
+
+* `STRICT` : This is the default mode. If the validation fails, issue an error.
+* `LENIENT` : If validation fails, issue a warning. The invalid value is used.
+* `SILENT` : If validation fails, do not report it. The invalid value is used.
+* `DEFINITIVE` : If validation fails, issue a warning and use the default value instead. If no default value is provided, the property is removed from the configuration.
+* `SILENT_DEFINITIVE` : If validation fails, do not report it and use the default value instead. If no default value is provided, the property is removed from the configuration.
+
+``` json
+"configuration-api:JSON" : {
+    "mode" : "SILENT",
+    ...
+}
+```
+
 ### Configurations
 
-Each OSGi configuration that is part of the configuration API is listed below the `configurations` object with the PID of the configuration as the key. Each configuration can have the following properties:
+Each OSGi configuration that is part of the configuration API (and therefore public) is listed below the `configurations` object with the PID of the configuration as the key. Each configuration can have the following properties:
 
 * `title` : A human readable title
 * `description` : A human readable description
 * `properties` : An object containing all properties that are allowed to be configured
 * `deprecated` : If this configuration should not be used anymore a human readable message.
+* `mode` : Validation mode for the configuration overriding the global one. This mode applies to all properties. 
 
 ``` json
 "configuration-api:JSON" : {
@@ -183,7 +205,7 @@ Each OSGi configuration that is part of the configuration API is listed below th
 
 For each property a JSON object contains additional information about this property. The following keys can be set:
 
-* 'type' : The type of the property, defaults to `STRING`. The following types are supported:
+* `type` : The type of the property, defaults to `STRING`. The following types are supported:
   * STRING : A string value
   * LONG : A long value
   * INTEGER : An integer value
@@ -207,6 +229,9 @@ For each property a JSON object contains additional information about this prope
 * `pattern` : A regular expression to validate the value.
 * `range` : An object which can have a `min` and/or a `max` property to further specify the value range.
 * `options` : An array of objects acting as an enumeration for the allowed values. Each option must have a `value` property. It might also have a `title` or `description` property.
+* `default` : A default value which might be used depending on the validation mode.
+* `mode` : Validation mode for the property overriding the global one or one set for the configuration. 
+* `placeholder-policy` : The placeholder policy defines whether a placeholder is allowed or required for a property. With `DEFAULT` the policy of the property type is used. `ALLOW`, `REQUIRE` , or `DENY` can be used to override that.
 
 ``` json
 "configuration-api:JSON" : {
@@ -244,7 +269,7 @@ For each property a JSON object contains additional information about this prope
             }
         }
     }
-  },
+  }
 ```
 
 ### Factory Configurations
