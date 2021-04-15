@@ -61,21 +61,21 @@ public class CheckConfigurationApi implements AnalyserTask{
             }
             for(final Map.Entry<String, ConfigurationValidationResult> entry : result.getConfigurationResults().entrySet()) {
                 for(final String warn : entry.getValue().getWarnings()) {
-                    context.reportWarning("Configuration " + entry.getKey() + " : " + warn);
+                    context.reportConfigurationWarning(context.getFeature().getConfigurations().getConfiguration(entry.getKey()), warn);
                 }
                 for(final Map.Entry<String, PropertyValidationResult> propEntry : entry.getValue().getPropertyResults().entrySet()) {
                     for(final String warn : propEntry.getValue().getWarnings()) {
-                        context.reportWarning("Configuration " + entry.getKey() + "." + propEntry.getKey() + " : " + warn);
+                        context.reportConfigurationWarning(context.getFeature().getConfigurations().getConfiguration(entry.getKey()), warn);
                     }
                 }
                 if ( !entry.getValue().isValid() ) {
                     for(final String err : entry.getValue().getErrors()) {
-                        context.reportError("Configuration " + entry.getKey() + " : " + err);
+                        context.reportConfigurationError(context.getFeature().getConfigurations().getConfiguration(entry.getKey()), err);
                     }
                     for(final Map.Entry<String, PropertyValidationResult> propEntry : entry.getValue().getPropertyResults().entrySet()) {
                         if ( !propEntry.getValue().isValid() ) {
                             for(final String err : propEntry.getValue().getErrors()) {
-                                context.reportError("Configuration " + entry.getKey() + "." + propEntry.getKey() + " : " + err);
+                                context.reportConfigurationError(context.getFeature().getConfigurations().getConfiguration(entry.getKey()), err);
                             }
                         }
                     }

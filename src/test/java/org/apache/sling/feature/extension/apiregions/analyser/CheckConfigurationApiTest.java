@@ -58,13 +58,17 @@ public class CheckConfigurationApiTest {
         analyser.execute(context);
         Mockito.verify(context, Mockito.never()).reportError(Mockito.anyString());
         Mockito.verify(context, Mockito.never()).reportWarning(Mockito.anyString());
+        Mockito.verify(context, Mockito.never()).reportConfigurationError(Mockito.any(Configuration.class), Mockito.anyString());
+        Mockito.verify(context, Mockito.never()).reportConfigurationWarning(Mockito.any(Configuration.class), Mockito.anyString());
 
         // integer -> validation error
         api.getConfigurationDescriptions().get("pid").getPropertyDescriptions().get("a").setType(PropertyType.INTEGER);
         ConfigurationApi.setConfigurationApi(f, api);
         context = newContext(f);
         analyser.execute(context);
-        Mockito.verify(context, Mockito.atLeastOnce()).reportError(Mockito.anyString());
+        Mockito.verify(context, Mockito.atLeastOnce()).reportConfigurationError(Mockito.any(Configuration.class), Mockito.anyString());
+        Mockito.verify(context, Mockito.never()).reportConfigurationWarning(Mockito.any(Configuration.class), Mockito.anyString());
+        Mockito.verify(context, Mockito.never()).reportWarning(Mockito.anyString());
         Mockito.verify(context, Mockito.never()).reportWarning(Mockito.anyString());
     }
 }
