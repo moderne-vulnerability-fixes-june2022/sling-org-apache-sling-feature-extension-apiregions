@@ -57,6 +57,10 @@ These analysers relate to Configuration API Region definitions in Feature Models
 
 * `configuration-api` : This analyser validates the OSGi configurations and framework properties based on the configuration API described in an extension.
 
+* `region-deprecated-api` : This analyser validates if packages marked as deprecated for a region are used. It has these configuration parameters:
+  * `regions` : The regions to check for such usage. This is a comma separate string of region names. It defaults to `global`.
+  * `strict` : By default the analyser issues warnings. If this is set to `true` errors are issued instead.
+
 ## Extensions
 
 The following extensions are registered via the ServiceLoader mechanism:
