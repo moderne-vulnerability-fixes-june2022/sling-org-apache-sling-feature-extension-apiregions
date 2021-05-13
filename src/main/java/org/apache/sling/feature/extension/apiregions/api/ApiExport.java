@@ -45,11 +45,25 @@ public class ApiExport implements Comparable<ApiExport> {
 
     private static final String MEMBERS_KEY = "members";
 
+    private static final String NAME_KEY = "name";
+
+    private static final String TOGGLE_KEY = "toggle";
+
+    private static final String PREVIOUS_KEY = "previous";
+
+    private static final String PREVIOUS_ARTIFACT_ID_KEY = "previous-artifact-id";
+
+    private static final String PREVIOUS_PACKAGE_VERSION_KEY = "previous-package-version";
+
     private final String name;
 
     private String toggle;
 
-    private ArtifactId previous;
+    /** If the package is behind a toggle, this is the previous artifact containing the package not behind a toggle */
+    private ArtifactId previousArtifactId;
+
+    /** If the package is behind a toggle, this is the previous version of the package not behind a toggle */
+    private String previousPackageVersion;
 
     private final Map<String, String> properties = new HashMap<>();
 
@@ -95,21 +109,61 @@ public class ApiExport implements Comparable<ApiExport> {
     }
 
     /**
+     * Get the previous version of this package
+     * @return The previous version of this package or {@code null}
+     * @since 1.2.0
+     */
+    public String getPreviousPackageVersion() {
+        return this.previousPackageVersion;
+    }
+
+    /**
+     * Set the previous version of this package
+     * @param version The previous version of this package 
+     * @since 1.2.0
+     */
+    public void setPreviousPackageVersion(final String version) {
+        this.previousPackageVersion = version;
+    }
+
+    /**
+     * Get the previous artifact id containing the previous version
+     *
+     * @return The previous artifact id or {@code null}
+     * @since 1.2.0
+     */
+    public ArtifactId getPreviousArtifactId() {
+        return previousArtifactId;
+    }
+
+    /**
+     * Set the previous artifact id
+     *
+     * @param previous Previus artifact id
+     * @since 1.2.0
+     */
+    public void setPreviousArtifactId(final ArtifactId previous) {
+        this.previousArtifactId = previous;
+    }
+
+    /**
      * Get the previous version of this api
      *
      * @return The previous version or {@code null}
+     * @deprecated Use {@link #getPreviousArtifactId()}
      */
     public ArtifactId getPrevious() {
-        return previous;
+        return this.getPreviousArtifactId();
     }
 
     /**
      * Set the previous version
      *
      * @param previous Previus version
+     * @deprecated Use {@link #setPreviousArtifactId(ArtifactId)}
      */
-    public void setPrevious(ArtifactId previous) {
-        this.previous = previous;
+    public void setPrevious(final ArtifactId previous) {
+        this.setPreviousArtifactId(previous);
     }
 
     /**
@@ -224,6 +278,97 @@ public class ApiExport implements Comparable<ApiExport> {
         return null;
     }
 
+    JsonValue toJSONValue() {
+        final JsonValue depValue = this.deprecationToJSON();
+        if (this.getToggle() == null 
+            && this.getPreviousPackageVersion() == null 
+            && this.getPreviousArtifactId() == null
+            && this.getProperties().isEmpty() 
+            && depValue == null ) {
+           return Json.createValue(this.getName());
+        }
+        final JsonObjectBuilder expBuilder = Json.createObjectBuilder();
+        expBuilder.add(NAME_KEY, this.getName());
+        if (this.getToggle() != null) {
+            expBuilder.add(TOGGLE_KEY, this.getToggle());
+        }
+        if (this.getPreviousPackageVersion() != null) {
+            expBuilder.add(PREVIOUS_PACKAGE_VERSION_KEY, this.getPreviousPackageVersion());
+        }
+        if (this.getPreviousArtifactId() != null) {
+            expBuilder.add(PREVIOUS_ARTIFACT_ID_KEY, this.getPreviousArtifactId().toMvnId());
+        }
+
+        if ( depValue != null ) {
+            expBuilder.add(DEPRECATED_KEY, depValue);
+        }
+
+        for (final Map.Entry<String, String> entry : this.getProperties().entrySet()) {
+            expBuilder.add(entry.getKey(), entry.getValue());
+        }
+        return expBuilder.build();
+    }
+
+    static ApiExport fromJson(final ApiRegion region, final JsonValue val) throws IOException {
+        if (val.getValueType() == ValueType.STRING) {
+            final String name = ((JsonString) val).getString();
+            if (!name.startsWith("#")) {
+                final ApiExport export = new ApiExport(name);
+                if (!region.add(export)) {
+                    throw new IOException("Export " + export.getName()
+                            + " is defined twice in region " + region.getName());
+                }
+                return export;
+            }
+            return null;
+        } else if (val.getValueType() == ValueType.OBJECT) {
+            final JsonObject expObj = (JsonObject) val;
+            final ApiExport export = new ApiExport(expObj.getString(NAME_KEY));
+            if (!region.add(export)) {
+                throw new IOException("Export " + export.getName() + " is defined twice in region "
+                        + region.getName());
+            }
+
+            boolean setPreviousArtifact = false;
+            for (final String key : expObj.keySet()) {
+                if (NAME_KEY.equals(key)) {
+                    continue; // already set
+
+                } else if (TOGGLE_KEY.equals(key)) {
+                    export.setToggle(expObj.getString(key));
+
+                } else if (PREVIOUS_PACKAGE_VERSION_KEY.equals(key)) {
+                    export.setPreviousPackageVersion(expObj.getString(key));
+                } else if (PREVIOUS_KEY.equals(key)) {
+                    if ( setPreviousArtifact ) {
+                        throw new IOException("Export " + export.getName() + " is defining previous artifact id twice in region "
+                                + region.getName());
+                    }
+                    export.setPreviousArtifactId(ArtifactId.parse(expObj.getString(key)));
+                    setPreviousArtifact = true;
+                } else if (PREVIOUS_ARTIFACT_ID_KEY.equals(key)) {
+                    if ( setPreviousArtifact ) {
+                        throw new IOException("Export " + export.getName() + " is defining previous artifact id twice in region "
+                                + region.getName());
+                    }
+                    export.setPreviousArtifactId(ArtifactId.parse(expObj.getString(key)));
+                    setPreviousArtifact = true;
+
+                } else if ( DEPRECATED_KEY.equals(key)) {
+                    final JsonValue dValue = expObj.get(DEPRECATED_KEY);
+                    export.parseDeprecation(dValue);
+
+                    // everything else is stored as a string property
+                } else {
+                    export.getProperties().put(key, expObj.getString(key));
+                }
+            }
+            return export;
+        } else {
+            throw new IOException("Region " + region.getName() + " has wrong type for package export : " + val.getValueType().name());
+        }
+    }
+
     @Override
     public int compareTo(final ApiExport o) {
         return this.name.compareTo(o.name);
@@ -231,13 +376,13 @@ public class ApiExport implements Comparable<ApiExport> {
 
     @Override
     public String toString() {
-        return "ApiExport [name=" + name + ", toggle=" + toggle + ", previous=" + previous + ", properties="
-                + properties + "]";
+        return "ApiExport [name=" + name + ", toggle=" + toggle + ", previousPackageVersion=" + previousPackageVersion
+                + ", previousArtifactId=" + previousArtifactId + ", properties=" + properties + "]";
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(deprecation, name, previous, properties, toggle);
+        return Objects.hash(deprecation, name, previousPackageVersion, previousArtifactId, properties, toggle);
     }
 
     @Override
@@ -253,7 +398,8 @@ public class ApiExport implements Comparable<ApiExport> {
         }
         ApiExport other = (ApiExport) obj;
         return Objects.equals(deprecation, other.deprecation) && Objects.equals(name, other.name)
-                && Objects.equals(previous, other.previous) && Objects.equals(properties, other.properties)
+                && Objects.equals(previousArtifactId, other.previousArtifactId)
+                && Objects.equals(previousPackageVersion, other.previousPackageVersion) && Objects.equals(properties, other.properties)
                 && Objects.equals(toggle, other.toggle);
     }
 }

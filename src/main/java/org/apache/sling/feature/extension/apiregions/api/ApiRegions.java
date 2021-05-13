@@ -61,12 +61,6 @@ public class ApiRegions {
 
     private static final String EXPORTS_KEY = "exports";
 
-    private static final String TOGGLE_KEY = "toggle";
-
-    private static final String PREVIOUS_KEY = "previous";
-
-    private static final String DEPRECATED_KEY = "deprecated";
-
     private final List<ApiRegion> regions = new ArrayList<>();
 
     /**
@@ -195,32 +189,7 @@ public class ApiRegions {
             if (!region.listExports().isEmpty()) {
                 final JsonArrayBuilder expArrayBuilder = Json.createArrayBuilder();
                 for (final ApiExport exp : region.listExports()) {
-                    if (exp.getToggle() == null 
-                        && exp.getPrevious() == null 
-                        && exp.getProperties().isEmpty() 
-                        && exp.getDeprecation().getPackageInfo() == null
-                        && exp.getDeprecation().getMemberInfos().isEmpty() ) {
-                        expArrayBuilder.add(exp.getName());
-                    } else {
-                        final JsonObjectBuilder expBuilder = Json.createObjectBuilder();
-                        expBuilder.add(NAME_KEY, exp.getName());
-                        if (exp.getToggle() != null) {
-                            expBuilder.add(TOGGLE_KEY, exp.getToggle());
-                        }
-                        if (exp.getPrevious() != null) {
-                            expBuilder.add(PREVIOUS_KEY, exp.getPrevious().toMvnId());
-                        }
-
-                        final JsonValue depValue = exp.deprecationToJSON();
-                        if ( depValue != null ) {
-                            expBuilder.add(DEPRECATED_KEY, depValue);
-                        }
-
-                        for (final Map.Entry<String, String> entry : exp.getProperties().entrySet()) {
-                            expBuilder.add(entry.getKey(), entry.getValue());
-                        }
-                        expArrayBuilder.add(expBuilder);
-                    }
+                    expArrayBuilder.add(exp.toJSONValue());
                 }
 
                 regionBuilder.add(EXPORTS_KEY, expArrayBuilder);
@@ -295,46 +264,7 @@ public class ApiRegions {
                         continue; // already set
                     } else if (entry.getKey().equals(EXPORTS_KEY)) {
                         for (final JsonValue e : (JsonArray) entry.getValue()) {
-                            if (e.getValueType() == ValueType.STRING) {
-                                final String name = ((JsonString) e).getString();
-                                if (!name.startsWith("#")) {
-                                    final ApiExport export = new ApiExport(name);
-                                    if (!region.add(export)) {
-                                        throw new IOException("Export " + export.getName()
-                                                + " is defined twice in region " + region.getName());
-                                    }
-                                }
-                            } else if (e.getValueType() == ValueType.OBJECT) {
-                                final JsonObject expObj = (JsonObject) e;
-                                final ApiExport export = new ApiExport(expObj.getString(NAME_KEY));
-                                if (!region.add(export)) {
-                                    throw new IOException("Export " + export.getName() + " is defined twice in region "
-                                            + region.getName());
-                                }
-
-                                for (final String key : expObj.keySet()) {
-                                    if (NAME_KEY.equals(key)) {
-                                        continue; // already set
-
-                                    } else if (TOGGLE_KEY.equals(key)) {
-                                        export.setToggle(expObj.getString(key));
-
-                                    } else if (PREVIOUS_KEY.equals(key)) {
-                                        export.setPrevious(ArtifactId.parse(expObj.getString(key)));
-
-
-                                    } else if ( DEPRECATED_KEY.equals(key)) {
-                                        final JsonValue dValue = expObj.get(DEPRECATED_KEY);
-                                        export.parseDeprecation(dValue);
-
-                                        // everything else is stored as a string property
-                                    } else {
-                                        export.getProperties().put(key, expObj.getString(key));
-                                    }
-                                }
-                            } else {
-                                throw new IOException("Region " + region.getName() + " has wrong type for " + EXPORTS_KEY + " : " + e.getValueType().name());
-                            }
+                            ApiExport.fromJson(region, e);
                         }
                     } else if (entry.getKey().equals(Artifact.KEY_FEATURE_ORIGINS)) {
                         final Set<ArtifactId> origins = new LinkedHashSet<>();
