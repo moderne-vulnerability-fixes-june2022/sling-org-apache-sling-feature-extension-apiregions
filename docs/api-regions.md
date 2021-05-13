@@ -96,7 +96,8 @@ While the above example enables a complete package based on a toggle, it is also
                 {
                     "name" : "org.apache.sling.api",
                     "toggle" : "NEW_SLING_API",
-                    "previous" : "org.apache.sling:org.apache.sling.api:1.1"
+                    "previous-package-version" : "1.0.3",
+                    "previous-artifact-id" : "org.apache.sling:org.apache.sling.api:1.1"
                 }
             ]
         }
