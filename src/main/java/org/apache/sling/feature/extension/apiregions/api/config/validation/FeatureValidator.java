@@ -16,6 +16,8 @@
  */
 package org.apache.sling.feature.extension.apiregions.api.config.validation;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -172,6 +174,15 @@ public class FeatureValidator {
         boolean changed = false;
 
         for(final Map.Entry<String, ConfigurationValidationResult> entry : result.getConfigurationResults().entrySet()) {
+            if ( entry.getValue().isUseDefaultValue() ) {
+                final Configuration cfg = feature.getConfigurations().getConfiguration(entry.getKey());
+                if ( cfg != null ) {
+                    final List<String> keys = new ArrayList<>(Collections.list(cfg.getConfigurationProperties().keys()));
+                    for(final String k : keys ) {
+                        cfg.getProperties().remove(k);
+                    }
+                }
+            }
             for(final Map.Entry<String, PropertyValidationResult> propEntry : entry.getValue().getPropertyResults().entrySet()) {
                 if ( propEntry.getValue().isUseDefaultValue() ) {
                     final Configuration cfg = feature.getConfigurations().getConfiguration(entry.getKey());

@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.FactoryConfigurationDescription;
+import org.apache.sling.feature.extension.apiregions.api.config.Mode;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyType;
 import org.apache.sling.feature.extension.apiregions.api.config.Region;
@@ -54,6 +55,8 @@ public class ConfigurationValidatorTest {
     @Test public void testDeprecated() {
         final Configuration cfg = new Configuration("org.apache");
         final ConfigurationDescription cd = new ConfigurationDescription();
+        final PropertyDescription prop = new PropertyDescription();
+        cd.getPropertyDescriptions().put("a", prop);
         
         ConfigurationValidationResult result = validator.validate(cfg, cd, null);
         assertTrue(result.isValid());
@@ -70,6 +73,8 @@ public class ConfigurationValidatorTest {
         final Configuration cfg = new Configuration("org.apache");
         final ConfigurationDescription cd = new ConfigurationDescription();
         cfg.getProperties().put(Constants.SERVICE_RANKING, 5); 
+        final PropertyDescription prop = new PropertyDescription();
+        cd.getPropertyDescriptions().put("a", prop);
 
         ConfigurationValidationResult result = validator.validate(cfg, cd, null);
         assertTrue(result.isValid());
@@ -82,6 +87,8 @@ public class ConfigurationValidatorTest {
     @Test public void testAllowedProperties() {
         final Configuration cfg = new Configuration("org.apache");
         final ConfigurationDescription cd = new ConfigurationDescription();
+        final PropertyDescription prop = new PropertyDescription();
+        cd.getPropertyDescriptions().put("a", prop);
         cfg.getProperties().put(Constants.SERVICE_DESCRIPTION, "desc");
         cfg.getProperties().put(Constants.SERVICE_VENDOR, "vendor");
 
@@ -132,5 +139,125 @@ public class ConfigurationValidatorTest {
         assertEquals(2, result.getPropertyResults().size());
         assertTrue(result.getPropertyResults().get("a").isValid());
         assertFalse(result.getPropertyResults().get("b").isValid());
+    }
+
+    @Test public void testInternalConfiguration() {
+        // internal -> valid
+        final Configuration cfg = new Configuration("org.apache");
+        cfg.getProperties().put("a", "desc");
+        cfg.getProperties().put("b", "vendor");
+
+        // description without properties -> internal
+        final ConfigurationDescription cd = new ConfigurationDescription();
+
+        ConfigurationValidationResult result = validator.validate(cfg, cd, Region.INTERNAL);
+        assertTrue(result.isValid());
+        assertFalse(result.isUseDefaultValue());
+        assertTrue(result.getWarnings().isEmpty());
+        assertEquals(2, cfg.getProperties().size());
+
+        // global -> invalid
+        result = validator.validate(cfg, cd, Region.GLOBAL);
+        assertFalse(result.isValid());
+        assertFalse(result.isUseDefaultValue());
+        assertEquals(1, result.getErrors().size());
+        assertTrue(result.getPropertyResults().isEmpty());
+        assertTrue(result.getWarnings().isEmpty());
+
+        // global -> invalid, but mode DEFINITIVE
+        cd.setMode(Mode.DEFINITIVE);
+        result = validator.validate(cfg, cd, Region.GLOBAL);
+        assertTrue(result.isValid());
+        assertTrue(result.isUseDefaultValue());
+        assertEquals(1, result.getWarnings().size());
+        assertTrue(result.getPropertyResults().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
+
+        // global -> invalid, but mode LENIENT
+        cd.setMode(Mode.LENIENT);
+        result = validator.validate(cfg, cd, Region.GLOBAL);
+        assertTrue(result.isValid());
+        assertFalse(result.isUseDefaultValue());
+        assertEquals(1, result.getWarnings().size());
+        assertTrue(result.getPropertyResults().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
+
+        // global -> invalid, but mode SILENT
+        cd.setMode(Mode.SILENT);
+        result = validator.validate(cfg, cd, Region.GLOBAL);
+        assertTrue(result.isValid());
+        assertFalse(result.isUseDefaultValue());
+        assertTrue(result.getWarnings().isEmpty());
+        assertTrue(result.getPropertyResults().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
+
+        // global -> invalid, but mode SILENT
+        cd.setMode(Mode.SILENT_DEFINITIVE);
+        result = validator.validate(cfg, cd, Region.GLOBAL);
+        assertTrue(result.isValid());
+        assertTrue(result.isUseDefaultValue());
+        assertTrue(result.getWarnings().isEmpty());
+        assertTrue(result.getPropertyResults().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
+    }
+
+    @Test public void testInternalFactoryConfiguration() {
+        // internal -> valid
+        final Configuration cfg = new Configuration("org.apache~foo");
+        cfg.getProperties().put("a", "desc");
+        cfg.getProperties().put("b", "vendor");
+
+        // description without properties -> internal
+        final FactoryConfigurationDescription cd = new FactoryConfigurationDescription();
+
+        ConfigurationValidationResult result = validator.validate(cfg, cd, Region.INTERNAL);
+        assertTrue(result.isValid());
+        assertFalse(result.isUseDefaultValue());
+        assertTrue(result.getWarnings().isEmpty());
+        assertEquals(2, cfg.getProperties().size());
+
+        // global -> invalid
+        result = validator.validate(cfg, cd, Region.GLOBAL);
+        assertFalse(result.isValid());
+        assertFalse(result.isUseDefaultValue());
+        assertEquals(1, result.getErrors().size());
+        assertTrue(result.getPropertyResults().isEmpty());
+        assertTrue(result.getWarnings().isEmpty());
+
+        // global -> invalid, but mode DEFINITIVE
+        cd.setMode(Mode.DEFINITIVE);
+        result = validator.validate(cfg, cd, Region.GLOBAL);
+        assertTrue(result.isValid());
+        assertTrue(result.isUseDefaultValue());
+        assertEquals(1, result.getWarnings().size());
+        assertTrue(result.getPropertyResults().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
+
+        // global -> invalid, but mode LENIENT
+        cd.setMode(Mode.LENIENT);
+        result = validator.validate(cfg, cd, Region.GLOBAL);
+        assertTrue(result.isValid());
+        assertFalse(result.isUseDefaultValue());
+        assertEquals(1, result.getWarnings().size());
+        assertTrue(result.getPropertyResults().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
+
+        // global -> invalid, but mode SILENT
+        cd.setMode(Mode.SILENT);
+        result = validator.validate(cfg, cd, Region.GLOBAL);
+        assertTrue(result.isValid());
+        assertFalse(result.isUseDefaultValue());
+        assertTrue(result.getWarnings().isEmpty());
+        assertTrue(result.getPropertyResults().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
+
+        // global -> invalid, but mode SILENT
+        cd.setMode(Mode.SILENT_DEFINITIVE);
+        result = validator.validate(cfg, cd, Region.GLOBAL);
+        assertTrue(result.isValid());
+        assertTrue(result.isUseDefaultValue());
+        assertTrue(result.getWarnings().isEmpty());
+        assertTrue(result.getPropertyResults().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
     }
 }

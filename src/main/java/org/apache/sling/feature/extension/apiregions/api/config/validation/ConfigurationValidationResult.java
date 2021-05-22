@@ -33,6 +33,12 @@ public class ConfigurationValidationResult {
     
     private final List<String> warnings = new ArrayList<>();
 
+    /** 
+     * Should the default configuration be used?
+     * @since 1.3
+     */
+    private boolean useDefault = false;
+
     /**
      * Is the configuration valid?
      * @return {@code true} if it is valid
@@ -73,4 +79,23 @@ public class ConfigurationValidationResult {
     public List<String> getWarnings() {
         return this.warnings;
     }
+
+	/**
+     * Should the default be used instead of the configuration values?
+	 * @return {@code true} if the default should be used.
+     * @see #getDefaultValue()
+     * @since 1.3
+	 */
+	public boolean isUseDefaultValue() {
+		return useDefault;
+	}
+
+	/**
+     * Set whether the default values should be used
+	 * @param useDefault boolean flag
+     * @since 1.3
+	 */
+	public void setUseDefaultValue(final boolean useDefault) {
+		this.useDefault = useDefault;
+	}
 }

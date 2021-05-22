@@ -314,16 +314,20 @@ A framework property has the same configuration options as a property inside a c
 
 ### Internal Configurations
 
-Some OSGi configurations and factory configurations are not part of the public API and cannot be created/updated by application configuration. Same applies to framework properties. The PIDs, factory PIDs and names of these can be specified as well:
+Some OSGi configurations and factory configurations are not part of the public API and cannot be created/updated by application configuration. Same applies to framework properties. For configurations and factory configurations, define a configuration description without any properties. Internal framework properties are listed with just their names:
 
 ``` json
 "configuration-api:JSON" : {
-    "internal-configurations" : [
-        // list of PIDs
-    ],
-    "internal-factory-configurations" : [
-        // list of factory PIDs
-    ],
+    "configurations" : {
+        "org.apache.sling.engine.impl.InternalRequestHandling" : {
+            // no properties
+        }
+    },
+    "factory-configurations" : {
+        "org.apache.sling.engine.impl.InternalLogger" : {
+            // no properties
+        }
+    },
     "internal-framework-properties" : {
         // list of property names
     }

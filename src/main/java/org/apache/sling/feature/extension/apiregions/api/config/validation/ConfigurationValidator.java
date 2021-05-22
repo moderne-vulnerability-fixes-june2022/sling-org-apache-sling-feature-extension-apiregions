@@ -77,13 +77,21 @@ public class ConfigurationValidator {
             if ( !(desc instanceof FactoryConfigurationDescription) ) {
                 result.getErrors().add("Factory configuration cannot be validated against non factory configuration description");
             } else {
-                validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
+                if ( desc.getPropertyDescriptions().isEmpty()) {
+                    setResult(result, region, validationMode, "Factory configuration is not allowed");
+                } else {
+                    validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
+                }
             }
         } else {
             if ( !(desc instanceof ConfigurationDescription) ) {
                 result.getErrors().add("Configuration cannot be validated against factory configuration description");
             } else {
-                validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
+                if ( desc.getPropertyDescriptions().isEmpty()) {
+                    setResult(result, region, validationMode, "Configuration is not allowed");
+                } else {
+                    validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
+                }
             }
         }
 
@@ -127,6 +135,19 @@ public class ConfigurationValidator {
                 } else if ( !isAllowedProperty(propName) && region != Region.INTERNAL ) {
                     result.getErrors().add("Property is not allowed");
                 }
+            }
+        }
+    }
+
+    void setResult(final ConfigurationValidationResult result, final Region region, final Mode validationMode, final String msg) {
+        if ( region != Region.INTERNAL ) {
+            if ( validationMode == Mode.STRICT ) {
+                result.getErrors().add(msg);
+            } else if ( validationMode == Mode.LENIENT || validationMode == Mode.DEFINITIVE ) {
+                result.getWarnings().add(msg);
+            }
+            if ( validationMode == Mode.DEFINITIVE || validationMode == Mode.SILENT_DEFINITIVE ) {
+                result.setUseDefaultValue(true);
             }
         }
     }

@@ -794,4 +794,146 @@ public class FeatureValidatorTest {
             assertEquals("hi", f.getFrameworkProperties().get("c"));
         }
     }
+
+    @Test public void testInternalConfigurationNoPropertyDescriptions() {
+        Feature f1 = createFeature("g:a:1");
+        ConfigurationApi api = createApi();
+        // no property descriptions -> internal
+        api.getConfigurationDescriptions().get(PID).getPropertyDescriptions().clear();        
+        api.setRegion(Region.INTERNAL);
+
+        // internal -> valid
+        FeatureValidationResult result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+        validator.applyDefaultValues(f1, result);
+        assertEquals(1, f1.getConfigurations().getConfiguration(PID).getConfigurationProperties().size());
+
+        // global -> invalid
+        f1 = createFeature("g:a:1");
+        api = createApi();
+        // no property descriptions -> internal
+        api.getConfigurationDescriptions().get(PID).getPropertyDescriptions().clear();        
+        api.setRegion(Region.GLOBAL);
+        result = validator.validate(f1, api);
+        assertFalse(result.isValid());
+
+        // global -> invalid, but mode DEFINITIVE
+        f1 = createFeature("g:a:1");
+        api = createApi();
+        // no property descriptions -> internal
+        api.getConfigurationDescriptions().get(PID).getPropertyDescriptions().clear();        
+        api.setRegion(Region.GLOBAL);
+        api.setMode(Mode.DEFINITIVE);
+        result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+        validator.applyDefaultValues(f1, result);
+        assertEquals(0, f1.getConfigurations().getConfiguration(PID).getConfigurationProperties().size());
+
+        // global -> invalid, but mode LENIENT
+        f1 = createFeature("g:a:1");
+        api = createApi();
+        // no property descriptions -> internal
+        api.getConfigurationDescriptions().get(PID).getPropertyDescriptions().clear();        
+        api.setRegion(Region.GLOBAL);
+        api.setMode(Mode.LENIENT);
+        result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+        validator.applyDefaultValues(f1, result);
+        assertEquals(1, f1.getConfigurations().getConfiguration(PID).getConfigurationProperties().size());
+
+        // global -> invalid, but mode SILENT
+        f1 = createFeature("g:a:1");
+        api = createApi();
+        // no property descriptions -> internal
+        api.getConfigurationDescriptions().get(PID).getPropertyDescriptions().clear();        
+        api.setRegion(Region.GLOBAL);
+        api.setMode(Mode.SILENT);
+        result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+        validator.applyDefaultValues(f1, result);
+        assertEquals(1, f1.getConfigurations().getConfiguration(PID).getConfigurationProperties().size());
+
+        // global -> invalid, but mode SILENT_DEFINITIVE
+        f1 = createFeature("g:a:1");
+        api = createApi();
+        // no property descriptions -> internal
+        api.getConfigurationDescriptions().get(PID).getPropertyDescriptions().clear();        
+        api.setRegion(Region.GLOBAL);
+        api.setMode(Mode.SILENT_DEFINITIVE);
+        result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+        validator.applyDefaultValues(f1, result);
+        assertEquals(0, f1.getConfigurations().getConfiguration(PID).getConfigurationProperties().size());
+    }
+
+    @Test public void testInternalFactoryConfigurationNoPropertyDescriptions() {
+        Feature f1 = createFeature("g:a:1");
+        ConfigurationApi api = createApi();
+        // no property descriptions -> internal
+        api.getFactoryConfigurationDescriptions().get(FACTORY_PID).getPropertyDescriptions().clear();        
+        api.setRegion(Region.INTERNAL);
+
+        // internal -> valid
+        FeatureValidationResult result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+        validator.applyDefaultValues(f1, result);
+        assertEquals(1, f1.getConfigurations().getConfiguration(FACTORY_PID.concat("~print")).getConfigurationProperties().size());
+
+        // global -> invalid
+        f1 = createFeature("g:a:1");
+        api = createApi();
+        // no property descriptions -> internal
+        api.getFactoryConfigurationDescriptions().get(FACTORY_PID).getPropertyDescriptions().clear();        
+        api.setRegion(Region.GLOBAL);
+        result = validator.validate(f1, api);
+        assertFalse(result.isValid());
+
+        // global -> invalid, but mode DEFINITIVE
+        f1 = createFeature("g:a:1");
+        api = createApi();
+        // no property descriptions -> internal
+        api.getFactoryConfigurationDescriptions().get(FACTORY_PID).getPropertyDescriptions().clear();        
+        api.setRegion(Region.GLOBAL);
+        api.setMode(Mode.DEFINITIVE);
+        result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+        validator.applyDefaultValues(f1, result);
+        assertEquals(0, f1.getConfigurations().getConfiguration(FACTORY_PID.concat("~print")).getConfigurationProperties().size());
+
+        // global -> invalid, but mode LENIENT
+        f1 = createFeature("g:a:1");
+        api = createApi();
+        // no property descriptions -> internal
+        api.getFactoryConfigurationDescriptions().get(FACTORY_PID).getPropertyDescriptions().clear();        
+        api.setRegion(Region.GLOBAL);
+        api.setMode(Mode.LENIENT);
+        result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+        validator.applyDefaultValues(f1, result);
+        assertEquals(1, f1.getConfigurations().getConfiguration(FACTORY_PID.concat("~print")).getConfigurationProperties().size());
+
+        // global -> invalid, but mode SILENT
+        f1 = createFeature("g:a:1");
+        api = createApi();
+        // no property descriptions -> internal
+        api.getFactoryConfigurationDescriptions().get(FACTORY_PID).getPropertyDescriptions().clear();        
+        api.setRegion(Region.GLOBAL);
+        api.setMode(Mode.SILENT);
+        result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+        validator.applyDefaultValues(f1, result);
+        assertEquals(1, f1.getConfigurations().getConfiguration(FACTORY_PID.concat("~print")).getConfigurationProperties().size());
+
+        // global -> invalid, but mode SILENT_DEFINITIVE
+        f1 = createFeature("g:a:1");
+        api = createApi();
+        // no property descriptions -> internal
+        api.getFactoryConfigurationDescriptions().get(FACTORY_PID).getPropertyDescriptions().clear();        
+        api.setRegion(Region.GLOBAL);
+        api.setMode(Mode.SILENT_DEFINITIVE);
+        result = validator.validate(f1, api);
+        assertTrue(result.isValid());
+        validator.applyDefaultValues(f1, result);
+        assertEquals(0, f1.getConfigurations().getConfiguration(FACTORY_PID.concat("~print")).getConfigurationProperties().size());
+    }
 }

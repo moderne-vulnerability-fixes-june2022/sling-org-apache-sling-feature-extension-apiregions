@@ -266,6 +266,7 @@ public class ConfigurationApi extends AttributeableEntity {
 	/**
      * Get the internal configuration pids
 	 * @return Mutable set of internal configuration pids
+     * @deprecated Please use empty configuration descriptions via {@link #getConfigurationDescriptions()}
 	 */
 	public Set<String> getInternalConfigurations() {
 		return internalConfigurations;
@@ -274,6 +275,7 @@ public class ConfigurationApi extends AttributeableEntity {
 	/**
      * Get the internal factory pids
 	 * @return Mutable set of internal factory configuration pids
+     * @deprecated Please use empty factory configuration descriptions via {@link #getFactoryConfigurationDescriptions()}
 	 */
 	public Set<String> getInternalFactoryConfigurations() {
 		return internalFactories;
