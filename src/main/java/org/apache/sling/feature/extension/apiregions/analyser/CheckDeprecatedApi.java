@@ -97,7 +97,7 @@ public class CheckDeprecatedApi implements AnalyserTask{
                     for(final ApiExport exp : exports) {
                         if ( pi.getName().equals(exp.getName()) ) {
                             String version = exp.getProperties().get(PROP_VERSION);
-                            if ( version == null || pi.getPackageVersionRange().includes(new Version(version)) ) {
+                            if ( version == null || pi.getPackageVersion() == null || pi.getPackageVersionRange().includes(new Version(version)) ) {
                                 imports = exp.getDeprecation().getPackageInfo().getMessage();
                                 break;
                             }
