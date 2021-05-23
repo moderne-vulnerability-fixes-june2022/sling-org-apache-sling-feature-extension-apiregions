@@ -12,7 +12,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.sling</groupId>
-        <artifactId>sling</artifactId>
+        <artifactId>sling-bundle-parent</artifactId>
         <version>41</version>
         <relativePath />
     </parent>
