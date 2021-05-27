@@ -65,7 +65,8 @@ public class CheckConfigurationApi implements AnalyserTask{
                 }
                 for(final Map.Entry<String, PropertyValidationResult> propEntry : entry.getValue().getPropertyResults().entrySet()) {
                     for(final String warn : propEntry.getValue().getWarnings()) {
-                        context.reportConfigurationWarning(context.getFeature().getConfigurations().getConfiguration(entry.getKey()), warn);
+                        context.reportConfigurationWarning(context.getFeature().getConfigurations().getConfiguration(entry.getKey()), 
+                            "Property ".concat(propEntry.getKey()).concat(" - ").concat(warn));
                     }
                 }
                 if ( !entry.getValue().isValid() ) {
@@ -75,7 +76,8 @@ public class CheckConfigurationApi implements AnalyserTask{
                     for(final Map.Entry<String, PropertyValidationResult> propEntry : entry.getValue().getPropertyResults().entrySet()) {
                         if ( !propEntry.getValue().isValid() ) {
                             for(final String err : propEntry.getValue().getErrors()) {
-                                context.reportConfigurationError(context.getFeature().getConfigurations().getConfiguration(entry.getKey()), err);
+                                context.reportConfigurationError(context.getFeature().getConfigurations().getConfiguration(entry.getKey()), 
+                                    "Property ".concat(propEntry.getKey()).concat(" - ").concat(err));
                             }
                         }
                     }
