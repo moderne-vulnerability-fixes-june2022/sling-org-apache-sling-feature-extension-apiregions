@@ -127,7 +127,7 @@ public class CheckDeprecatedApi implements AnalyserTask{
                             msg = msg.concat(" Deprecated since ").concat(deprecationInfo.getSince());
                         }
                         boolean isError = strict;
-                        if ( deprecationInfo.getForRemoval() != null ) {
+                        if ( deprecationInfo.isForRemoval() ) {
                             boolean printRemoval = true;
                             if ( checkDate != null ) {
                                 final Calendar c = deprecationInfo.getForRemovalBy();
