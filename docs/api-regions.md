@@ -139,13 +139,16 @@ The usual process for deprecating Java API is to mark it with a corresponding an
                     "name":"org.apache.sling.incubator.api",
                     "deprecated":{
                         "msg":"This is deprecated",
-                        "since":"Since Sling left the incubator"
+                        "since":"Since Sling left the incubator",
+                        "for-removal":"2029-12-31"
                     }
                 }
             ]
         }
      ]
 ```
+
+The deprecation informnation can just be the message, or it can also include information when the deprecated started (since) and by when the member is expected to be removed (for-removal). The removal information should be either the string `true` or a date in the format `YYYY-MM-DD`.
 
 ## OSGi Configurations
 

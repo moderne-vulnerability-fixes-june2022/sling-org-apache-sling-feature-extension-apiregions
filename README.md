@@ -60,6 +60,7 @@ These analysers relate to Configuration API Region definitions in Feature Models
 * `region-deprecated-api` : This analyser validates if packages marked as deprecated for a region are used. It has these configuration parameters:
   * `regions` : The regions to check for such usage. This is a comma separate string of region names. It defaults to `global`.
   * `strict` : By default the analyser issues warnings. If this is set to `true` errors are issued instead.
+  * `removal-period` : If deprecated api is used and that api has a `for-removal` information with a date set, then this configuration can be used to issue an error instead of a warning if the removal date is less than the configured number of days away. For example setting this to 28 will result in errors being generated four weeks ahead of the removal date.
 
 ## Extensions
 

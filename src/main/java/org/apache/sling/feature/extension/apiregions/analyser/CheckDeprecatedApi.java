@@ -16,6 +16,7 @@
  */
 package org.apache.sling.feature.extension.apiregions.analyser;
 
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -29,6 +30,7 @@ import org.apache.sling.feature.analyser.task.AnalyserTaskContext;
 import org.apache.sling.feature.extension.apiregions.api.ApiExport;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegion;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
+import org.apache.sling.feature.extension.apiregions.api.DeprecationInfo;
 import org.apache.sling.feature.scanner.BundleDescriptor;
 import org.apache.sling.feature.scanner.PackageInfo;
 import org.osgi.framework.Version;
@@ -40,6 +42,8 @@ public class CheckDeprecatedApi implements AnalyserTask{
     public static final String CFG_REGIONS = "regions";
 
     private static final String CFG_STRICT = "strict";
+
+    private static final String CFG_REMOVAL_PERIOD = "removal-period";
 
     private static final String PROP_VERSION = "version";
 
@@ -62,13 +66,14 @@ public class CheckDeprecatedApi implements AnalyserTask{
         } else {
             final Map<BundleDescriptor, Set<String>> bundleRegions = this.calculateBundleRegions(context, regions);
             final boolean strict = Boolean.parseBoolean(context.getConfiguration().getOrDefault(CFG_STRICT, "false"));
+            final Integer removalPeriod = Integer.parseInt(context.getConfiguration().getOrDefault(CFG_REMOVAL_PERIOD, "-1"));
             final String regionNames = context.getConfiguration().getOrDefault(CFG_REGIONS, ApiRegion.GLOBAL);
             for(final String r : regionNames.split(",")) {
                 final ApiRegion region = regions.getRegionByName(r.trim());
                 if (region == null ) {
                     context.reportExtensionError(ApiRegions.EXTENSION_NAME, "Region not found:" + r.trim());
                 } else {
-                    checkBundlesForRegion(context, region, bundleRegions, strict);
+                    checkBundlesForRegion(context, region, bundleRegions, strict, removalPeriod);
                 }
             }
         }
@@ -86,7 +91,18 @@ public class CheckDeprecatedApi implements AnalyserTask{
     private void checkBundlesForRegion(final AnalyserTaskContext context, 
             final ApiRegion region,
             final Map<BundleDescriptor, Set<String>> bundleRegions,
-            final boolean strict) {
+            final boolean strict,
+            final int removalPeriod) {
+        final Calendar checkDate;
+        if ( removalPeriod > 0 ) {
+            checkDate = Calendar.getInstance();
+            checkDate.set(Calendar.HOUR_OF_DAY, 23);
+            checkDate.set(Calendar.MINUTE, 59);
+            checkDate.add(Calendar.DAY_OF_YEAR, removalPeriod);
+        } else {
+            checkDate = null;
+        }
+
         final Set<ApiExport> exports = this.calculateDeprecatedPackages(region, bundleRegions);
 
         final Set<String> allowedNames = getAllowedRegions(region);
@@ -95,19 +111,37 @@ public class CheckDeprecatedApi implements AnalyserTask{
             if ( isInAllowedRegion(bundleRegions.get(bd), region.getName(), allowedNames) ) {
                 for(final PackageInfo pi : bd.getImportedPackages()) {
                     final VersionRange importRange = pi.getPackageVersionRange();
-                    String imports = null;
+                    DeprecationInfo deprecationInfo = null;
                     for(final ApiExport exp : exports) {
                         if ( pi.getName().equals(exp.getName()) ) {
                             String version = exp.getProperties().get(PROP_VERSION);
                             if ( version == null || importRange == null || importRange.includes(new Version(version)) ) {
-                                imports = exp.getDeprecation().getPackageInfo().getMessage();
+                                deprecationInfo = exp.getDeprecation().getPackageInfo();
                                 break;
                             }
                         }
                     }
-                    if ( imports != null ) {
-                        final String msg = "Usage of deprecated package found : ".concat(pi.getName()).concat(" : ").concat(imports);
-                        if ( strict ) {
+                    if ( deprecationInfo != null ) {
+                        String msg = "Usage of deprecated package found : ".concat(pi.getName()).concat(" : ").concat(deprecationInfo.getMessage());
+                        if ( deprecationInfo.getSince() != null ) {
+                            msg = msg.concat(" Deprecated since ").concat(deprecationInfo.getSince());
+                        }
+                        boolean isError = strict;
+                        if ( deprecationInfo.getForRemoval() != null ) {
+                            boolean printRemoval = true;
+                            if ( checkDate != null ) {
+                                final Calendar c = deprecationInfo.getForRemovalBy();
+                                if ( c != null && c.before(checkDate)) {
+                                    isError = true;
+                                    printRemoval = false;
+                                    msg = msg.concat(" The package is scheduled to be removed in less than ").concat(String.valueOf(removalPeriod)).concat(" days by ").concat(deprecationInfo.getForRemoval());
+                                }
+                            }
+                            if ( printRemoval ) {
+                                msg = msg.concat(" For removal : ").concat(deprecationInfo.getForRemoval());
+                            } 
+                        }
+                        if ( isError ) {
                             context.reportArtifactError(bd.getArtifact().getId(), msg);
                         } else {
                             context.reportArtifactWarning(bd.getArtifact().getId(), msg);

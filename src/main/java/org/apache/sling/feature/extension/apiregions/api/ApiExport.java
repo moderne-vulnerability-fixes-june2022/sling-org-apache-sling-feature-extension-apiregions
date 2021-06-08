@@ -43,6 +43,8 @@ public class ApiExport implements Comparable<ApiExport> {
 
     private static final String SINCE_KEY = "since";
 
+    private static final String FOR_REMOVAL_KEY = "for-removal";
+
     private static final String MEMBERS_KEY = "members";
 
     private static final String NAME_KEY = "name";
@@ -210,10 +212,14 @@ public class ApiExport implements Comparable<ApiExport> {
                 // whole package
                 final DeprecationInfo info = new DeprecationInfo(depObj.getString(MSG_KEY));
                 info.setSince(depObj.getString(SINCE_KEY, null));
+                info.setForRemoval(depObj.getString(FOR_REMOVAL_KEY, null));
                 this.getDeprecation().setPackageInfo(info);
             } else {
                 if ( depObj.containsKey(SINCE_KEY) ) {
                     throw new IOException("Export " + this.getName() + " has wrong since in " + DEPRECATED_KEY);
+                }
+                if ( depObj.containsKey(FOR_REMOVAL_KEY) ) {
+                    throw new IOException("Export " + this.getName() + " has wrong for-removal in " + DEPRECATED_KEY);
                 }
                 final JsonValue val = depObj.get(MEMBERS_KEY);
                 if ( val.getValueType() != ValueType.OBJECT) {
@@ -230,6 +236,7 @@ public class ApiExport implements Comparable<ApiExport> {
                         }
                         final DeprecationInfo info = new DeprecationInfo(memberObj.getString(MSG_KEY));
                         info.setSince(memberObj.getString(SINCE_KEY, null));
+                        info.setForRemoval(depObj.getString(FOR_REMOVAL_KEY, null));
                         this.getDeprecation().addMemberInfo(memberProp.getKey(), info);
                     } else {
                         throw new IOException("Export " + this.getName() + " has wrong type for member in " + MEMBERS_KEY + " : " + memberProp.getValue().getValueType().name());
@@ -248,26 +255,34 @@ public class ApiExport implements Comparable<ApiExport> {
     JsonValue deprecationToJSON() {
         final Deprecation dep = this.getDeprecation();
         if ( dep.getPackageInfo() != null ) {
-            if ( dep.getPackageInfo().getSince() == null ) {
+            if ( dep.getPackageInfo().getSince() == null && dep.getPackageInfo().getForRemoval() == null ) {
                 return Json.createValue(dep.getPackageInfo().getMessage());
             } else {
                 final JsonObjectBuilder depBuilder = Json.createObjectBuilder();
                 depBuilder.add(MSG_KEY, dep.getPackageInfo().getMessage());
-                depBuilder.add(SINCE_KEY, dep.getPackageInfo().getSince());
-
+                if ( dep.getPackageInfo().getSince() != null ) {
+                    depBuilder.add(SINCE_KEY, dep.getPackageInfo().getSince());
+                }
+                if ( dep.getPackageInfo().getForRemoval() != null ) {
+                    depBuilder.add(FOR_REMOVAL_KEY, dep.getPackageInfo().getForRemoval());
+                }
                 return depBuilder.build();
             }
         } else if ( !dep.getMemberInfos().isEmpty() ) {
             final JsonObjectBuilder depBuilder = Json.createObjectBuilder();
             final JsonObjectBuilder membersBuilder = Json.createObjectBuilder();
             for(final Map.Entry<String, DeprecationInfo> memberEntry : dep.getMemberInfos().entrySet()) {
-                if ( memberEntry.getValue().getSince() == null ) {
+                if ( memberEntry.getValue().getSince() == null && memberEntry.getValue().getForRemoval() == null ) {
                     membersBuilder.add(memberEntry.getKey(), memberEntry.getValue().getMessage());
                 } else {
                     final JsonObjectBuilder mBuilder = Json.createObjectBuilder();
                     mBuilder.add(MSG_KEY, memberEntry.getValue().getMessage());
-                    mBuilder.add(SINCE_KEY, memberEntry.getValue().getSince());
-
+                    if ( memberEntry.getValue().getSince() != null ) {
+                        mBuilder.add(SINCE_KEY, memberEntry.getValue().getSince());
+                    }
+                    if ( memberEntry.getValue().getForRemoval() != null ) {
+                        mBuilder.add(FOR_REMOVAL_KEY, memberEntry.getValue().getForRemoval());
+                    }
                     membersBuilder.add(memberEntry.getKey(), mBuilder);
                 }
             }

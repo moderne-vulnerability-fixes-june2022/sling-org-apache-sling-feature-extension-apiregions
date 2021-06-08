@@ -16,6 +16,7 @@
  */
 package org.apache.sling.feature.extension.apiregions.api;
 
+import java.util.Calendar;
 import java.util.Objects;
 
 /**
@@ -28,6 +29,12 @@ public class DeprecationInfo {
     private final String message;
 
     private String since;
+
+    /** 
+     * Optional for removal information.
+     * @since 1.3.0
+     */
+    private String forRemoval;
 
     /**
      * Create a new info
@@ -65,9 +72,68 @@ public class DeprecationInfo {
         this.since = since;
     }
 
+    /**
+     * Get the optional for removal information. This should either be 'true' or 'false'
+     * or a date in the format 'YYYY-MM-DD'.
+     * @return The for removal information or {@code null}
+     * @since 1.3.0
+     */
+    public String getForRemoval() {
+        return forRemoval;
+    }
+
+    /**
+     * Set the for removal information. This should either be 'true' or 'false'
+     * or a date in the format 'YYYY-MM-DD'.
+     * @param value The new removal info
+     * @since 1.3.0
+     */
+    public void setForRemoval(final String value) {
+        this.forRemoval = value;
+    }
+
+    /**
+     * Is this member intended to be removed?
+     * @return {@code true} if the member will be removed in the future
+     * @since 1.3.0
+     */
+    public boolean isForRemoval() {
+        return this.forRemoval != null && !"false".equalsIgnoreCase(this.forRemoval);
+    }
+
+    /**
+     * Return a date by which this member will be removed
+     * @return A calendar if the value from {@link #getForRemoval()} is formatted as 'YYYY-MM-DD'.
+     * @since 1.3.0
+     */
+    public Calendar getForRemovalBy() {
+        if ( this.forRemoval != null ) {
+           final String[] parts = this.forRemoval.split("-");
+           if ( parts.length == 3 ) {
+               if ( parts[0].length() == 4 && parts[1].length() == 2 && parts[2].length() == 2 ) {
+                   try {
+                       final int year = Integer.parseInt(parts[0]);
+                       final int month = Integer.parseInt(parts[1]);
+                       final int day = Integer.parseInt(parts[2]);
+
+                       final Calendar c = Calendar.getInstance();
+                       c.set(Calendar.YEAR, year);
+                       c.set(Calendar.MONTH, month - 1);
+                       c.set(Calendar.DAY_OF_MONTH, day);
+
+                       return c;
+                   } catch ( final NumberFormatException ignore ) {
+                       // ignore
+                   }
+               }
+           }
+        }
+        return null;
+    }
+    
     @Override
     public int hashCode() {
-        return Objects.hash(message, since);
+        return Objects.hash(message, since, forRemoval);
     }
 
     @Override
@@ -82,6 +148,6 @@ public class DeprecationInfo {
             return false;
         }
         DeprecationInfo other = (DeprecationInfo) obj;
-        return Objects.equals(message, other.message) && Objects.equals(since, other.since);
+        return Objects.equals(message, other.message) && Objects.equals(since, other.since) && Objects.equals(forRemoval, other.forRemoval);
     }
 }
