@@ -56,7 +56,7 @@ don't opt-in are assumed to be non-defining.
 These analysers relate to Configuration API Region definitions in Feature Models:
 
 * `configuration-api` : This analyser validates the OSGi configurations and framework properties based on the configuration API described in an extension.
-For more details see here: [docs/api-regions.md#configurations].
+For more details see here: [Configuration Regions](docs/api-regions.md#configurations).
 
 * `region-deprecated-api` : This analyser validates if packages marked as deprecated for a region are used. It has these configuration parameters:
   * `regions` : The regions to check for such usage. This is a comma separate string of region names. It defaults to `global`.
