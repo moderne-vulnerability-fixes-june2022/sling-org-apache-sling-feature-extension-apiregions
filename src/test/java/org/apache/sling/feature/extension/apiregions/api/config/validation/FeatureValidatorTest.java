@@ -936,4 +936,28 @@ public class FeatureValidatorTest {
         validator.applyDefaultValues(f1, result);
         assertEquals(0, f1.getConfigurations().getConfiguration(FACTORY_PID.concat("~print")).getConfigurationProperties().size());
     }
+
+    @Test
+    public void testLiveValidation() {
+        assertFalse(validator.isLiveValues());
+        
+        final Feature feature = createFeature("g:a:1");
+        final ConfigurationApi api = createApi();
+        // make property a password requiring a placeholder
+        api.getConfigurationDescriptions().get(PID).getPropertyDescriptions().get("prop").setType(PropertyType.PASSWORD);
+
+        // validate non live values - this should value as no secret is used for the password
+        FeatureValidationResult result = validator.validate(feature, api);
+        assertFalse(result.isValid());
+
+        try {
+            validator.setLiveValues(true);
+
+            result = validator.validate(feature, api);
+            assertTrue(result.isValid());
+    
+        } finally {
+            validator.setLiveValues(false);
+        }
+    }
 }

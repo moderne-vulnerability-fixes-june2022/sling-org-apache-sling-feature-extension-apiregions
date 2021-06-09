@@ -35,6 +35,26 @@ import org.apache.sling.feature.extension.apiregions.api.config.PropertyType;
  */
 public class PropertyValidator {
     
+    private boolean liveValues = false;
+
+    /**
+     * Are live values validated?
+     * @return {@code true} if live values are validated
+     * @since 1.4
+     */
+    public boolean isLiveValues() {
+        return liveValues;
+    }
+
+    /**
+     * Set whether live values are validated.
+     * @param value Flag for validating live values
+     * @since 1.4
+     */
+    public void setLiveValues(final boolean value) {
+        this.liveValues = value;
+    }
+
 	/**
 	 * Validate the value against the property definition
      * @param value The value to validate
@@ -388,7 +408,7 @@ public class PropertyValidator {
 	}
 
 	void validatePassword(final Context context, final Object value, final boolean hasPlaceholder) {
-        if ( !hasPlaceholder && context.description.getPlaceholderPolicy() != PlaceholderPolicy.DENY ) {
+        if ( !this.isLiveValues() && !hasPlaceholder && context.description.getPlaceholderPolicy() != PlaceholderPolicy.DENY ) {
             setResult(context, "Value for a password must use a placeholder");
         }
 	}
@@ -455,12 +475,15 @@ public class PropertyValidator {
     }
 
     void validatePlaceholderPolicy(final Context context, final Object value, final boolean hasPlaceholder) {
-        // for policy default and allow nothing needs to be validated
-        if ( context.description.getPlaceholderPolicy() == PlaceholderPolicy.DENY && hasPlaceholder ) {
-            setResult(context, "Placeholder in value is not allowed");
-        }  else if ( context.description.getPlaceholderPolicy() == PlaceholderPolicy.REQUIRE && !hasPlaceholder ) {
-            setResult(context, "Value must use a placeholder");
-        }
+        // only check policy if no live values
+        if ( !this.isLiveValues() ) {
+            // for policy default and allow nothing needs to be validated
+            if ( context.description.getPlaceholderPolicy() == PlaceholderPolicy.DENY && hasPlaceholder ) {
+                setResult(context, "Placeholder in value is not allowed");
+            }  else if ( context.description.getPlaceholderPolicy() == PlaceholderPolicy.REQUIRE && !hasPlaceholder ) {
+                setResult(context, "Value must use a placeholder");
+            }
+        } 
     }         
 
     static final class Context {

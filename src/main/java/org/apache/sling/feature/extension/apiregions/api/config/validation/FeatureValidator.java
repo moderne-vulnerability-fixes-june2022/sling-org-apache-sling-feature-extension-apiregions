@@ -44,6 +44,8 @@ public class FeatureValidator {
 
     private FeatureProvider featureProvider;
 
+    private boolean liveValues = false;
+
     /**
      * Get the current feature provider
      * @return the feature provider or {@code null}
@@ -58,6 +60,26 @@ public class FeatureValidator {
      */
     public void setFeatureProvider(final FeatureProvider provider) {
         this.featureProvider = provider;
+    }
+
+    /**
+     * Are live values validated?
+     * @return {@code true} if live values are validated
+     * @since 1.4
+     */
+    public boolean isLiveValues() {
+        return liveValues;
+    }
+
+    /**
+     * Set whether live values are validated.
+     * @param value Flag for validating live values
+     * @since 1.4
+     */
+    public void setLiveValues(final boolean value) {
+        this.liveValues = value;
+        this.configurationValidator.setLiveValues(value);
+        this.propertyValidator.setLiveValues(value);
     }
 
     /**

@@ -508,4 +508,30 @@ public class PropertyValidatorTest {
         assertTrue(result.isValid());
         assertFalse(result.isSkipped());
     }
+
+
+    @Test
+    public void testLiveValidation() {
+        assertFalse(this.validator.isLiveValues());
+
+        try {
+            this.validator.setLiveValues(true);
+
+            final PropertyDescription desc = new PropertyDescription();
+            desc.setPlaceholderPolicy(PlaceholderPolicy.DENY);
+    
+            PropertyValidationResult result = null;
+    
+            result = validator.validate("$[env:variable]", desc);
+            assertTrue(result.isValid());
+            assertFalse(result.isSkipped());
+    
+            result = validator.validate("hello", desc);
+            assertTrue(result.isValid());
+            assertFalse(result.isSkipped());
+
+        } finally {
+            this.validator.setLiveValues(false);
+        }
+    }
 }

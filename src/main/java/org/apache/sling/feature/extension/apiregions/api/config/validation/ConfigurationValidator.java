@@ -46,6 +46,27 @@ public class ConfigurationValidator {
 
     private final PropertyValidator propertyValidator = new PropertyValidator();
 
+    private boolean liveValues = false;
+
+    /**
+     * Are live values validated?
+     * @return {@code true} if live values are validated
+     * @since 1.4
+     */
+    public boolean isLiveValues() {
+        return liveValues;
+    }
+
+    /**
+     * Set whether live values are validated.
+     * @param value Flag for validating live values
+     * @since 1.4
+     */
+    public void setLiveValues(final boolean value) {
+        this.liveValues = value;
+        this.propertyValidator.setLiveValues(value);
+    }
+
     /**
      * Validate a configuration
      * 

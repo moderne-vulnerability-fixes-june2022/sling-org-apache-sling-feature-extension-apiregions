@@ -260,4 +260,9 @@ public class ConfigurationValidatorTest {
         assertTrue(result.getPropertyResults().isEmpty());
         assertTrue(result.getErrors().isEmpty());
     }
+
+    @Test
+    public void testLiveValidation() {
+        assertFalse(this.validator.isLiveValues());
+    }
 }
