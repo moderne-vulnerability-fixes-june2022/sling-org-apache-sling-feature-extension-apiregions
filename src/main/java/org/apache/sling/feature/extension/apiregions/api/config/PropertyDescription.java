@@ -469,6 +469,7 @@ public class PropertyDescription extends DescribableEntity {
 	/**
 	 * Get the placeholder regex
 	 * @return the placeholder regex or {@code null}
+     * @since 1.3
 	 */
     public String getPlaceholderRegex() {
         return placeholderPattern == null ? null : placeholderPattern.pattern();
@@ -478,6 +479,7 @@ public class PropertyDescription extends DescribableEntity {
 	 * Set the placeholder regex
 	 * @param regex the placeholder regex to set
      * @throws IllegalArgumentException If the pattern is not valid
+     * @since 1.3
 	 */
     public void setPlaceholderRegex(final String regex) {
         if ( regex == null ) {
@@ -490,6 +492,7 @@ public class PropertyDescription extends DescribableEntity {
     /**
      * Get the placeholder regex pattern
      * @return The pattern or {@code null}
+     * @since 1.3
      */
     public Pattern getPlaceholderRegexPattern() {
         return this.placeholderPattern;
