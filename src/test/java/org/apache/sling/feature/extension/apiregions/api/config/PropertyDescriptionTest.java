@@ -50,7 +50,7 @@ public class PropertyDescriptionTest {
         entity.setRegex(".");
         entity.setRequired(true);
         entity.setVariable("var");
-        entity.setType(PropertyType.BYTE);        
+        entity.setType(PropertyType.BYTE);
         entity.setDefaultValue("default");
         entity.setMode(Mode.SILENT);
         entity.setPlaceholderPolicy(PlaceholderPolicy.ALLOW);
@@ -78,7 +78,7 @@ public class PropertyDescriptionTest {
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
         ext.setJSON("{ \"type\" : \"BYTE\", \"cardinality\": 5, \"required\" : true, \"variable\" : \"var\"," +
         "\"range\" : {}, \"includes\" : [\"in\"], \"excludes\" : [\"ex\"] , \"options\": [{}], \"regex\": \".\"," +
-        "\"default\" : \"def\", \"placeholder-policy\" : \"DENY\"}");
+        "\"default\" : \"def\", \"placeholder-policy\" : \"DENY\", \"placeholder-regex\": \"my-regex\"}");
 
         final PropertyDescription entity = new PropertyDescription();
         entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
@@ -95,6 +95,7 @@ public class PropertyDescriptionTest {
         assertNotNull(entity.getRegexPattern());
         assertEquals("def", entity.getDefaultValue());
         assertEquals(PlaceholderPolicy.DENY, entity.getPlaceholderPolicy());
+        assertEquals("my-regex", entity.getPlaceholderRegex());
 
         // test defaults and empty values
         ext.setJSON("{ \"variable\" : \"var\", \"regex\": \".\"}");
@@ -111,6 +112,7 @@ public class PropertyDescriptionTest {
         assertEquals(".", entity.getRegex());
         assertNotNull(entity.getRegexPattern());
         assertEquals(PlaceholderPolicy.DEFAULT, entity.getPlaceholderPolicy());
+        assertNull(entity.getPlaceholderRegex());
    }
 
     @Test public void testToJSONObject() throws IOException {
@@ -126,11 +128,12 @@ public class PropertyDescriptionTest {
         entity.setType(PropertyType.BYTE);
         entity.setDefaultValue("def");
         entity.setPlaceholderPolicy(PlaceholderPolicy.DENY);
+        entity.setPlaceholderRegex("^.*$");
 
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
         ext.setJSON("{ \"type\" : \"BYTE\", \"cardinality\": 5, \"required\" : true, \"variable\" : \"var\"," +
             "\"range\" : {}, \"includes\" : [\"in\"], \"excludes\" : [\"ex\"] , \"options\": [{}], \"regex\": \".\"," +
-            "\"default\" : \"def\", \"placeholder-policy\" : \"DENY\"}");
+            "\"default\" : \"def\", \"placeholder-policy\" : \"DENY\", \"placeholder-regex\": \"^.*$\"}");
 
         assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
 
@@ -144,7 +147,8 @@ public class PropertyDescriptionTest {
         entity.setIncludes(null);
         entity.setDefaultValue(null);
         entity.setPlaceholderPolicy(null);
-        
+        entity.setPlaceholderRegex(null);
+
         ext.setJSON("{ \"variable\" : \"var\", \"regex\": \".\"}");
 
         assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
