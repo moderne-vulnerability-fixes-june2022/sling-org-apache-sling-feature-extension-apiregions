@@ -249,11 +249,11 @@ For each property a JSON object contains additional information about this prope
                     "options" : [
                         {
                             "title" : "Output to text file",
-                            "value" : "TEXT
+                            "value" : "TEXT"
                         },
                         {
                             "title" : "Output to console",
-                            "value" : "CONSOLE
+                            "value" : "CONSOLE"
                         }
                     ]
                 },
