@@ -83,7 +83,6 @@ public class ConfigurationValidationResult {
 	/**
      * Should the default be used instead of the configuration values?
 	 * @return {@code true} if the default should be used.
-     * @see #getDefaultValue()
      * @since 1.3
 	 */
 	public boolean isUseDefaultValue() {
