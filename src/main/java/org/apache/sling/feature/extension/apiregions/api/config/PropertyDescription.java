@@ -81,6 +81,12 @@ public class PropertyDescription extends DescribableEntity {
      */
     private PlaceholderPolicy placeholderPolicy;
 
+	/**
+     * A pattern to validate values which contain substitution placeholders
+     * @since 1.3
+     */
+	private Pattern placeholderPattern;
+
     /**
      * Create a new description
      */
@@ -175,6 +181,7 @@ public class PropertyDescription extends DescribableEntity {
 			if ( policyVal != null ) {
                 this.setPlaceholderPolicy(PlaceholderPolicy.valueOf(policyVal.toUpperCase()));
 			}
+			this.setPlaceholderRegex(this.getString(InternalConstants.KEY_PLACEHOLDER_REGEX));
  		} catch (final JsonException | IllegalArgumentException e) {
             throw new IOException(e);
         }
@@ -235,6 +242,7 @@ public class PropertyDescription extends DescribableEntity {
         if ( this.getPlaceholderPolicy() != PlaceholderPolicy.DEFAULT ) {
             objectBuilder.add(InternalConstants.KEY_PLACEHOLDER_POLICY, this.getPlaceholderPolicy().name());
         }
+        this.setString(objectBuilder, InternalConstants.KEY_PLACEHOLDER_REGEX, this.getPlaceholderRegex());
 
         return objectBuilder;
 	}
@@ -456,5 +464,37 @@ public class PropertyDescription extends DescribableEntity {
      */
     public void setPlaceholderPolicy(final PlaceholderPolicy policy) {
         this.placeholderPolicy = policy == null ? PlaceholderPolicy.DEFAULT : policy;
+    }
+
+	/**
+	 * Get the placeholder regex
+	 * @return the placeholder regex or {@code null}
+     * @since 1.3
+	 */
+    public String getPlaceholderRegex() {
+        return placeholderPattern == null ? null : placeholderPattern.pattern();
+    }
+
+	/**
+	 * Set the placeholder regex
+	 * @param regex the placeholder regex to set
+     * @throws IllegalArgumentException If the pattern is not valid
+     * @since 1.3
+	 */
+    public void setPlaceholderRegex(final String regex) {
+        if ( regex == null ) {
+            this.placeholderPattern = null;
+        } else {
+            this.placeholderPattern = Pattern.compile(regex);
+        }
+    }
+
+    /**
+     * Get the placeholder regex pattern
+     * @return The pattern or {@code null}
+     * @since 1.3
+     */
+    public Pattern getPlaceholderRegexPattern() {
+        return this.placeholderPattern;
     }
 }

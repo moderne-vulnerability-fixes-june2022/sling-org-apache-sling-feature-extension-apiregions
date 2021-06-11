@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.sling.feature.extension.apiregions.api.config.Mode;
 import org.apache.sling.feature.extension.apiregions.api.config.Option;
@@ -215,7 +216,7 @@ public class PropertyValidator {
                                 break;
                     default : context.result.getErrors().add("Unable to validate value - unknown property type : " + context.description.getType());
                 }
-                validateRegex(context, value);
+                validateRegex(context, context.description.getRegexPattern(), value);
                 validateOptions(context, value);
                 if ( context.description.getType() != PropertyType.PASSWORD ) {
                     validatePlaceholderPolicy(context, value, false);              
@@ -225,7 +226,9 @@ public class PropertyValidator {
                 if ( context.description.getType() == PropertyType.PASSWORD ) {
                     validatePassword(context, value, true);
                 } else if ( context.description.getType() == PropertyType.STRING ) {
-                    // any string is valid, we only mark the result as skipped if a regex or options are set
+                    validateRegex(context, context.description.getPlaceholderRegexPattern(), value);
+
+                    // we mark the result as skipped if a regex or options are set or if a value is marked as required.
                     if ( context.description.getRegex() != null || context.description.getOptions() != null || context.description.isRequired() ) {
                         context.result.markSkipped();
                     }
@@ -452,10 +455,10 @@ public class PropertyValidator {
 		}
 	}
 
-    void validateRegex(final Context context, final Object value) {
-        if ( context.description.getRegexPattern() != null ) {
-            if ( !context.description.getRegexPattern().matcher(value.toString()).matches() ) {
-                setResult(context, "Value " + value + " does not match regex " + context.description.getRegex());
+    void validateRegex(final Context context, final Pattern pattern, final Object value) {
+        if ( pattern != null ) {
+            if ( !pattern.matcher(value.toString()).matches() ) {
+                setResult(context, "Value " + value + " does not match regex " + pattern.pattern());
             }
         }
     }
