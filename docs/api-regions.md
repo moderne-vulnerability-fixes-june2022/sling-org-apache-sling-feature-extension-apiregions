@@ -230,12 +230,13 @@ For each property a JSON object contains additional information about this prope
 * `deprecated` : If this configuration should not be used anymore a human readable message.
 * `includes` : An array of values. If configured, these values must be present.
 * `excludes` : An array of values. If configured, these values must not be present.
-* `pattern` : A regular expression to validate the value.
+* `regex` : A regular expression to validate the value.
 * `range` : An object which can have a `min` and/or a `max` property to further specify the value range.
 * `options` : An array of objects acting as an enumeration for the allowed values. Each option must have a `value` property. It might also have a `title` or `description` property.
 * `default` : A default value which might be used depending on the validation mode.
 * `mode` : Validation mode for the property overriding the global one or one set for the configuration. 
 * `placeholder-policy` : The placeholder policy defines whether a placeholder is allowed or required for a property. With `DEFAULT` the policy of the property type is used. `ALLOW`, `REQUIRE` , or `DENY` can be used to override that.
+* `placeholder-regex` : A regular expression to validate the value, used if the value is expressed as a placeholder.
 
 ``` json
 "configuration-api:JSON" : {
