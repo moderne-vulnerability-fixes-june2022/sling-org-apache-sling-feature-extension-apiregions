@@ -189,7 +189,10 @@ Each OSGi configuration that is part of the configuration API (and therefore pub
 * `description` : A human readable description
 * `properties` : An object containing all properties that are allowed to be configured
 * `deprecated` : If this configuration should not be used anymore a human readable message.
-* `mode` : Validation mode for the configuration overriding the global one. This mode applies to all properties. 
+* `mode` : Validation mode for the configuration overriding the global one. This mode applies to all properties.
+* `region` : Optional property to restrict the configuration to the internal region if this is set to "INTERNAL". With this set, configurations for the internal region can be validated.
+* `allow-additional-properties` : Optional property. If set to true, additional properties not listed in the description are allowed.
+* `internal-property-names` : Specify property names which are internal.
 
 ``` json
 "configuration-api:JSON" : {
@@ -337,6 +340,8 @@ Some OSGi configurations and factory configurations are not part of the public A
     }
 }
 ```
+
+Note, if you specify `allow-additional-properties` to be true for configurations without properties, the configurations are not marked as internal anymore and can be used, for example as a marker configuration.
 
 ### OSGi Configuration Regions
 

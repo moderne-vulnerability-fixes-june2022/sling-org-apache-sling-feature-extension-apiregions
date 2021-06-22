@@ -17,6 +17,7 @@
 package org.apache.sling.feature.extension.apiregions.api.config;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -34,6 +35,10 @@ public class ConfigurableEntityTest {
 
     public static class CE extends ConfigurableEntity {
         // ConfigurableEntity is abstract, therefore subclassing for testing
+
+        public CE() {
+            setDefaults();
+        }
     }
 
     @Test public void testClear() {
@@ -51,6 +56,9 @@ public class ConfigurableEntityTest {
         assertNull(entity.getDescription());
         assertTrue(entity.getPropertyDescriptions().isEmpty());
         assertNull(entity.getMode());
+        assertTrue(entity.getInternalPropertyNames().isEmpty());
+        assertFalse(entity.isAllowAdditionalProperties());
+        assertEquals(Region.GLOBAL, entity.getRegion());
     }
 
     @Test public void testFromJSONObject() throws IOException {
@@ -95,5 +103,47 @@ public class ConfigurableEntityTest {
         entity.clear();
         entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
         assertEquals(Mode.SILENT, entity.getMode());
+    }
+
+    @Test public void testSerialisingRegion() throws IOException {
+        final CE entity = new CE();
+        entity.setRegion(Region.INTERNAL);
+
+        final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
+        ext.setJSON("{ \"region\" : \"INTERNAL\"}");
+
+        assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
+        entity.clear();
+        entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
+        assertEquals(Region.INTERNAL, entity.getRegion());
+    }
+
+    @Test public void testSerialisingAllowAdditionalProperties() throws IOException {
+        final CE entity = new CE();
+        entity.setAllowAdditionalProperties(true);
+
+        final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
+        ext.setJSON("{ \"allow-additional-properties\" : true}");
+
+        assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
+        entity.clear();
+        entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
+        assertTrue(entity.isAllowAdditionalProperties());
+    }
+
+    @Test public void testSerialisingInternalProperties() throws IOException {
+        final CE entity = new CE();
+        entity.getInternalPropertyNames().add("a");
+        entity.getInternalPropertyNames().add("b");
+
+        final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
+        ext.setJSON("{ \"internal-property-names\" : [\"a\",\"b\"]}");
+
+        assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
+        entity.clear();
+        entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
+        assertEquals(2, entity.getInternalPropertyNames().size());
+        assertTrue(entity.getInternalPropertyNames().contains("a"));
+        assertTrue(entity.getInternalPropertyNames().contains("b"));
     }
 }

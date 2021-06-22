@@ -137,7 +137,16 @@ public class ConfigurationApi extends AttributeableEntity {
      * The default validation mode. 
      * @since 1.2
      */
-    private Mode mode = Mode.STRICT;
+    private Mode mode;
+    
+    public ConfigurationApi() {
+        this.setDefaults();
+    }
+    
+    void setDefaults() {
+        super.setDefaults();
+        this.setMode(Mode.STRICT);
+    }
     
     /**
      * Clear the object and reset to defaults
@@ -153,7 +162,6 @@ public class ConfigurationApi extends AttributeableEntity {
         this.internalFrameworkProperties.clear();
         this.setRegion(null);
         this.getFeatureToRegionCache().clear();
-        this.setMode(Mode.STRICT);
     }
 
 	/**

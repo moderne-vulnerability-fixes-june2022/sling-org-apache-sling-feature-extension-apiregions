@@ -95,6 +95,7 @@ public class PropertyDescription extends DescribableEntity {
     }
 
     void setDefaults() {
+        super.setDefaults();
 		this.setType(PropertyType.STRING);
         this.setCardinality(1);
         this.setRequired(false);
@@ -107,7 +108,6 @@ public class PropertyDescription extends DescribableEntity {
     @Override
 	public void clear() {
         super.clear();
-        this.setDefaults();
 		this.setVariable(null);
 		this.setRange(null);
 		this.setIncludes(null);

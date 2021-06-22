@@ -23,4 +23,8 @@ package org.apache.sling.feature.extension.apiregions.api.config;
 public class ConfigurationDescription extends ConfigurableEntity {
 
     // marker class to distinguish between different configurable entities
+
+    public ConfigurationDescription() {
+        this.setDefaults();
+    }
 }

@@ -80,4 +80,8 @@ abstract class InternalConstants {
     static final String KEY_PLACEHOLDER_POLICY = "placeholder-policy";
 
     static final String KEY_PLACEHOLDER_REGEX = "placeholder-regex";
+
+    static final String KEY_ALLOW_ADDITIONAL_PROPERTIES = "allow-additional-properties";
+
+    static final String KEY_INTERNAL_PROPERTIES = "internal-property-names";
 }

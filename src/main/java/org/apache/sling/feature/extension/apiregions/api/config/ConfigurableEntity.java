@@ -17,9 +17,12 @@
 package org.apache.sling.feature.extension.apiregions.api.config;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.json.Json;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -43,6 +46,30 @@ public abstract class ConfigurableEntity extends DescribableEntity {
      */
     private Mode mode;
     
+    /** 
+     * Allow additional properties
+     * @since 1.4
+     */
+    private boolean allowAdditional;
+    
+    /** 
+     * The region
+     * @since 1.4
+     */
+    private Region region;
+
+    /** 
+     * 
+     * @since 1.4
+     */
+    private final List<String> internalProperties = new ArrayList<>();
+
+    void setDefaults() {
+        super.setDefaults();
+        this.setAllowAdditionalProperties(false);
+        this.setRegion(Region.GLOBAL);
+    }
+
     /**
      * Clear the object and reset to defaults
      */
@@ -51,6 +78,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
         super.clear();
 		this.properties.clear();
         this.setMode(null);
+        this.getInternalPropertyNames().clear();
     }
 
 	/**
@@ -64,7 +92,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
 	public void fromJSONObject(final JsonObject jsonObj) throws IOException {
         super.fromJSONObject(jsonObj);
         try {
-            final JsonValue val = this.getAttributes().remove(InternalConstants.KEY_PROPERTIES);
+            JsonValue val = this.getAttributes().remove(InternalConstants.KEY_PROPERTIES);
             if ( val != null ) {
                 for(final Map.Entry<String, JsonValue> innerEntry : val.asJsonObject().entrySet()) {
 					final PropertyDescription prop = new PropertyDescription();
@@ -78,6 +106,17 @@ public abstract class ConfigurableEntity extends DescribableEntity {
 			if ( modeVal != null ) {
                 this.setMode(Mode.valueOf(modeVal.toUpperCase()));				
 			}
+            final String regionVal = this.getString(InternalConstants.KEY_REGION);
+            if ( regionVal != null ) {
+                this.setRegion(Region.valueOf(regionVal.toUpperCase()));				
+            }
+			this.setAllowAdditionalProperties(this.getBoolean(InternalConstants.KEY_ALLOW_ADDITIONAL_PROPERTIES, this.isAllowAdditionalProperties()));
+            val = this.getAttributes().remove(InternalConstants.KEY_INTERNAL_PROPERTIES);
+            if ( val != null ) {
+                for(final JsonValue v : val.asJsonArray()) {
+                    this.getInternalPropertyNames().add(getString(v));
+                }
+            }
         } catch (final JsonException | IllegalArgumentException e) {
             throw new IOException(e);
         }
@@ -110,6 +149,51 @@ public abstract class ConfigurableEntity extends DescribableEntity {
     }
 
     /**
+     * Are additional properties allowed?
+     * @return {@code true} if additional properties are allowed
+     * @since 1.4
+     */
+    public boolean isAllowAdditionalProperties() {
+        return allowAdditional;
+    }
+
+    /**
+     * Set whether additional properties are allowed
+     * @param flag Set to {@code true} to allow additional properties
+     * @since 1.4
+     */
+    public void setAllowAdditionalProperties(final boolean flag) {
+        this.allowAdditional = flag;
+    }
+
+    /**
+     * Which region does this entity apply to?
+     * @return the region
+     * @since 1.4
+     */
+    public Region getRegion() {
+        return this.region;
+    }
+
+    /**
+     * Set the region of this entity.
+     * @param region The region
+     * @since 1.4
+     */
+    public void setRegion(final Region region) {
+        this.region = region == null ? Region.GLOBAL : region;
+    }
+
+    /**
+     * Get the list of internal property names.
+     * @return the mutable list of internal property names
+     * @since 1.4
+     */
+    public List<String> getInternalPropertyNames() {
+        return internalProperties;
+    }
+
+    /**
      * Convert this object into JSON
      *
      * @return The json object builder
@@ -129,7 +213,20 @@ public abstract class ConfigurableEntity extends DescribableEntity {
         if ( this.getMode() != null ) {
             objBuilder.add(InternalConstants.KEY_MODE, this.getMode().name());
         }
-
+        if ( this.getRegion() != Region.GLOBAL ) {
+            objBuilder.add(InternalConstants.KEY_REGION, this.getRegion().name());
+        }
+		if ( this.isAllowAdditionalProperties() ) {
+			objBuilder.add(InternalConstants.KEY_ALLOW_ADDITIONAL_PROPERTIES, this.isAllowAdditionalProperties());
+		}
+        if ( !this.getInternalPropertyNames().isEmpty() ) {
+            final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+            for(final String name : this.getInternalPropertyNames()) {
+                arrayBuilder.add(name);
+            }
+            objBuilder.add(InternalConstants.KEY_INTERNAL_PROPERTIES, arrayBuilder);
+        }
+ 
 		return objBuilder;
    }
 }

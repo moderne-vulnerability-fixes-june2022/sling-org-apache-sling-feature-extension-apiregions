@@ -89,8 +89,10 @@ public class ConfigurationValidator {
      * @return The result
      * @since 1.2
      */
-    public ConfigurationValidationResult validate(final Configuration config, final ConfigurableEntity desc, 
-            final Region region, final Mode mode) {
+    public ConfigurationValidationResult validate(final Configuration config,
+            final ConfigurableEntity desc, 
+            final Region region,
+            final Mode mode) {
         final Mode validationMode = desc.getMode() != null ? desc.getMode() : (mode != null ? mode : Mode.STRICT);
         
         final ConfigurationValidationResult result = new ConfigurationValidationResult();
@@ -99,9 +101,15 @@ public class ConfigurationValidator {
                 result.getErrors().add("Factory configuration cannot be validated against non factory configuration description");
             } else {
                 if ( desc.getPropertyDescriptions().isEmpty()) {
-                    setResult(result, region, validationMode, "Factory configuration is not allowed");
+                    if ( region == Region.GLOBAL && !desc.isAllowAdditionalProperties() ) {
+                        setResult(result, validationMode, "Factory configuration is not allowed");
+                    }
                 } else {
-                    validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
+                    if ( region == Region.GLOBAL && desc.getRegion() == Region.INTERNAL ) {
+                        setResult(result, validationMode, "Factory configuration is not allowed");
+                    } else {
+                        validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
+                    }
                 }
             }
         } else {
@@ -109,9 +117,15 @@ public class ConfigurationValidator {
                 result.getErrors().add("Configuration cannot be validated against factory configuration description");
             } else {
                 if ( desc.getPropertyDescriptions().isEmpty()) {
-                    setResult(result, region, validationMode, "Configuration is not allowed");
+                    if ( region == Region.GLOBAL && !desc.isAllowAdditionalProperties() ) {
+                        setResult(result, validationMode, "Configuration is not allowed");
+                    }
                 } else {
-                    validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
+                    if ( region == Region.GLOBAL && desc.getRegion() == Region.INTERNAL ) {
+                        setResult(result, validationMode, "Configuration is not allowed");
+                    } else {
+                        validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
+                    }
                 }
             }
         }
@@ -128,6 +142,7 @@ public class ConfigurationValidator {
      * @param desc The configuration description
      * @param results The map of results per property
      * @param region The configuration region
+     * @param mode The validation mode.
      */
     void validateProperties(final Configuration configuration,
             final ConfigurableEntity desc,  
@@ -135,12 +150,14 @@ public class ConfigurationValidator {
             final Region region,
             final Mode mode) {
         final Dictionary<String, Object> properties = configuration.getConfigurationProperties();
+
         // validate the described properties
         for(final Map.Entry<String, PropertyDescription> propEntry : desc.getPropertyDescriptions().entrySet()) {
             final Object value = properties.get(propEntry.getKey());
             final PropertyValidationResult result = propertyValidator.validate(value, propEntry.getValue(), mode);
             results.put(propEntry.getKey(), result);
         }
+
         // validate additional properties
         final Enumeration<String> keyEnum = properties.keys();
         while ( keyEnum.hasMoreElements() ) {
@@ -148,28 +165,31 @@ public class ConfigurationValidator {
             if ( !desc.getPropertyDescriptions().containsKey(propName) ) {
                 final PropertyValidationResult result = new PropertyValidationResult();
                 results.put(propName, result);
-                if ( Constants.SERVICE_RANKING.equalsIgnoreCase(propName) ) {
+
+                if ( desc.getInternalPropertyNames().contains(propName ) ) {
+                    if  ( region != Region.INTERNAL ) {
+                        result.getErrors().add("Property is not allowed");
+                    }
+                } else if ( Constants.SERVICE_RANKING.equalsIgnoreCase(propName) ) {
                     final Object value = properties.get(propName);
                     if ( !(value instanceof Integer) ) {
                         setResult(result, mode, "service.ranking must be of type Integer");
                     }    
-                } else if ( !isAllowedProperty(propName) && region != Region.INTERNAL ) {
+                } else if ( !isAllowedProperty(propName) && region != Region.INTERNAL && !desc.isAllowAdditionalProperties() ) {
                     result.getErrors().add("Property is not allowed");
                 }
             }
         }
     }
 
-    void setResult(final ConfigurationValidationResult result, final Region region, final Mode validationMode, final String msg) {
-        if ( region != Region.INTERNAL ) {
-            if ( validationMode == Mode.STRICT ) {
-                result.getErrors().add(msg);
-            } else if ( validationMode == Mode.LENIENT || validationMode == Mode.DEFINITIVE ) {
-                result.getWarnings().add(msg);
-            }
-            if ( validationMode == Mode.DEFINITIVE || validationMode == Mode.SILENT_DEFINITIVE ) {
-                result.setUseDefaultValue(true);
-            }
+    void setResult(final ConfigurationValidationResult result, final Mode validationMode, final String msg) {
+        if ( validationMode == Mode.STRICT ) {
+            result.getErrors().add(msg);
+        } else if ( validationMode == Mode.LENIENT || validationMode == Mode.DEFINITIVE ) {
+            result.getWarnings().add(msg);
+        }
+        if ( validationMode == Mode.DEFINITIVE || validationMode == Mode.SILENT_DEFINITIVE ) {
+            result.setUseDefaultValue(true);
         }
     }
 

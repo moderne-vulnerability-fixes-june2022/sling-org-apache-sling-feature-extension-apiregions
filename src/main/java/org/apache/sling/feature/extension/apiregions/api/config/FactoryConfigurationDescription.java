@@ -44,6 +44,7 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
     }
 
     void setDefaults() {
+        super.setDefaults();
         this.getOperations().add(Operation.CREATE);
         this.getOperations().add(Operation.UPDATE);
     }
@@ -54,7 +55,6 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
     @Override
     public void clear() {
         super.clear();
-        this.setDefaults();
         this.internalNames.clear();
     }
 

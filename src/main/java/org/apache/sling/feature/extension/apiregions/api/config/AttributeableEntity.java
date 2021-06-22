@@ -38,9 +38,17 @@ public abstract class AttributeableEntity {
 	private final Map<String, JsonValue> attributes = new LinkedHashMap<>();
 
     /**
+     * Apply the non-null default values.
+     */
+    void setDefaults() {
+        // nothing to do
+    }
+
+        /**
      * Clear the object and reset to defaults
      */
 	public void clear() {
+        this.setDefaults();
 		this.attributes.clear();
 	}
 	
