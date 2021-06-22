@@ -17,15 +17,18 @@
 package org.apache.sling.feature.extension.apiregions.analyser;
 
 import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.analyser.Analyser;
 import org.apache.sling.feature.analyser.AnalyserResult;
 import org.apache.sling.feature.analyser.AnalyserResult.ArtifactReport;
 import org.apache.sling.feature.analyser.task.AnalyserTask;
 import org.apache.sling.feature.builder.ArtifactProvider;
-import org.apache.sling.feature.extension.apiregions.scanner.ApiRegionsExtensionScanner;
+import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
 import org.apache.sling.feature.io.json.FeatureJSONReader;
+import org.apache.sling.feature.scanner.ContainerDescriptor;
 import org.apache.sling.feature.scanner.Scanner;
+import org.apache.sling.feature.scanner.spi.ExtensionScanner;
 import org.junit.Test;
 
 import java.io.File;
@@ -279,7 +282,7 @@ public class CheckApiRegionsCrossFeatureDupsTest {
                 return null;
             }
         };
-        Scanner scanner = new Scanner(ap, Collections.singletonList(new ApiRegionsExtensionScanner()), Collections.emptyList());
+        Scanner scanner = new Scanner(ap, Collections.singletonList(new RegionScanner()), Collections.emptyList());
         return scanner;
     }
 
@@ -302,7 +305,7 @@ public class CheckApiRegionsCrossFeatureDupsTest {
                 return null;
             }
         };
-        Scanner scanner = new Scanner(ap, Collections.singletonList(new ApiRegionsExtensionScanner()), Collections.emptyList());
+        Scanner scanner = new Scanner(ap, Collections.singletonList(new RegionScanner()), Collections.emptyList());
         return scanner;
     }
 
@@ -319,7 +322,33 @@ public class CheckApiRegionsCrossFeatureDupsTest {
                 return null;
             }
         };
-        Scanner scanner = new Scanner(ap, Collections.singletonList(new ApiRegionsExtensionScanner()), Collections.emptyList());
+        Scanner scanner = new Scanner(ap, Collections.singletonList(new RegionScanner()), Collections.emptyList());
         return scanner;
+    }
+
+    private static final class RegionScanner implements ExtensionScanner {
+
+        @Override
+        public String getId() {
+            return "region";
+        }
+
+        @Override
+        public String getName() {
+            return "region";
+        }
+
+        @Override
+        public ContainerDescriptor scan(Feature arg0, Extension arg1, ArtifactProvider arg2) throws IOException {
+            if ( arg1.getName().equals(ApiRegions.EXTENSION_NAME) ) {
+                final ContainerDescriptor desc = new ContainerDescriptor(arg1.getName()) {
+
+                };
+                desc.lock();
+                return desc;
+            }
+            return null;
+        }
+
     }
 }
