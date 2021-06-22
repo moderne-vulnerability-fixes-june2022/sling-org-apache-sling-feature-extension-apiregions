@@ -173,7 +173,7 @@ public class ConfigurationValidator {
                 } else if ( Constants.SERVICE_RANKING.equalsIgnoreCase(propName) ) {
                     final Object value = properties.get(propName);
                     if ( !(value instanceof Integer) ) {
-                        setResult(result, mode, "service.ranking must be of type Integer");
+                        PropertyValidator.setResult(result, 0, mode, "service.ranking must be of type Integer");
                     }    
                 } else if ( !isAllowedProperty(propName) && region != Region.INTERNAL && !desc.isAllowAdditionalProperties() ) {
                     result.getErrors().add("Property is not allowed");
@@ -182,7 +182,7 @@ public class ConfigurationValidator {
         }
     }
 
-    void setResult(final ConfigurationValidationResult result, final Mode validationMode, final String msg) {
+    static void setResult(final ConfigurationValidationResult result, final Mode validationMode, final String msg) {
         if ( validationMode == Mode.STRICT ) {
             result.getErrors().add(msg);
         } else if ( validationMode == Mode.LENIENT || validationMode == Mode.DEFINITIVE ) {
@@ -193,17 +193,6 @@ public class ConfigurationValidator {
         }
     }
 
-    void setResult(final PropertyValidationResult result, final Mode validationMode, final String msg) {
-        if ( validationMode == Mode.STRICT ) {
-            result.getErrors().add(msg);
-        } else if ( validationMode == Mode.LENIENT || validationMode == Mode.DEFINITIVE ) {
-            result.getWarnings().add(msg);
-        }
-        if ( validationMode == Mode.DEFINITIVE || validationMode == Mode.SILENT_DEFINITIVE ) {
-            result.setUseDefaultValue(true);
-        }
-    }
-    
     private boolean isAllowedProperty(final String name) {
         for(final String allowed : ALLOWED_PROPERTIES) {
             if ( allowed.equalsIgnoreCase(name) ) {

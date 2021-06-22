@@ -120,17 +120,21 @@ public class PropertyValidator {
 	}
 
     void setResult(final Context context, final String msg) {
-        if ( context.validationMode == Mode.STRICT ) {
-            context.result.getErrors().add(msg);
-        } else if ( context.validationMode == Mode.LENIENT || context.validationMode == Mode.DEFINITIVE ) {
-            context.result.getWarnings().add(msg);
-        }
-        if ( context.validationMode == Mode.DEFINITIVE || context.validationMode == Mode.SILENT_DEFINITIVE ) {
-            context.result.setUseDefaultValue(true);
-            context.result.setDefaultValue(context.description.getDefaultValue());
-        }
+        setResult(context.result, context.description.getDefaultValue(), context.validationMode, msg);
     }
 
+    static void setResult(final PropertyValidationResult result, final Object defaultValue, final Mode validationMode, final String msg) {
+        if ( validationMode == Mode.STRICT ) {
+            result.getErrors().add(msg);
+        } else if ( validationMode == Mode.LENIENT || validationMode == Mode.DEFINITIVE ) {
+            result.getWarnings().add(msg);
+        }
+        if ( validationMode == Mode.DEFINITIVE || validationMode == Mode.SILENT_DEFINITIVE ) {
+            result.setUseDefaultValue(true);
+            result.setDefaultValue(defaultValue);
+        }
+    }
+    
     /**
      * Validate a multi value
      * @param prop The property description

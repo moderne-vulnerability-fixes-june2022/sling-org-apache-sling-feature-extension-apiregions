@@ -30,6 +30,7 @@ import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationApi
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.FactoryConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.FrameworkPropertyDescription;
+import org.apache.sling.feature.extension.apiregions.api.config.Mode;
 import org.apache.sling.feature.extension.apiregions.api.config.Operation;
 import org.apache.sling.feature.extension.apiregions.api.config.Region;
 
@@ -124,22 +125,22 @@ public class FeatureValidator {
                         result.getConfigurationResults().put(config.getPid(), r);
                         if ( regionInfo.region != Region.INTERNAL ) {
                             if ( desc.getOperations().isEmpty() ) {
-                                r.getErrors().add("No operations allowed for factory configuration");
+                                ConfigurationValidator.setResult(r, api.getMode(), "No operations allowed for factory configuration");
                             } else {
                                 if ( regionInfo.isUpdate && !desc.getOperations().contains(Operation.UPDATE)) {
-                                    r.getErrors().add("Updating of factory configuration is not allowed");
+                                    ConfigurationValidator.setResult(r, api.getMode(), "Updating of factory configuration is not allowed");
                                 } else if ( !regionInfo.isUpdate && !desc.getOperations().contains(Operation.CREATE)) {
-                                    r.getErrors().add("Creation of factory configuration is not allowed");
+                                    ConfigurationValidator.setResult(r, api.getMode(), "Creation of factory configuration is not allowed");
                                 }
                             }
                             if ( desc.getInternalNames().contains(config.getName())) {
-                                r.getErrors().add("Factory configuration with name is not allowed");
+                                ConfigurationValidator.setResult(r, api.getMode(), "Factory configuration with name is not allowed");
                             }
                         }                        
 
                     } else if ( regionInfo.region != Region.INTERNAL && api.getInternalFactoryConfigurations().contains(config.getFactoryPid())) {
                         final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
-                        cvr.getErrors().add("Factory configuration is not allowed");
+                        ConfigurationValidator.setResult(cvr, api.getMode(), "Factory configuration is not allowed");
                         result.getConfigurationResults().put(config.getPid(), cvr);
                     }
                 } else {
@@ -149,7 +150,7 @@ public class FeatureValidator {
                         result.getConfigurationResults().put(config.getPid(), r);
                     } else if ( regionInfo.region!= Region.INTERNAL && api.getInternalConfigurations().contains(config.getPid())) {
                         final ConfigurationValidationResult cvr = new ConfigurationValidationResult();
-                        cvr.getErrors().add("Configuration is not allowed");
+                        ConfigurationValidator.setResult(cvr, api.getMode(), "Configuration is not allowed");
                         result.getConfigurationResults().put(config.getPid(), cvr);
                     } 
                 }    
@@ -172,7 +173,7 @@ public class FeatureValidator {
                     result.getFrameworkPropertyResults().put(frameworkProperty, pvr);
                 } else if ( regionInfo.region != Region.INTERNAL && api.getInternalFrameworkProperties().contains(frameworkProperty) ) {
                     final PropertyValidationResult pvr = new PropertyValidationResult();
-                    pvr.getErrors().add("Framework property is not allowed");
+                    PropertyValidator.setResult(pvr, null, api.getMode(), "Framework property is not allowed");
                     result.getFrameworkPropertyResults().put(frameworkProperty, pvr);
                 }
             } 
