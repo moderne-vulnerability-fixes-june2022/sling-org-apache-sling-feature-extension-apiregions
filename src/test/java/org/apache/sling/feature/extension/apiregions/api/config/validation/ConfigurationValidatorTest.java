@@ -120,6 +120,13 @@ public class ConfigurationValidatorTest {
         result = validator.validate(cfg, cd, Region.INTERNAL);
         assertTrue(result.isValid());
         assertEquals(2, result.getPropertyResults().size());
+
+        // allowed if lenient
+        cd.setMode(Mode.LENIENT);
+        result = validator.validate(cfg, cd, Region.GLOBAL);
+        assertTrue(result.isValid());
+        assertEquals(2, result.getPropertyResults().size());
+
     }
 
     @Test public void testInvalidProperty() {

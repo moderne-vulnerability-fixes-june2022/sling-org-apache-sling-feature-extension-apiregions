@@ -168,7 +168,7 @@ public class ConfigurationValidator {
 
                 if ( desc.getInternalPropertyNames().contains(propName ) ) {
                     if  ( region != Region.INTERNAL ) {
-                        result.getErrors().add("Property is not allowed");
+                        PropertyValidator.setResult(result, null, mode, "Property is not allowed");
                     }
                 } else if ( Constants.SERVICE_RANKING.equalsIgnoreCase(propName) ) {
                     final Object value = properties.get(propName);
@@ -176,7 +176,7 @@ public class ConfigurationValidator {
                         PropertyValidator.setResult(result, 0, mode, "service.ranking must be of type Integer");
                     }    
                 } else if ( !isAllowedProperty(propName) && region != Region.INTERNAL && !desc.isAllowAdditionalProperties() ) {
-                    result.getErrors().add("Property is not allowed");
+                    PropertyValidator.setResult(result, null, mode, "Property is not allowed");
                 }
             }
         }
