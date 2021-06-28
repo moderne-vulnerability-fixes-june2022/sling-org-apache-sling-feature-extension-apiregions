@@ -49,6 +49,13 @@ public class FeatureValidator {
     final Map<ArtifactId, Region> cache = new HashMap<>();
 
     /**
+     * Create a new feature validator
+     */
+    public FeatureValidator() {
+        this.configurationValidator.setCache(cache);
+    }
+
+    /**
      * Get the current feature provider
      * @return the feature provider or {@code null}
      */
@@ -81,7 +88,6 @@ public class FeatureValidator {
     public void setLiveValues(final boolean value) {
         this.liveValues = value;
         this.configurationValidator.setLiveValues(value);
-        this.configurationValidator.setCache(cache);
         this.propertyValidator.setLiveValues(value);
     }
 

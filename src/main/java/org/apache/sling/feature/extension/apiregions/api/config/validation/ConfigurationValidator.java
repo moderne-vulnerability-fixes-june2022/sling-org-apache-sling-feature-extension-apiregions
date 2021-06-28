@@ -182,7 +182,7 @@ public class ConfigurationValidator {
                     if ( !(value instanceof Integer) ) {
                         PropertyValidator.setResult(result, 0, mode, "service.ranking must be of type Integer");
                     }    
-                } else if ( !isAllowedProperty(propName) && propRegion != Region.INTERNAL && !desc.isAllowAdditionalProperties() ) {
+                } else if ( !isAllowedProperty(propName) && propRegion != Region.INTERNAL && !desc.isAllowAdditionalProperties() ) {                    
                     PropertyValidator.setResult(result, null, mode, "Property is not allowed");
                 }
             }
