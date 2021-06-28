@@ -30,7 +30,6 @@ import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationApi
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.FactoryConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.FrameworkPropertyDescription;
-import org.apache.sling.feature.extension.apiregions.api.config.Mode;
 import org.apache.sling.feature.extension.apiregions.api.config.Operation;
 import org.apache.sling.feature.extension.apiregions.api.config.Region;
 
@@ -46,6 +45,8 @@ public class FeatureValidator {
     private FeatureProvider featureProvider;
 
     private boolean liveValues = false;
+
+    final Map<ArtifactId, Region> cache = new HashMap<>();
 
     /**
      * Get the current feature provider
@@ -80,6 +81,7 @@ public class FeatureValidator {
     public void setLiveValues(final boolean value) {
         this.liveValues = value;
         this.configurationValidator.setLiveValues(value);
+        this.configurationValidator.setCache(cache);
         this.propertyValidator.setLiveValues(value);
     }
 
@@ -106,8 +108,7 @@ public class FeatureValidator {
         if ( api == null ) {
             throw new IllegalArgumentException();
         }
-
-        final Map<ArtifactId, Region> cache = new HashMap<>(api.getFeatureToRegionCache());
+        cache.putAll(api.getFeatureToRegionCache());
         cache.put(feature.getId(), api.detectRegion());
 
         for(final Configuration config : feature.getConfigurations()) {
@@ -235,7 +236,7 @@ public class FeatureValidator {
         return changed;
     }
 
-    Region getConfigurationApiRegion(final ArtifactId id, final Map<ArtifactId, Region> cache) {
+    static Region getConfigurationApiRegion(final ArtifactId id, final Map<ArtifactId, Region> cache) {
         Region result = cache.get(id);
         if ( result == null ) {
             result = Region.GLOBAL;
@@ -277,6 +278,25 @@ public class FeatureValidator {
         return result;
     }
 
+    static Region getRegionInfo(final Region cfgRegion, final Configuration cfg, final String propertyName, final Map<ArtifactId, Region> cache) {
+        final List<ArtifactId> list = cfg.getFeatureOrigins(propertyName);
+        if ( !list.isEmpty() ) {
+            boolean global = false;
+            for(final ArtifactId id : list) {
+                final Region region = getConfigurationApiRegion(id, cache);
+                if ( region == null ) {
+                    return null;
+                }
+                if ( region == Region.GLOBAL ) {
+                    global = true;
+                    break;
+                }
+            }
+            return global ? Region.GLOBAL : Region.INTERNAL;
+        }
+        return cfgRegion;
+    }
+
     RegionInfo getRegionInfo(final Feature feature, final String frameworkProperty, final Map<ArtifactId, Region> cache) {
         final List<ArtifactId> list = feature.getFeatureOrigins(feature.getFrameworkPropertyMetadata(frameworkProperty));
         boolean global = false;
@@ -289,7 +309,7 @@ public class FeatureValidator {
                 global = true;
                 break;
             }
-    }
+        }
         final RegionInfo result = new RegionInfo();
         result.region = global ? Region.GLOBAL : Region.INTERNAL;
         result.isUpdate = list.size() > 1;

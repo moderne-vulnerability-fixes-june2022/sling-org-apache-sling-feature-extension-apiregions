@@ -23,13 +23,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.extension.apiregions.api.config.Mode;
 import org.apache.sling.feature.extension.apiregions.api.config.Option;
 import org.apache.sling.feature.extension.apiregions.api.config.PlaceholderPolicy;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyType;
+import org.apache.sling.feature.extension.apiregions.api.config.Region;
 
 /**
  * Validate a configuration property or framework property

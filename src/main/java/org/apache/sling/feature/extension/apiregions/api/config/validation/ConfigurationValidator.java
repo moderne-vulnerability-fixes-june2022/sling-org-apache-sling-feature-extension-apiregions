@@ -19,9 +19,11 @@ package org.apache.sling.feature.extension.apiregions.api.config.validation;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurableEntity;
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationDescription;
@@ -47,6 +49,8 @@ public class ConfigurationValidator {
     private final PropertyValidator propertyValidator = new PropertyValidator();
 
     private boolean liveValues = false;
+
+    private Map<ArtifactId, Region> cache = new HashMap<>();
 
     /**
      * Are live values validated?
@@ -163,11 +167,14 @@ public class ConfigurationValidator {
         while ( keyEnum.hasMoreElements() ) {
             final String propName = keyEnum.nextElement();
             if ( !desc.getPropertyDescriptions().containsKey(propName) ) {
+                // detect the region
+                final Region propRegion = FeatureValidator.getRegionInfo(region, configuration, propName, this.cache);
+
                 final PropertyValidationResult result = new PropertyValidationResult();
                 results.put(propName, result);
 
                 if ( desc.getInternalPropertyNames().contains(propName ) ) {
-                    if  ( region != Region.INTERNAL ) {
+                    if  ( propRegion != Region.INTERNAL ) {
                         PropertyValidator.setResult(result, null, mode, "Property is not allowed");
                     }
                 } else if ( Constants.SERVICE_RANKING.equalsIgnoreCase(propName) ) {
@@ -175,7 +182,7 @@ public class ConfigurationValidator {
                     if ( !(value instanceof Integer) ) {
                         PropertyValidator.setResult(result, 0, mode, "service.ranking must be of type Integer");
                     }    
-                } else if ( !isAllowedProperty(propName) && region != Region.INTERNAL && !desc.isAllowAdditionalProperties() ) {
+                } else if ( !isAllowedProperty(propName) && propRegion != Region.INTERNAL && !desc.isAllowAdditionalProperties() ) {
                     PropertyValidator.setResult(result, null, mode, "Property is not allowed");
                 }
             }
@@ -201,4 +208,8 @@ public class ConfigurationValidator {
         }
         return false;
     } 
+
+    void setCache(Map<ArtifactId, Region> cache) {
+        this.cache = cache;
+    }
 }
