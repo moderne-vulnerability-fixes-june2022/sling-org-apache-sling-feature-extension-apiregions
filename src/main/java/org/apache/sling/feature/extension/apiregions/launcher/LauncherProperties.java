@@ -90,7 +90,7 @@ public class LauncherProperties
                 {
                     features = new HashSet<>();
                 }
-                features.addAll(Arrays.asList(bundle.getFeatureOrigins()));
+                features.addAll(Arrays.asList(bundle.getFeatureOrigins(app.getId())));
                 return features;
             });
         }

@@ -19,6 +19,9 @@ package org.apache.sling.feature.extension.apiregions.launcher;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.apache.sling.feature.Artifact;
+import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
 import org.junit.Assert;
 import org.junit.Test;
@@ -60,5 +63,35 @@ public class LauncherPropertiesTest
         Assert.assertEquals("region1,region2", properties.getProperty("f:f1:1"));
         Assert.assertEquals("region3,region4", properties.getProperty("f:f2:1"));
         Assert.assertEquals("region1,region2,region3,region4,region5", properties.getProperty("__region.order__"));
+    }
+
+    @Test
+    public void testGetBundleIDtoFeaturesMapWithOrigins() {
+        final ArtifactId featureId = ArtifactId.parse("g:f:1");
+        final ArtifactId artifactId = ArtifactId.parse("g:a:2");
+        final ArtifactId originId = ArtifactId.parse("g:o:5");
+
+        final Feature f = new Feature(featureId);
+        final Artifact a = new Artifact(artifactId);
+        a.setFeatureOrigins(originId);
+        f.getBundles().add(a);
+
+        final Properties prop = LauncherProperties.getBundleIDtoFeaturesMap(f);
+        Assert.assertEquals(1, prop.size());
+        Assert.assertEquals(originId.toMvnId(), prop.get(artifactId.toMvnId()));
+    }
+
+    @Test
+    public void testGetBundleIDtoFeaturesMapWithoutOrigins() {
+        final ArtifactId featureId = ArtifactId.parse("g:f:1");
+        final ArtifactId artifactId = ArtifactId.parse("g:a:2");
+
+        final Feature f = new Feature(featureId);
+        final Artifact a = new Artifact(artifactId);
+        f.getBundles().add(a);
+
+        final Properties prop = LauncherProperties.getBundleIDtoFeaturesMap(f);
+        Assert.assertEquals(1, prop.size());
+        Assert.assertEquals(featureId.toMvnId(), prop.get(artifactId.toMvnId()));
     }
 }
