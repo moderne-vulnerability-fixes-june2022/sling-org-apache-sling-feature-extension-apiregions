@@ -26,6 +26,10 @@ abstract class InternalConstants {
 	static final String KEY_DESCRIPTION = "description";
 
 	static final String KEY_DEPRECATED = "deprecated";
+
+    static final String KEY_SINCE = "since";
+
+    static final String KEY_ENFORCE_ON = "enforce-on";
 	
 	static final String KEY_PROPERTIES = "properties";
 

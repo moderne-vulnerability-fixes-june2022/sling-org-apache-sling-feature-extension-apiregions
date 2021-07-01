@@ -118,6 +118,21 @@ public class PropertyValidator {
             if ( desc.getDeprecated() != null ) {
                 context.result.getWarnings().add(desc.getDeprecated());
             }
+
+            // set postfix to the message if since or enforce-on are set
+            String postfixMsg = "";
+            if ( desc.getSince() != null ) {
+                postfixMsg = postfixMsg.concat(". Since : ").concat(desc.getSince());
+            }
+            if ( desc.getEnforceOn() != null ) {
+                postfixMsg = postfixMsg.concat(". Enforced on : ").concat(desc.getEnforceOn());
+            }
+            for (int i = 0; i < context.result.getWarnings().size(); i++) {
+                context.result.getWarnings().set(i, context.result.getWarnings().get(i) + postfixMsg);
+            }
+            for (int i = 0; i < context.result.getErrors().size(); i++) {
+                context.result.getErrors().set(i, context.result.getErrors().get(i) + postfixMsg);
+            }
 		}
 		return context.result;
 	}

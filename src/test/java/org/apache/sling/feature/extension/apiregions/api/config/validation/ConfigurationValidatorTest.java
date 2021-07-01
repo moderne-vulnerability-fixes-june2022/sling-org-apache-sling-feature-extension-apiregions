@@ -69,6 +69,26 @@ public class ConfigurationValidatorTest {
         assertEquals("this is deprecated", result.getWarnings().get(0));
     }
 
+    @Test public void testMessageWithEnforceAndSinceInfo() {
+        final Configuration cfg = new Configuration("org.apache");
+        final ConfigurationDescription cd = new ConfigurationDescription();
+        final PropertyDescription prop = new PropertyDescription();
+        cd.getPropertyDescriptions().put("a", prop);
+
+        ConfigurationValidationResult result = validator.validate(cfg, cd, null);
+        assertTrue(result.isValid());
+        assertTrue(result.getWarnings().isEmpty());
+
+        cd.setDeprecated("this is deprecated");
+        cd.setSince("1970-01-01");
+        cd.setEnforceOn("1970-04-01");
+        result = validator.validate(cfg, cd, null);
+        assertTrue(result.isValid());
+        assertFalse(result.getWarnings().isEmpty());
+        assertEquals("this is deprecated. Since : 1970-01-01. Enforced on : 1970-04-01",
+                result.getWarnings().get(0));
+    }
+
     @Test public void testServiceRanking() {
         final Configuration cfg = new Configuration("org.apache");
         final ConfigurationDescription cd = new ConfigurationDescription();

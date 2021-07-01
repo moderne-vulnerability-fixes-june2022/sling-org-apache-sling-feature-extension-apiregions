@@ -39,6 +39,18 @@ public abstract class DescribableEntity extends AttributeableEntity {
 	private String deprecated;
 
 	/**
+	 * Optional since information.
+	 * @since 1.3.6
+	 */
+	private String since;
+
+	/**
+	 * Optional enforce on information.
+	 * @since 1.3.6
+	 */
+	private String enforceOn;
+
+	/**
      * Clear the object and reset to defaults
      */
     @Override
@@ -47,6 +59,8 @@ public abstract class DescribableEntity extends AttributeableEntity {
 		this.setTitle(null);
 		this.setDescription(null);
 		this.setDeprecated(null);
+		this.setSince(null);
+		this.setEnforceOn(null);
 	}
 	
 	/**
@@ -63,6 +77,8 @@ public abstract class DescribableEntity extends AttributeableEntity {
 			this.setTitle(this.getString(InternalConstants.KEY_TITLE));
 			this.setDescription(this.getString(InternalConstants.KEY_DESCRIPTION));
 			this.setDeprecated(this.getString(InternalConstants.KEY_DEPRECATED));
+			this.setSince(this.getString(InternalConstants.KEY_SINCE));
+			this.setEnforceOn(this.getString(InternalConstants.KEY_ENFORCE_ON));
         } catch (final JsonException | IllegalArgumentException e) {
             throw new IOException(e);
 		}
@@ -117,6 +133,39 @@ public abstract class DescribableEntity extends AttributeableEntity {
 	}
 
 	/**
+	 * Get the optional since information
+	 * @return The since information or {@code null}
+	 */
+	public String getSince() {
+		return since;
+	}
+
+	/**
+	 * Set the since information. This should a date in the format 'YYYY-MM-DD'.
+	 * @param since The new info
+	 */
+	public void setSince(final String since) {
+		this.since = since;
+	}
+
+
+	/**
+	 * Get the optional since information
+	 * @return The since information or {@code null}
+	 */
+	public String getEnforceOn() {
+		return enforceOn;
+	}
+
+	/**
+	 * Set the enforce on information.
+	 * @param enforceOn The new info
+	 */
+	public void setEnforceOn(final String enforceOn) {
+		this.enforceOn = enforceOn;
+	}
+
+	/**
      * Convert this object into JSON
      *
      * @return The json object builder
@@ -129,6 +178,8 @@ public abstract class DescribableEntity extends AttributeableEntity {
 		this.setString(objectBuilder, InternalConstants.KEY_TITLE, this.getTitle());
 		this.setString(objectBuilder, InternalConstants.KEY_DESCRIPTION, this.getDescription());
 		this.setString(objectBuilder, InternalConstants.KEY_DEPRECATED, this.getDeprecated());
+		this.setString(objectBuilder, InternalConstants.KEY_SINCE, this.getSince());
+		this.setString(objectBuilder, InternalConstants.KEY_ENFORCE_ON, this.getEnforceOn());
 
 		return objectBuilder;
 	}
