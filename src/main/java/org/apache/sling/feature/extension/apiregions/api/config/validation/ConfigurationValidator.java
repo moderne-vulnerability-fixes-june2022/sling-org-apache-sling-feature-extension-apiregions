@@ -27,6 +27,7 @@ import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurableEntity;
 import org.apache.sling.feature.extension.apiregions.api.config.ConfigurationDescription;
+import org.apache.sling.feature.extension.apiregions.api.config.DescribableEntity;
 import org.apache.sling.feature.extension.apiregions.api.config.FactoryConfigurationDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.Mode;
 import org.apache.sling.feature.extension.apiregions.api.config.PropertyDescription;
@@ -106,11 +107,11 @@ public class ConfigurationValidator {
             } else {
                 if ( desc.getPropertyDescriptions().isEmpty()) {
                     if ( region == Region.GLOBAL && !desc.isAllowAdditionalProperties() ) {
-                        setResult(result, validationMode, "Factory configuration is not allowed");
+                        setResult(result, validationMode, desc, "Factory configuration is not allowed");
                     }
                 } else {
                     if ( region == Region.GLOBAL && desc.getRegion() == Region.INTERNAL ) {
-                        setResult(result, validationMode, "Factory configuration is not allowed");
+                        setResult(result, validationMode, desc, "Factory configuration is not allowed");
                     } else {
                         validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
                     }
@@ -122,11 +123,11 @@ public class ConfigurationValidator {
             } else {
                 if ( desc.getPropertyDescriptions().isEmpty()) {
                     if ( region == Region.GLOBAL && !desc.isAllowAdditionalProperties() ) {
-                        setResult(result, validationMode, "Configuration is not allowed");
+                        setResult(result, validationMode, desc, "Configuration is not allowed");
                     }
                 } else {
                     if ( region == Region.GLOBAL && desc.getRegion() == Region.INTERNAL ) {
-                        setResult(result, validationMode, "Configuration is not allowed");
+                        setResult(result, validationMode, desc, "Configuration is not allowed");
                     } else {
                         validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
                     }
@@ -135,22 +136,7 @@ public class ConfigurationValidator {
         }
 
         if ( desc.getDeprecated() != null ) {
-            result.getWarnings().add(desc.getDeprecated());
-        }
-
-        // set postfix to the message if since or enforce-on are set
-        String postfixMsg = "";
-        if ( desc.getSince() != null ) {
-            postfixMsg = postfixMsg.concat(". Since : ").concat(desc.getSince());
-        }
-        if ( desc.getEnforceOn() != null ) {
-            postfixMsg = postfixMsg.concat(". Enforced on : ").concat(desc.getEnforceOn());
-        }
-        for (int i = 0; i < result.getWarnings().size(); i++) {
-            result.getWarnings().set(i, result.getWarnings().get(i) + postfixMsg);
-        }
-        for (int i = 0; i < result.getErrors().size(); i++) {
-            result.getErrors().set(i, result.getErrors().get(i) + postfixMsg);
+            setResult(result, Mode.LENIENT, desc, desc.getDeprecated());
         }
 
         return result;
@@ -191,25 +177,35 @@ public class ConfigurationValidator {
 
                 if ( desc.getInternalPropertyNames().contains(propName ) ) {
                     if  ( propRegion != Region.INTERNAL ) {
-                        PropertyValidator.setResult(result, null, mode, "Property is not allowed");
+                        PropertyValidator.setResult(result, null, mode, desc, "Property is not allowed");
                     }
                 } else if ( Constants.SERVICE_RANKING.equalsIgnoreCase(propName) ) {
                     final Object value = properties.get(propName);
                     if ( !(value instanceof Integer) ) {
-                        PropertyValidator.setResult(result, 0, mode, "service.ranking must be of type Integer");
+                        PropertyValidator.setResult(result, 0, mode, desc, "service.ranking must be of type Integer");
                     }    
                 } else if ( !isAllowedProperty(propName) && propRegion != Region.INTERNAL && !desc.isAllowAdditionalProperties() ) {                    
-                    PropertyValidator.setResult(result, null, mode, "Property is not allowed");
+                    PropertyValidator.setResult(result, null, mode, desc, "Property is not allowed");
                 }
             }
         }
     }
 
-    static void setResult(final ConfigurationValidationResult result, final Mode validationMode, final String msg) {
+    static void setResult(final ConfigurationValidationResult result, final Mode validationMode,
+                          final DescribableEntity desc, final String msg) {
+        // set postfix to the message if since or enforce-on are set
+        String postfixMsg = "";
+        if ( desc != null && desc.getSince() != null ) {
+            postfixMsg = postfixMsg.concat(". Since : ").concat(desc.getSince());
+        }
+        if ( desc != null && desc.getEnforceOn() != null ) {
+            postfixMsg = postfixMsg.concat(". Enforced on : ").concat(desc.getEnforceOn());
+        }
+        String finalMsg = msg + postfixMsg;
         if ( validationMode == Mode.STRICT ) {
-            result.getErrors().add(msg);
+            result.getErrors().add(finalMsg);
         } else if ( validationMode == Mode.LENIENT || validationMode == Mode.DEFINITIVE ) {
-            result.getWarnings().add(msg);
+            result.getWarnings().add(finalMsg);
         }
         if ( validationMode == Mode.DEFINITIVE || validationMode == Mode.SILENT_DEFINITIVE ) {
             result.setUseDefaultValue(true);
