@@ -425,6 +425,19 @@ public class PropertyValidatorTest {
         assertEquals("This is deprecated", result.getWarnings().get(0));
     }
 
+
+    @Test public void testEnforceOnAndSinceInMsg() {
+        final PropertyDescription prop = new PropertyDescription();
+        prop.setDeprecated("Deprecated message");
+        prop.setEnforceOn("1970-04-01");
+        prop.setSince("1970-01-01");
+
+        final PropertyValidationResult result = validator.validate("foo", prop);
+        assertTrue(result.isValid());
+        assertEquals(1, result.getWarnings().size());
+        assertEquals("Deprecated message. Since : 1970-01-01. Enforced on : 1970-04-01", result.getWarnings().get(0));
+    }
+
     @Test public void testPlaceholdersString() {
         final PropertyDescription desc = new PropertyDescription();
         desc.setType(PropertyType.PATH);

@@ -148,7 +148,7 @@ The usual process for deprecating Java API is to mark it with a corresponding an
      ]
 ```
 
-The deprecation informnation can just be the message, or it can also include information when the deprecated started (since) and by when the member is expected to be removed (for-removal). The removal information should be either the string `true` or a date in the format `YYYY-MM-DD`.
+The deprecation information can just be the message, or it can also include information when the deprecated started (since) and by when the member is expected to be removed (for-removal). The removal information should be either the string `true` or a date in the format `YYYY-MM-DD`.
 
 ## OSGi Configurations
 
@@ -189,6 +189,8 @@ Each OSGi configuration that is part of the configuration API (and therefore pub
 * `description` : A human readable description
 * `properties` : An object containing all properties that are allowed to be configured
 * `deprecated` : If this configuration should not be used anymore a human readable message.
+* `since` : Info about when the configuration restriction started. It will be appended at the end of every validation message.
+* `enforce-on` : Info about by when the configuration restriction is expected to be enforced (enforced-on). It will be appended at the end of every validation message.
 * `mode` : Validation mode for the configuration overriding the global one. This mode applies to all properties.
 * `region` : Optional property to restrict the configuration to the internal region if this is set to "INTERNAL". With this set, configurations for the internal region can be validated.
 * `allow-additional-properties` : Optional property. If set to true, additional properties not listed in the description are allowed.

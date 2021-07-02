@@ -41,16 +41,21 @@ public class DescribableEntityTest {
         entity.setDeprecated("d");
         entity.setTitle("t");
         entity.setDescription("x");
+        entity.setEnforceOn("e");
+        entity.setSince("s");
         entity.clear();
         assertTrue(entity.getAttributes().isEmpty());
         assertNull(entity.getDeprecated());
         assertNull(entity.getTitle());
         assertNull(entity.getDescription());
+        assertNull(entity.getEnforceOn());
+        assertNull(entity.getSince());
     }
 
     @Test public void testFromJSONObject() throws IOException {
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
-        ext.setJSON("{ \"a\" : 1, \"b\" : \"2\", \"title\" : \"t\", \"description\" : \"desc\", \"deprecated\" : \"depr\"}");
+        ext.setJSON("{ \"a\" : 1, \"b\" : \"2\", \"title\" : \"t\", \"description\" : \"desc\", \"deprecated\" : " +
+                "\"depr\", \"enforce-on\" : \"1970-04-01\", \"since\" : \"1970-01-01\"}");
 
         final DE entity = new DE();
         entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
@@ -59,7 +64,8 @@ public class DescribableEntityTest {
         assertEquals(Json.createValue("2"), entity.getAttributes().get("b"));
         assertEquals("t", entity.getTitle());
         assertEquals("desc", entity.getDescription());
-        assertEquals("depr", entity.getDeprecated());
+        assertEquals("1970-04-01", entity.getEnforceOn());
+        assertEquals("1970-01-01", entity.getSince());
     }
 
     @Test public void testToJSONObject() throws IOException {
@@ -69,9 +75,12 @@ public class DescribableEntityTest {
         entity.setTitle("t");
         entity.setDescription("desc");
         entity.setDeprecated("depr");
+        entity.setEnforceOn("1970-04-01");
+        entity.setSince("1970-01-01");
 
         final Extension ext = new Extension(ExtensionType.JSON, "a", ExtensionState.OPTIONAL);
-        ext.setJSON("{ \"a\" : 1, \"b\" : \"2\", \"title\" : \"t\", \"description\" : \"desc\", \"deprecated\" : \"depr\"}");
+        ext.setJSON("{ \"a\" : 1, \"b\" : \"2\", \"title\" : \"t\", \"description\" : \"desc\", \"deprecated\" : " +
+                "\"depr\", \"enforce-on\" : \"1970-04-01\", \"since\" : \"1970-01-01\"}");
 
         assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
     }
