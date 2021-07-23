@@ -150,6 +150,8 @@ The usual process for deprecating Java API is to mark it with a corresponding an
 
 The deprecation information can just be the message, or it can also include information when the deprecated started (since) and by when the member is expected to be removed (for-removal). The removal information should be either the string `true` or a date in the format `YYYY-MM-DD`.
 
+In addition a mode can be specified for a message, values are LENIENT (default) or STRICT. This mode is used by the analyser to decide whether a warning (LENIENT) or error (STRICT) should be issued if a deprecated package is used.
+
 ## OSGi Configurations
 
 Apart from defining the Java API surface, for some applications it is beneficial to describe the OSGi configuration surface, too. For example, a framework might not allow an application to set some configurations or update existing configurations.
@@ -239,7 +241,7 @@ For each property a JSON object contains additional information about this prope
 * `range` : An object which can have a `min` and/or a `max` property to further specify the value range.
 * `options` : An array of objects acting as an enumeration for the allowed values. Each option must have a `value` property. It might also have a `title` or `description` property.
 * `default` : A default value which might be used depending on the validation mode.
-* `mode` : Validation mode for the property overriding the global one or one set for the configuration. 
+* `mode` : Validation mode for the property overriding the global one or one set for the configuration.
 * `placeholder-policy` : The placeholder policy defines whether a placeholder is allowed or required for a property. With `DEFAULT` the policy of the property type is used. `ALLOW`, `REQUIRE` , or `DENY` can be used to override that.
 * `placeholder-regex` : A regular expression to validate the value, used if the value is expressed as a placeholder.
 
