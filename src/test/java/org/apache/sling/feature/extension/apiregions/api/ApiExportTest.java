@@ -155,4 +155,16 @@ public class ApiExportTest {
 
         assertEquals(jv, exp.deprecationToJSON());
     }
+
+    @Test
+    public void testMode() throws Exception {
+        final JsonValue jv = getJson("{\"msg\":\"" + MSG + "\",\"mode\":\"" + DeprecationValidationMode.STRICT.name() + "\"}");
+
+        final ApiExport exp = new ApiExport(PCK);
+        exp.parseDeprecation(jv);
+
+        assertEquals(DeprecationValidationMode.STRICT, exp.getDeprecation().getPackageInfo().getMode());
+
+        assertEquals(jv, exp.deprecationToJSON());
+    }
 }

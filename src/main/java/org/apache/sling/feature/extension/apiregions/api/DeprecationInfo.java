@@ -37,6 +37,12 @@ public class DeprecationInfo {
     private String forRemoval;
 
     /**
+     * Optional validation mode
+     * @since 1.4.0
+     */
+    private DeprecationValidationMode mode;
+
+    /**
      * Create a new info
      * @param msg The msg
      * @throws IllegalArgumentException if msg is {@code null}
@@ -131,9 +137,27 @@ public class DeprecationInfo {
         return null;
     }
     
+    /**
+     * Get the optional validation mode.
+     * @return The mode or {@code null}
+     * @since 1.4.0
+     */
+    public DeprecationValidationMode getMode() {
+        return mode;
+    }
+
+    /**
+     * Set the validation mode.
+     * @param value The new mode
+     * @since 1.4.0
+     */
+    public void setMode(final DeprecationValidationMode value) {
+        this.mode = value;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(message, since, forRemoval);
+        return Objects.hash(message, since, forRemoval, mode);
     }
 
     @Override
@@ -148,6 +172,7 @@ public class DeprecationInfo {
             return false;
         }
         DeprecationInfo other = (DeprecationInfo) obj;
-        return Objects.equals(message, other.message) && Objects.equals(since, other.since) && Objects.equals(forRemoval, other.forRemoval);
+        return Objects.equals(message, other.message) && Objects.equals(since, other.since) && Objects.equals(forRemoval, other.forRemoval)
+               && Objects.equals(mode, other.mode);
     }
 }

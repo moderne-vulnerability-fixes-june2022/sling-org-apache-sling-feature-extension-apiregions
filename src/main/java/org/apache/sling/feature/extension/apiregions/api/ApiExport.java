@@ -45,6 +45,8 @@ public class ApiExport implements Comparable<ApiExport> {
 
     private static final String FOR_REMOVAL_KEY = "for-removal";
 
+    private static final String MODE_KEY = "mode";
+
     private static final String MEMBERS_KEY = "members";
 
     private static final String NAME_KEY = "name";
@@ -213,6 +215,13 @@ public class ApiExport implements Comparable<ApiExport> {
                 final DeprecationInfo info = new DeprecationInfo(depObj.getString(MSG_KEY));
                 info.setSince(depObj.getString(SINCE_KEY, null));
                 info.setForRemoval(depObj.getString(FOR_REMOVAL_KEY, null));
+                if ( depObj.getString(MODE_KEY, null) != null ) {
+                    try {
+                        info.setMode(DeprecationValidationMode.valueOf(depObj.getString(MODE_KEY)));
+                    } catch ( final IllegalArgumentException iae) {
+                        throw new IOException(iae);
+                    }
+                }
                 this.getDeprecation().setPackageInfo(info);
             } else {
                 if ( depObj.containsKey(SINCE_KEY) ) {
@@ -220,6 +229,9 @@ public class ApiExport implements Comparable<ApiExport> {
                 }
                 if ( depObj.containsKey(FOR_REMOVAL_KEY) ) {
                     throw new IOException("Export " + this.getName() + " has wrong for-removal in " + DEPRECATED_KEY);
+                }
+                if ( depObj.containsKey(MODE_KEY) ) {
+                    throw new IOException("Export " + this.getName() + " has wrong mode in " + DEPRECATED_KEY);
                 }
                 final JsonValue val = depObj.get(MEMBERS_KEY);
                 if ( val.getValueType() != ValueType.OBJECT) {
@@ -237,7 +249,14 @@ public class ApiExport implements Comparable<ApiExport> {
                         final DeprecationInfo info = new DeprecationInfo(memberObj.getString(MSG_KEY));
                         info.setSince(memberObj.getString(SINCE_KEY, null));
                         info.setForRemoval(depObj.getString(FOR_REMOVAL_KEY, null));
-                        this.getDeprecation().addMemberInfo(memberProp.getKey(), info);
+                        if ( depObj.getString(MODE_KEY, null) != null ) {
+                            try {
+                                info.setMode(DeprecationValidationMode.valueOf(depObj.getString(MODE_KEY)));
+                            } catch ( final IllegalArgumentException iae) {
+                                throw new IOException(iae);
+                            }
+                        }
+                                this.getDeprecation().addMemberInfo(memberProp.getKey(), info);
                     } else {
                         throw new IOException("Export " + this.getName() + " has wrong type for member in " + MEMBERS_KEY + " : " + memberProp.getValue().getValueType().name());
                     }
@@ -255,7 +274,7 @@ public class ApiExport implements Comparable<ApiExport> {
     JsonValue deprecationToJSON() {
         final Deprecation dep = this.getDeprecation();
         if ( dep.getPackageInfo() != null ) {
-            if ( dep.getPackageInfo().getSince() == null && dep.getPackageInfo().getForRemoval() == null ) {
+            if ( dep.getPackageInfo().getSince() == null && dep.getPackageInfo().getForRemoval() == null && dep.getPackageInfo().getMode() == null) {
                 return Json.createValue(dep.getPackageInfo().getMessage());
             } else {
                 final JsonObjectBuilder depBuilder = Json.createObjectBuilder();
@@ -266,13 +285,16 @@ public class ApiExport implements Comparable<ApiExport> {
                 if ( dep.getPackageInfo().getForRemoval() != null ) {
                     depBuilder.add(FOR_REMOVAL_KEY, dep.getPackageInfo().getForRemoval());
                 }
+                if ( dep.getPackageInfo().getMode() != null ) {
+                    depBuilder.add(MODE_KEY, dep.getPackageInfo().getMode().name());
+                }
                 return depBuilder.build();
             }
         } else if ( !dep.getMemberInfos().isEmpty() ) {
             final JsonObjectBuilder depBuilder = Json.createObjectBuilder();
             final JsonObjectBuilder membersBuilder = Json.createObjectBuilder();
             for(final Map.Entry<String, DeprecationInfo> memberEntry : dep.getMemberInfos().entrySet()) {
-                if ( memberEntry.getValue().getSince() == null && memberEntry.getValue().getForRemoval() == null ) {
+                if ( memberEntry.getValue().getSince() == null && memberEntry.getValue().getForRemoval() == null && memberEntry.getValue().getMode() == null ) {
                     membersBuilder.add(memberEntry.getKey(), memberEntry.getValue().getMessage());
                 } else {
                     final JsonObjectBuilder mBuilder = Json.createObjectBuilder();
@@ -282,6 +304,9 @@ public class ApiExport implements Comparable<ApiExport> {
                     }
                     if ( memberEntry.getValue().getForRemoval() != null ) {
                         mBuilder.add(FOR_REMOVAL_KEY, memberEntry.getValue().getForRemoval());
+                    }
+                    if ( memberEntry.getValue().getMode() != null ) {
+                        mBuilder.add(MODE_KEY, memberEntry.getValue().getMode().name());
                     }
                     membersBuilder.add(memberEntry.getKey(), mBuilder);
                 }

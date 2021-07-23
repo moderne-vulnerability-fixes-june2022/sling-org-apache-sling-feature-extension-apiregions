@@ -31,6 +31,7 @@ import org.apache.sling.feature.extension.apiregions.api.ApiExport;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegion;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
 import org.apache.sling.feature.extension.apiregions.api.DeprecationInfo;
+import org.apache.sling.feature.extension.apiregions.api.DeprecationValidationMode;
 import org.apache.sling.feature.scanner.BundleDescriptor;
 import org.apache.sling.feature.scanner.PackageInfo;
 import org.osgi.framework.Version;
@@ -126,7 +127,12 @@ public class CheckDeprecatedApi implements AnalyserTask{
                         if ( deprecationInfo.getSince() != null ) {
                             msg = msg.concat(" Deprecated since ").concat(deprecationInfo.getSince());
                         }
-                        boolean isError = strict;
+                        boolean isError;
+                        if ( deprecationInfo.getMode() != null ) {
+                            isError = deprecationInfo.getMode() == DeprecationValidationMode.STRICT;
+                        } else {
+                            isError = strict;
+                        }
                         if ( deprecationInfo.isForRemoval() ) {
                             boolean printRemoval = true;
                             if ( checkDate != null ) {
