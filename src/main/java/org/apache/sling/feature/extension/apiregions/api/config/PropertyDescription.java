@@ -94,7 +94,7 @@ public class PropertyDescription extends DescribableEntity {
         this.setDefaults();
     }
 
-    void setDefaults() {
+    protected void setDefaults() {
         super.setDefaults();
 		this.setType(PropertyType.STRING);
         this.setCardinality(1);
@@ -194,7 +194,7 @@ public class PropertyDescription extends DescribableEntity {
      * @throws IOException If generating the JSON fails
      */
     @Override
-    JsonObjectBuilder createJson() throws IOException {
+    protected JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objectBuilder = super.createJson();
 
 		if ( this.getType() != null && this.getType() != PropertyType.STRING ) {

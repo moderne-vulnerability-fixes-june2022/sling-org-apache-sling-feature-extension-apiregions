@@ -79,7 +79,7 @@ public class Option extends DescribableEntity {
      * @throws IOException If generating the JSON fails
      */
     @Override
-    JsonObjectBuilder createJson() throws IOException {
+    protected JsonObjectBuilder createJson() throws IOException {
         final JsonObjectBuilder objectBuilder = super.createJson();
 
         this.setString(objectBuilder, InternalConstants.KEY_VALUE, this.getValue());

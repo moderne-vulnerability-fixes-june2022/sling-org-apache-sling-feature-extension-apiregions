@@ -64,7 +64,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
      */
     private final List<String> internalProperties = new ArrayList<>();
 
-    void setDefaults() {
+    protected void setDefaults() {
         super.setDefaults();
         this.setAllowAdditionalProperties(false);
         this.setRegion(Region.GLOBAL);
@@ -200,7 +200,7 @@ public abstract class ConfigurableEntity extends DescribableEntity {
      * @throws IOException If generating the JSON fails
      */
     @Override
-	JsonObjectBuilder createJson() throws IOException {
+	protected JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objBuilder = super.createJson();
 
 		if ( !this.getPropertyDescriptions().isEmpty() ) {

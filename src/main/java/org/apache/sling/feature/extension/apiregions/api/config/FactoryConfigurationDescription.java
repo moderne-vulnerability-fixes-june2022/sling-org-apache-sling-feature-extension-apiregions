@@ -43,7 +43,7 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
         this.setDefaults();
     }
 
-    void setDefaults() {
+    protected void setDefaults() {
         super.setDefaults();
         this.getOperations().add(Operation.CREATE);
         this.getOperations().add(Operation.UPDATE);
@@ -117,7 +117,7 @@ public class FactoryConfigurationDescription extends ConfigurableEntity {
      * @throws IOException If generating the JSON fails
      */
     @Override
-    JsonObjectBuilder createJson() throws IOException {
+    protected JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objBuilder = super.createJson();
 		
 		if ( !this.getOperations().isEmpty() && this.getOperations().size() != 2 ) {

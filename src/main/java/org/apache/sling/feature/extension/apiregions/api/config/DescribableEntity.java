@@ -172,7 +172,7 @@ public abstract class DescribableEntity extends AttributeableEntity {
      * @throws IOException If generating the JSON fails
      */
     @Override
-    JsonObjectBuilder createJson() throws IOException {
+    protected JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objectBuilder = super.createJson();
 
 		this.setString(objectBuilder, InternalConstants.KEY_TITLE, this.getTitle());

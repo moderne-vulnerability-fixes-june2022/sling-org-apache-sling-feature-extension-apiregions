@@ -16,6 +16,7 @@
  */
 package org.apache.sling.feature.extension.apiregions.api.config;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -24,6 +25,8 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 
 import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
 import org.apache.sling.feature.Extension;
@@ -74,6 +77,20 @@ public class AttributeableEntityTest {
         assertTrue(entity.getAttributes().isEmpty());
     }
 
+    @Test public void testGetStringArray() throws IOException {
+        final AE entity = new AE();
+        assertNull(entity.getStringArray("foo"));
+        entity.getAttributes().put("foo", Json.createValue("bar"));
+        assertArrayEquals(new String[] {"bar"}, entity.getStringArray("foo"));
+        assertTrue(entity.getAttributes().isEmpty());
+        final JsonArrayBuilder jab = Json.createArrayBuilder();
+        jab.add("a");
+        jab.add("b");
+        entity.getAttributes().put("foo", jab.build());
+        assertArrayEquals(new String[] {"a", "b"}, entity.getStringArray("foo"));
+        assertTrue(entity.getAttributes().isEmpty());
+    }
+
     @Test public void testGetBoolean() throws IOException {
         final AE entity = new AE();
         assertTrue(entity.getBoolean("foo", true));
@@ -121,5 +138,21 @@ public class AttributeableEntityTest {
         } catch ( final IOException expected) {
             // this is expected
         }
+    }
+
+    @Test public void testSetStringArray() {
+        final AE entity = new AE();
+
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        entity.setStringArray(builder, "foo", null);
+        assertEquals("{}", builder.build().toString());
+
+        builder = Json.createObjectBuilder();
+        entity.setStringArray(builder, "foo", new String[0]);
+        assertEquals("{}", builder.build().toString());
+
+        builder = Json.createObjectBuilder();
+        entity.setStringArray(builder, "foo", new String[] {"a", "b"});
+        assertEquals("{\"foo\":[\"a\",\"b\"]}", builder.build().toString());
     }
 }

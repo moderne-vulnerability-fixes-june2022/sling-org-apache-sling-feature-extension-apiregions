@@ -102,7 +102,7 @@ public class Range extends AttributeableEntity {
      * @throws IOException If generating the JSON fails
      */
     @Override
-    JsonObjectBuilder createJson() throws IOException {
+    protected JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objectBuilder = super.createJson();
 
         if ( this.getMin() != null ) {

@@ -1,2 +1,3 @@
 org.apache.sling.feature.extension.apiregions.APIRegionMergeHandler
 org.apache.sling.feature.extension.apiregions.ConfigurationApiMergeHandler
+org.apache.sling.feature.extension.apiregions.ArtifactRulesMergeHandler

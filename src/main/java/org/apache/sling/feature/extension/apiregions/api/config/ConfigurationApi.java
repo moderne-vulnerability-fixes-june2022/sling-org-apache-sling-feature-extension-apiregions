@@ -42,10 +42,10 @@ import org.apache.sling.feature.Feature;
  * This class is not thread safe.
  */
 public class ConfigurationApi extends AttributeableEntity {
-    
+
     /** The name of the api regions extension. */
     public static final String EXTENSION_NAME = "configuration-api";
-  
+
     /**
      * Get the configuration api from the feature - if it exists.
      * If the configuration api is updated, the containing feature is left untouched.
@@ -82,7 +82,7 @@ public class ConfigurationApi extends AttributeableEntity {
             throw new IllegalArgumentException(ioe.getMessage(), ioe);
         }
     }
-   
+
     /**
      * Set the configuration api as an extension to the feature
      * @param feature The feature
@@ -126,28 +126,29 @@ public class ConfigurationApi extends AttributeableEntity {
 
     /** The set of internal framework property names */
     private final Set<String> internalFrameworkProperties = new TreeSet<>();
-    
+
     /** The configuration region of this feature */
     private Region region;
 
     /** The cached region information for feature origins */
     private final Map<ArtifactId, Region> regionCache = new LinkedHashMap<>();
 
-    /** 
-     * The default validation mode. 
+    /**
+     * The default validation mode.
      * @since 1.2
      */
     private Mode mode;
-    
+
     public ConfigurationApi() {
         this.setDefaults();
     }
-    
-    void setDefaults() {
+
+    @Override
+    protected void setDefaults() {
         super.setDefaults();
         this.setMode(Mode.STRICT);
     }
-    
+
     /**
      * Clear the object and reset to defaults
      */
@@ -167,7 +168,7 @@ public class ConfigurationApi extends AttributeableEntity {
 	/**
 	 * Extract the metadata from the JSON object.
 	 * This method first calls {@link #clear()}.
-     * 
+     *
 	 * @param jsonObj The JSON Object
 	 * @throws IOException If JSON parsing fails
 	 */
@@ -177,7 +178,7 @@ public class ConfigurationApi extends AttributeableEntity {
         try {
 			final String typeVal = this.getString(InternalConstants.KEY_REGION);
 			if ( typeVal != null ) {
-                this.setRegion(Region.valueOf(typeVal.toUpperCase()));				
+                this.setRegion(Region.valueOf(typeVal.toUpperCase()));
 			}
 
             JsonValue val;
@@ -189,7 +190,7 @@ public class ConfigurationApi extends AttributeableEntity {
                     this.getConfigurationDescriptions().put(innerEntry.getKey(), cfg);
                 }
             }
-            
+
             val = this.getAttributes().remove(InternalConstants.KEY_FACTORIES);
             if ( val != null ) {
                 for(final Map.Entry<String, JsonValue> innerEntry : val.asJsonObject().entrySet()) {
@@ -232,14 +233,14 @@ public class ConfigurationApi extends AttributeableEntity {
             val = this.getAttributes().remove(InternalConstants.KEY_REGION_CACHE);
             if ( val != null ) {
                 for(final Map.Entry<String, JsonValue> innerEntry : val.asJsonObject().entrySet()) {
-                    this.getFeatureToRegionCache().put(ArtifactId.parse(innerEntry.getKey()), 
+                    this.getFeatureToRegionCache().put(ArtifactId.parse(innerEntry.getKey()),
                         Region.valueOf(getString(innerEntry.getValue()).toUpperCase()));
                 }
             }
-            
+
 			final String modeVal = this.getString(InternalConstants.KEY_MODE);
 			if ( modeVal != null ) {
-                this.setMode(Mode.valueOf(modeVal.toUpperCase()));				
+                this.setMode(Mode.valueOf(modeVal.toUpperCase()));
 			}
 
         } catch (final JsonException | IllegalArgumentException e) {
@@ -276,7 +277,8 @@ public class ConfigurationApi extends AttributeableEntity {
 	 * @return Mutable set of internal configuration pids
      * @deprecated Please use empty configuration descriptions via {@link #getConfigurationDescriptions()}
 	 */
-	public Set<String> getInternalConfigurations() {
+	@Deprecated
+    public Set<String> getInternalConfigurations() {
 		return internalConfigurations;
 	}
 
@@ -285,7 +287,8 @@ public class ConfigurationApi extends AttributeableEntity {
 	 * @return Mutable set of internal factory configuration pids
      * @deprecated Please use empty factory configuration descriptions via {@link #getFactoryConfigurationDescriptions()}
 	 */
-	public Set<String> getInternalFactoryConfigurations() {
+	@Deprecated
+    public Set<String> getInternalFactoryConfigurations() {
 		return internalFactories;
 	}
 
@@ -360,7 +363,7 @@ public class ConfigurationApi extends AttributeableEntity {
      * @throws IOException If generating the JSON fails
      */
     @Override
-    JsonObjectBuilder createJson() throws IOException {
+    protected JsonObjectBuilder createJson() throws IOException {
 		final JsonObjectBuilder objBuilder = super.createJson();
         if ( this.getRegion() != null ) {
             objBuilder.add(InternalConstants.KEY_REGION, this.getRegion().name());
