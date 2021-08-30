@@ -21,6 +21,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+
 import javax.json.Json;
 
 import org.apache.sling.feature.ArtifactId;
@@ -29,6 +31,7 @@ import org.apache.sling.feature.ExtensionState;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 import org.junit.Test;
+import org.osgi.framework.VersionRange;
 
 public class ArtifactRulesTest {
 
@@ -73,5 +76,34 @@ public class ArtifactRulesTest {
         assertTrue(entity.getAttributes().isEmpty());
         assertTrue(entity.getBundleVersionRules().isEmpty());
         assertEquals(Mode.STRICT, entity.getMode());
+    }
+
+    @Test public void testFromJSONObject() throws IOException {
+        final Extension ext = new Extension(ExtensionType.JSON, ArtifactRules.EXTENSION_NAME, ExtensionState.OPTIONAL);
+        ext.setJSON("{ \"mode\" : \"LENIENT\", \"bundle-version-rules\":[{"+
+                "\"artifact-id\":\"g:a:1\",\"allowed-version-ranges\":[\"1.0.0\"]}]}");
+
+        final ArtifactRules entity = new ArtifactRules();
+        entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
+        assertEquals(Mode.LENIENT, entity.getMode());
+        assertEquals(1, entity.getBundleVersionRules().size());
+        assertEquals(ArtifactId.parse("g:a:1"), entity.getBundleVersionRules().get(0).getArtifactId());
+        assertEquals(1, entity.getBundleVersionRules().get(0).getAllowedVersionRanges().length);
+        assertEquals(new VersionRange("1.0.0"), entity.getBundleVersionRules().get(0).getAllowedVersionRanges()[0]);
+    }
+
+    @Test public void testToJSONObject() throws IOException {
+        final ArtifactRules entity = new ArtifactRules();
+        entity.setMode(Mode.LENIENT);
+        final VersionRule rule = new VersionRule();
+        rule.setArtifactId(ArtifactId.parse("g:a:1"));
+        rule.setAllowedVersionRanges(new VersionRange[] {new VersionRange("1.0.0")});
+        entity.getBundleVersionRules().add(rule);
+
+        final Extension ext = new Extension(ExtensionType.JSON, ArtifactRules.EXTENSION_NAME, ExtensionState.OPTIONAL);
+        ext.setJSON("{ \"mode\" : \"LENIENT\", \"bundle-version-rules\":[{"+
+                "\"artifact-id\":\"g:a:1\",\"allowed-version-ranges\":[\"1.0.0\"]}]}");
+
+        assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
     }
 }

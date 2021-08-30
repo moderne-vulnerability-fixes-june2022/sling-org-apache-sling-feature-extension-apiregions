@@ -63,6 +63,8 @@ For more details see here: [Configuration Regions](docs/api-regions.md#configura
   * `strict` : By default the analyser issues warnings. If this is set to `true` errors are issued instead.
   * `removal-period` : If deprecated api is used and that api has a `for-removal` information with a date set, then this configuration can be used to issue an error instead of a warning if the removal date is less than the configured number of days away. For example setting this to 28 will result in errors being generated four weeks ahead of the removal date.
 
+* `artifact-rules` : This analyser validates the artifacts (bundles) against rules in the feature model. 
+
 ## Extensions
 
 The following extensions are registered via the ServiceLoader mechanism:
@@ -72,7 +74,8 @@ The following extensions are registered via the ServiceLoader mechanism:
 Merge handlers are called when features are merged during the aggregation process:
 
 * `APIRegionMergeHandler` - This handler knows how to merge API Regions extensions
-* `ConfigurationApiMergeHandler` - This handlers knows how to merge Configuration API extensions
+* `ConfigurationApiMergeHandler` - This handler knows how to merge Configuration API extensions
+* `ArtifactRulesMergeHandler` - This handler merges artifact rules
 
 # Additional Extensions
 

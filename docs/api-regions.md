@@ -1,6 +1,6 @@
 # API Regions for the Feature Model
 
-If you're assembling a platform (in contrast to a final application) out of several features and provide this platform for customers to build their application on top of it, additional control of the API provided by the platform is needed. The bundles within the features provide all kinds of APIs but you might not want to expose all of these as extension points. You would rather want to use some of them internally within either a single feature or share within your platform features.
+If you are assembling a platform (in contrast to a final application) out of several features and provide this platform for customers to build their application on top of it, additional control of the API provided by the platform is needed. The bundles within the features provide all kinds of APIs but you might not want to expose all of these as extension points. You would rather want to use some of them internally within either a single feature or share within your platform features.
 
 ## Visibility of Java API
 
@@ -358,3 +358,23 @@ Two regions are supported for OSGi configurations, internal and global. Without 
 ```
 
 When two features are aggregated, the resulting feature is only in the internal region if both source features are in the internal region. Otherwise, the resulting aggregate is always in the global region.
+
+## Artifact Rules
+
+The artifact rules extension allows to specify version rules for bundles. For an artifact identity allowed and denied version ranges can be specified. A version range follows the OSGi version range syntax. If no ranges are specified, the artifact is not allowed. An artifact version must match at least one allowed version range and must not match any denied version range (if specified).
+
+``` json
+"artifact-rules:JSON|optional" : {
+  "mode" : "INTERNAL",
+  "bundle-version-rules":[
+      {
+          "artifact-id" : "g:a:1", # version does not matter
+          "msg":"Use at least version 2.0.4 but avoid 2.1.1",
+          "allowed-version-ranges":["[2.0.4,3)"],
+          "denied-version-ranges":["[2.1.1,2.1.1]]
+      }
+  ]
+}
+```
+
+The mode, either LENIENT or STRICT (default) can be used to decide whether a warning or an error should be emitted.
