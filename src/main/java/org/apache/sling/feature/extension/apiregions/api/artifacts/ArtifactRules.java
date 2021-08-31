@@ -111,8 +111,11 @@ public class ArtifactRules extends AttributeableEntity {
     /** The validation mode */
     private Mode mode;
 
-    /** The version rules */
+    /** The version rules for bundles */
     private final List<VersionRule> bundleVersionRules = new ArrayList<>();
+
+    /** The version rules for artifacts */
+    private final List<VersionRule> artifactVersionRules = new ArrayList<>();
 
     /**
      * Create a new rules object
@@ -134,6 +137,7 @@ public class ArtifactRules extends AttributeableEntity {
     public void clear() {
         super.clear();
         this.getBundleVersionRules().clear();
+        this.getArtifactVersionRules().clear();
     }
 
     /**
@@ -155,6 +159,14 @@ public class ArtifactRules extends AttributeableEntity {
                 arrayBuilder.add(rule.createJson());
             }
             objBuilder.add(InternalConstants.KEY_BUNDLE_VERSION_RULES, arrayBuilder);
+        }
+
+        if ( !this.getArtifactVersionRules().isEmpty() ) {
+            final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+            for(final VersionRule rule : this.getArtifactVersionRules()) {
+                arrayBuilder.add(rule.createJson());
+            }
+            objBuilder.add(InternalConstants.KEY_ARTIFACT_VERSION_RULES, arrayBuilder);
         }
 
         return objBuilder;
@@ -185,6 +197,14 @@ public class ArtifactRules extends AttributeableEntity {
                 }
             }
 
+            val = this.getAttributes().remove(InternalConstants.KEY_ARTIFACT_VERSION_RULES);
+            if ( val != null ) {
+                for(final JsonValue innerVal : val.asJsonArray()) {
+                    final VersionRule rule = new VersionRule();
+                    rule.fromJSONObject(innerVal.asJsonObject());
+                    this.getArtifactVersionRules().add(rule);
+                }
+            }
         } catch (final JsonException | IllegalArgumentException e) {
             throw new IOException(e);
         }
@@ -213,5 +233,13 @@ public class ArtifactRules extends AttributeableEntity {
      */
     public List<VersionRule> getBundleVersionRules() {
         return this.bundleVersionRules;
+    }
+
+    /**
+     * Return the list of version rules for artifacts. The returned list is mutable.
+     * @return the list of rules, might be empty.
+     */
+    public List<VersionRule> getArtifactVersionRules() {
+        return artifactVersionRules;
     }
 }

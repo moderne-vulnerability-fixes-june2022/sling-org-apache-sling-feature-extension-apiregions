@@ -72,16 +72,20 @@ public class ArtifactRulesTest {
         entity.getAttributes().put("a", Json.createValue(5));
         entity.setMode(Mode.LENIENT);
         entity.getBundleVersionRules().add(new VersionRule());
+        entity.getArtifactVersionRules().add(new VersionRule());
         entity.clear();
         assertTrue(entity.getAttributes().isEmpty());
         assertTrue(entity.getBundleVersionRules().isEmpty());
+        assertTrue(entity.getArtifactVersionRules().isEmpty());
         assertEquals(Mode.STRICT, entity.getMode());
     }
 
     @Test public void testFromJSONObject() throws IOException {
         final Extension ext = new Extension(ExtensionType.JSON, ArtifactRules.EXTENSION_NAME, ExtensionState.OPTIONAL);
         ext.setJSON("{ \"mode\" : \"LENIENT\", \"bundle-version-rules\":[{"+
-                "\"artifact-id\":\"g:a:1\",\"allowed-version-ranges\":[\"1.0.0\"]}]}");
+                "\"artifact-id\":\"g:a:1\",\"allowed-version-ranges\":[\"1.0.0\"]}]"+
+                ", \"artifact-version-rules\":[{"+
+                "\"artifact-id\":\"g:c:1\",\"allowed-version-ranges\":[\"2.0.0\"]}]}");
 
         final ArtifactRules entity = new ArtifactRules();
         entity.fromJSONObject(ext.getJSONStructure().asJsonObject());
@@ -90,6 +94,10 @@ public class ArtifactRulesTest {
         assertEquals(ArtifactId.parse("g:a:1"), entity.getBundleVersionRules().get(0).getArtifactId());
         assertEquals(1, entity.getBundleVersionRules().get(0).getAllowedVersionRanges().length);
         assertEquals(new VersionRange("1.0.0"), entity.getBundleVersionRules().get(0).getAllowedVersionRanges()[0]);
+        assertEquals(1, entity.getArtifactVersionRules().size());
+        assertEquals(ArtifactId.parse("g:c:1"), entity.getArtifactVersionRules().get(0).getArtifactId());
+        assertEquals(1, entity.getArtifactVersionRules().get(0).getAllowedVersionRanges().length);
+        assertEquals(new VersionRange("2.0.0"), entity.getArtifactVersionRules().get(0).getAllowedVersionRanges()[0]);
     }
 
     @Test public void testToJSONObject() throws IOException {
@@ -100,9 +108,16 @@ public class ArtifactRulesTest {
         rule.setAllowedVersionRanges(new VersionRange[] {new VersionRange("1.0.0")});
         entity.getBundleVersionRules().add(rule);
 
+        final VersionRule artifactRule = new VersionRule();
+        artifactRule.setArtifactId(ArtifactId.parse("g:c:1"));
+        artifactRule.setAllowedVersionRanges(new VersionRange[] {new VersionRange("2.0.0")});
+        entity.getArtifactVersionRules().add(artifactRule);
+
         final Extension ext = new Extension(ExtensionType.JSON, ArtifactRules.EXTENSION_NAME, ExtensionState.OPTIONAL);
         ext.setJSON("{ \"mode\" : \"LENIENT\", \"bundle-version-rules\":[{"+
-                "\"artifact-id\":\"g:a:1\",\"allowed-version-ranges\":[\"1.0.0\"]}]}");
+                "\"artifact-id\":\"g:a:1\",\"allowed-version-ranges\":[\"1.0.0\"]}]"+
+                ", \"artifact-version-rules\":[{"+
+                "\"artifact-id\":\"g:c:1\",\"allowed-version-ranges\":[\"2.0.0\"]}]}");
 
         assertEquals(ext.getJSONStructure().asJsonObject(), entity.toJSONObject());
     }

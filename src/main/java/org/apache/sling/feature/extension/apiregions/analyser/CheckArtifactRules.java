@@ -16,12 +16,16 @@
  */
 package org.apache.sling.feature.extension.apiregions.analyser;
 
-import org.apache.sling.feature.Artifact;
+import java.util.List;
+
+import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.analyser.task.AnalyserTask;
 import org.apache.sling.feature.analyser.task.AnalyserTaskContext;
 import org.apache.sling.feature.extension.apiregions.api.artifacts.ArtifactRules;
 import org.apache.sling.feature.extension.apiregions.api.artifacts.Mode;
 import org.apache.sling.feature.extension.apiregions.api.artifacts.VersionRule;
+import org.apache.sling.feature.scanner.ArtifactDescriptor;
+import org.apache.sling.feature.scanner.BundleDescriptor;
 
 
 public class CheckArtifactRules implements AnalyserTask{
@@ -42,27 +46,34 @@ public class CheckArtifactRules implements AnalyserTask{
         if ( rules == null ) {
             context.reportExtensionWarning(ArtifactRules.EXTENSION_NAME, "Artifact rules are not specified, unable to validate feature");
         } else {
-            for(final Artifact bundle : context.getFeature().getBundles()) {
-                for(final VersionRule rule : rules.getBundleVersionRules()) {
-                    if ( rule.getArtifactId() != null && rule.getArtifactId().isSame(bundle.getId())) {
-                        if ( ! rule.isAllowed(bundle.getId().getOSGiVersion())) {
-                            String msg = rule.getMessage();
-                            if ( msg == null ) {
-                                msg = "Bundle with version " + bundle.getId().getVersion() + " is not allowed.";
-                            }
-                            Mode m = rules.getMode();
-                            if ( rule.getMode() != null ) {
-                                m = rule.getMode();
-                            }
-                            if ( m == Mode.LENIENT ) {
-                                context.reportArtifactWarning(bundle.getId(), msg);
-                            } else {
-                                context.reportArtifactError(bundle.getId(), msg);
-                            }
-                        }
+            for(final BundleDescriptor bundle : context.getFeatureDescriptor().getBundleDescriptors()) {
+                this.checkArtifact(context, rules.getBundleVersionRules(), rules.getMode(), bundle.getArtifact().getId());
+            }
+            for(final ArtifactDescriptor desc : context.getFeatureDescriptor().getArtifactDescriptors()) {
+                this.checkArtifact(context, rules.getArtifactVersionRules(), rules.getMode(), desc.getArtifact().getId());
+            }    
+        }
+	}
+
+    void checkArtifact(final AnalyserTaskContext context, final List<VersionRule> rules, final Mode defaultMode, final ArtifactId id) {
+        for(final VersionRule rule : rules) {
+            if ( rule.getArtifactId() != null && rule.getArtifactId().isSame(id)) {
+                if ( ! rule.isAllowed(id.getOSGiVersion())) {
+                    String msg = rule.getMessage();
+                    if ( msg == null ) {
+                        msg = "Artifact with version " + id.getVersion() + " is not allowed.";
+                    }
+                    Mode m = defaultMode;
+                    if ( rule.getMode() != null ) {
+                        m = rule.getMode();
+                    }
+                    if ( m == Mode.LENIENT ) {
+                        context.reportArtifactWarning(id, msg);
+                    } else {
+                        context.reportArtifactError(id, msg);
                     }
                 }
             }
         }
-	}
+    }
 }

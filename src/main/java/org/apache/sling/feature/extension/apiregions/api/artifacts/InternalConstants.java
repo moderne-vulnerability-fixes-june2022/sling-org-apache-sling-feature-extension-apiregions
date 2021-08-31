@@ -32,4 +32,6 @@ abstract class InternalConstants {
     static final String KEY_MESSAGE = "message";
 
     static final String KEY_BUNDLE_VERSION_RULES = "bundle-version-rules";
+
+    static final String KEY_ARTIFACT_VERSION_RULES = "artifact-version-rules";
 }

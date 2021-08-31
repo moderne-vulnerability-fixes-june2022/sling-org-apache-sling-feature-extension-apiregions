@@ -361,12 +361,20 @@ When two features are aggregated, the resulting feature is only in the internal 
 
 ## Artifact Rules
 
-The artifact rules extension allows to specify version rules for bundles. For an artifact identity allowed and denied version ranges can be specified. A version range follows the OSGi version range syntax. If no ranges are specified, the artifact is not allowed. An artifact version must match at least one allowed version range and must not match any denied version range (if specified).
+The artifact rules extension allows to specify version rules for bundles and artifacts. For an artifact identity allowed and denied version ranges can be specified. A version range follows the OSGi version range syntax. If no ranges are specified, the artifact is not allowed. An artifact version must match at least one allowed version range and must not match any denied version range (if specified).
 
 ``` json
 "artifact-rules:JSON|optional" : {
   "mode" : "INTERNAL",
   "bundle-version-rules":[
+      {
+          "artifact-id" : "g:a:1", # version does not matter
+          "msg":"Use at least version 2.0.4 but avoid 2.1.1",
+          "allowed-version-ranges":["[2.0.4,3)"],
+          "denied-version-ranges":["[2.1.1,2.1.1]]
+      }
+  ],
+  "artifact-version-rules":[
       {
           "artifact-id" : "g:a:1", # version does not matter
           "msg":"Use at least version 2.0.4 but avoid 2.1.1",

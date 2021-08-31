@@ -18,13 +18,25 @@ package org.apache.sling.feature.extension.apiregions.analyser;
 
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionState;
+import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.analyser.task.AnalyserTaskContext;
 import org.apache.sling.feature.extension.apiregions.api.artifacts.ArtifactRules;
 import org.apache.sling.feature.extension.apiregions.api.artifacts.Mode;
 import org.apache.sling.feature.extension.apiregions.api.artifacts.VersionRule;
+import org.apache.sling.feature.scanner.ArtifactDescriptor;
+import org.apache.sling.feature.scanner.BundleDescriptor;
+import org.apache.sling.feature.scanner.FeatureDescriptor;
+import org.apache.sling.feature.scanner.impl.FeatureDescriptorImpl;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -36,7 +48,25 @@ public class CheckArtifactRulesTest {
         final AnalyserTaskContext context = Mockito.mock(AnalyserTaskContext.class);
 
         when(context.getFeature()).thenReturn(f);
-        
+        final FeatureDescriptor fd = new FeatureDescriptorImpl(f);
+        when(context.getFeatureDescriptor()).thenReturn(fd);
+
+        for(final Artifact b : f.getBundles()) {
+            final BundleDescriptor bd = Mockito.mock(BundleDescriptor.class);
+            when(bd.getArtifact()).thenReturn(b);
+            fd.getBundleDescriptors().add(bd);
+        }
+
+        for(final Extension ext : f.getExtensions()) {
+            if ( ext.getType() == ExtensionType.ARTIFACTS ) {
+                for(final Artifact a : ext.getArtifacts()) {
+                    final ArtifactDescriptor bd = Mockito.mock(ArtifactDescriptor.class);
+                    when(bd.getArtifact()).thenReturn(a);
+                    fd.getArtifactDescriptors().add(bd);        
+                }
+            }
+        }
+
         return context;
     }
 
@@ -55,18 +85,30 @@ public class CheckArtifactRulesTest {
         final Artifact bundle = new Artifact(ArtifactId.parse("g:b:1.1"));
         f.getBundles().add(bundle);
 
+        final Extension ext = new Extension(ExtensionType.ARTIFACTS, "artifacts", ExtensionState.OPTIONAL);
+        f.getExtensions().add(ext);
+        final Artifact artifact = new Artifact(ArtifactId.parse("g:c:3.0"));
+        ext.getArtifacts().add(artifact);
+
         final VersionRule r = new VersionRule();
         r.setArtifactId(bundle.getId());
         r.setMode(Mode.STRICT);
         r.setMessage("foo");
 
+        final VersionRule r2 = new VersionRule();
+        r2.setArtifactId(artifact.getId());
+        r2.setMode(Mode.STRICT);
+        r2.setMessage("bar");
+
         final ArtifactRules rules = new ArtifactRules();
         rules.getBundleVersionRules().add(r);
+        rules.getArtifactVersionRules().add(r2);
         
         ArtifactRules.setArtifactRules(f, rules);
         final AnalyserTaskContext context = newContext(f);
         analyser.execute(context);
 
         Mockito.verify(context, Mockito.atLeastOnce()).reportArtifactError(Mockito.eq(bundle.getId()), Mockito.eq(r.getMessage()));
+        Mockito.verify(context, Mockito.atLeastOnce()).reportArtifactError(Mockito.eq(artifact.getId()), Mockito.eq(r2.getMessage()));
     }
 }
