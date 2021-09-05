@@ -369,7 +369,7 @@ The artifact rules extension allows to specify version rules for bundles and art
   "bundle-version-rules":[
       {
           "artifact-id" : "g:a:1", # version does not matter
-          "msg":"Use at least version 2.0.4 but avoid 2.1.1",
+          "message":"Use at least version 2.0.4 but avoid 2.1.1",
           "allowed-version-ranges":["[2.0.4,3)"],
           "denied-version-ranges":["[2.1.1,2.1.1]]
       }
@@ -377,7 +377,7 @@ The artifact rules extension allows to specify version rules for bundles and art
   "artifact-version-rules":[
       {
           "artifact-id" : "g:a:1", # version does not matter
-          "msg":"Use at least version 2.0.4 but avoid 2.1.1",
+          "message":"Use at least version 2.0.4 but avoid 2.1.1",
           "allowed-version-ranges":["[2.0.4,3)"],
           "denied-version-ranges":["[2.1.1,2.1.1]]
       }
