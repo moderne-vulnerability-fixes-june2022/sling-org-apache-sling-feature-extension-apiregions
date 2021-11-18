@@ -150,6 +150,14 @@ The usual process for deprecating Java API is to mark it with a corresponding an
 
 The deprecation information can just be the message, or it can also include information when the deprecated started (since) and by when the member is expected to be removed (for-removal). The removal information should be either the string `true` or a date in the format `YYYY-MM-DD`.
 
+Deprecation of single members of a package can be done by specifying a deprecation message per member as shown in the example above. The key in the `members` array specifies the member to be deprecated. It follows this format:
+
+* Single name (not containing a hash sign): a type (class, interface) is deprecated, e.g. FileCache
+* Name followed by a hash sign followed by another single name : Field in that type is deprecated, e.g. MemoryCache#TYPE
+* Name followed by a hash sign followed by another name with brackets : Method in that type is deprecated, e.g. MemoryCache#getFile() or MemoryCache#getFile(String)
+* Name followed by a hash sign followed by brackets : Constructor in that type is deprecated, e.g. MemoryCache#(String)
+* Name followed by a hash sign followed by a dollar sign followed by a name : Inner type is depreacted, e.g. MemoryCache#$CacheKey
+
 In addition a mode can be specified for a message, values are LENIENT (default) or STRICT. This mode is used by the analyser to decide whether a warning (LENIENT) or error (STRICT) should be issued if a deprecated package is used.
 
 ## OSGi Configurations
