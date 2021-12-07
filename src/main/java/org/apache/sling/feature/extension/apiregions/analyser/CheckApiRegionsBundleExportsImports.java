@@ -21,6 +21,7 @@ package org.apache.sling.feature.extension.apiregions.analyser;
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,6 +52,9 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
     private static final String GLOBAL_REGION = "global";
     private static final String NO_REGION = " __NO_REGION__ ";
     private static final String OWN_FEATURE = " __OWN_FEATURE__ ";
+
+    /** Ignore JDK packages */
+    private static final List<String> IGNORED_IMPORT_PREFIXES = Arrays.asList("java.", "javax.", "org.w3c.", "org.xml.");
 
     @Override
     public String getName() {
@@ -100,16 +104,21 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
         }
     }
 
+    private boolean ignoreImportPackage(final String name) {
+        for(final String prefix : IGNORED_IMPORT_PREFIXES) {
+            if ( name.startsWith(prefix) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     private void checkForVersionOnImportingPackages(final AnalyserTaskContext ctx, final Map<BundleDescriptor, Report> reports) {
         for(final BundleDescriptor info : ctx.getFeatureDescriptor().getBundleDescriptors()) {
             if ( info.getImportedPackages() != null ) {
                 for(final PackageInfo i : info.getImportedPackages()) {
-                    if ( i.getVersion() == null ) {
-                        // don't report for javax, org.xml. and org.w3c. packages (TODO)
-                        if ( !i.getName().startsWith("javax.")
-                                && !i.getName().startsWith("org.w3c.") && !i.getName().startsWith("org.xml.")) {
-                            getReport(reports, info).importWithoutVersion.add(i);
-                        }
+                    if ( i.getVersion() == null && !ignoreImportPackage(i.getName()) ) {
+                        getReport(reports, info).importWithoutVersion.add(i);
                     }
                 }
             }
