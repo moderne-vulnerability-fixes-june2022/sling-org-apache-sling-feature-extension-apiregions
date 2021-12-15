@@ -25,6 +25,7 @@ import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
 import org.junit.Assert;
 import org.junit.Test;
+import org.osgi.framework.Constants;
 
 public class LauncherPropertiesTest
 {
@@ -93,5 +94,21 @@ public class LauncherPropertiesTest
         final Properties prop = LauncherProperties.getBundleIDtoFeaturesMap(f);
         Assert.assertEquals(1, prop.size());
         Assert.assertEquals(featureId.toMvnId(), prop.get(artifactId.toMvnId()));
+    }
+
+    @Test
+    public void testGetBundleIDtoBSNandVersionMap() {
+        final ArtifactId featureId = ArtifactId.parse("g:f:1");
+        final ArtifactId artifactId = ArtifactId.parse("g:a:2");
+
+        final Feature f = new Feature(featureId);
+        final Artifact a = new Artifact(artifactId);
+        a.getMetadata().put(Constants.BUNDLE_SYMBOLICNAME, "my.bundle");
+        a.getMetadata().put(Constants.BUNDLE_VERSION, "1.0");
+        f.getBundles().add(a);
+
+        final Properties prop = LauncherProperties.getBundleIDtoBSNandVersionMap(f, null);
+        Assert.assertEquals(1, prop.size());
+        Assert.assertEquals("my.bundle~1.0.0", prop.get(a.getId().toMvnId()));
     }
 }

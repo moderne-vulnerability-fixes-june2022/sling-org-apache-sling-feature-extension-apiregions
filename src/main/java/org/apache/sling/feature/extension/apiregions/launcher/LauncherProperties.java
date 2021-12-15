@@ -48,32 +48,29 @@ public class LauncherProperties
     private static final String REGION_ORDER = "__region.order__";
 
     public static Properties getBundleIDtoBSNandVersionMap(Feature app, ArtifactProvider artifactProvider) {
-        Map<ArtifactId, String> map = new HashMap<>();
-
-        for (Artifact bundle : app.getBundles())
-        {
-            map.computeIfAbsent(bundle.getId(), id ->
-            {
-                try(JarFile jarFile = IOUtils.getJarFileFromURL(artifactProvider.provide(id), true, null)) {
-                    Attributes manifest = jarFile.getManifest().getMainAttributes();
-                    String bsn = manifest.getValue(Constants.BUNDLE_SYMBOLICNAME);
-                    if (bsn != null && !bsn.trim().isEmpty())
-                    {
-                        return bsn.trim() + "~" + Version.parseVersion(manifest.getValue(Constants.BUNDLE_VERSION));
-                    }
-                    else {
-                        return null;
-                    }
-                } catch (IOException ex) {
-                    throw new UncheckedIOException(ex);
-                }
-            });
-        }
-
         Properties result = new Properties();
 
-        for (Map.Entry<ArtifactId, String> entry : map.entrySet()) {
-            result.setProperty(entry.getKey().toMvnId(), entry.getValue());
+        for (Artifact bundle : app.getBundles()) {
+            final String key = bundle.getId().toMvnId();
+            if ( result.getProperty(key) == null ) {
+                String bsn = bundle.getMetadata().get(Constants.BUNDLE_SYMBOLICNAME);
+                String version = bundle.getMetadata().get(Constants.BUNDLE_VERSION);
+                if ( bsn == null || version == null ) {
+                    try(JarFile jarFile = IOUtils.getJarFileFromURL(artifactProvider.provide(bundle.getId()), true, null)) {
+                        Attributes manifest = jarFile.getManifest().getMainAttributes();
+                        bsn = manifest.getValue(Constants.BUNDLE_SYMBOLICNAME);
+                        if (bsn != null) {
+                            version = manifest.getValue(Constants.BUNDLE_VERSION);
+                        }
+                    } catch (IOException ex) {
+                        throw new UncheckedIOException(ex);
+                    }
+    
+                }
+                if ( bsn != null && version != null ) {
+                    result.setProperty(key, bsn.concat("~").concat(Version.parseVersion(version).toString()));
+                }
+            }
         }
 
         return result;
