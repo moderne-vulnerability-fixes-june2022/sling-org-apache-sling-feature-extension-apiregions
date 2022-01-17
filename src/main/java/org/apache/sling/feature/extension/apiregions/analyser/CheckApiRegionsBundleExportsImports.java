@@ -53,9 +53,6 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
     private static final String NO_REGION = " __NO_REGION__ ";
     private static final String OWN_FEATURE = " __OWN_FEATURE__ ";
 
-    /** Ignore JDK packages */
-    private static final List<String> IGNORED_IMPORT_PREFIXES = Arrays.asList("java.", "javax.", "org.w3c.", "org.xml.");
-
     @Override
     public String getName() {
         return "Bundle Import/Export Check";
@@ -68,11 +65,7 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
 
     public static final class Report {
 
-        public List<PackageInfo> exportWithoutVersion = new ArrayList<>();
-
         public List<PackageInfo> exportMatchingSeveral = new ArrayList<>();
-
-        public List<PackageInfo> importWithoutVersion = new ArrayList<>();
 
         public List<PackageInfo> missingExports = new ArrayList<>();
 
@@ -92,48 +85,12 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
         return report;
     }
 
-    private void checkForVersionOnExportedPackages(final AnalyserTaskContext ctx, final Map<BundleDescriptor, Report> reports) {
-        for(final BundleDescriptor info : ctx.getFeatureDescriptor().getBundleDescriptors()) {
-            if ( info.getExportedPackages() != null ) {
-                for(final PackageInfo i : info.getExportedPackages()) {
-                    if ( i.getPackageVersion().compareTo(Version.emptyVersion) == 0 ) {
-                        getReport(reports, info).exportWithoutVersion.add(i);
-                    }
-                }
-            }
-        }
-    }
-
-    private boolean ignoreImportPackage(final String name) {
-        for(final String prefix : IGNORED_IMPORT_PREFIXES) {
-            if ( name.startsWith(prefix) ) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    private void checkForVersionOnImportingPackages(final AnalyserTaskContext ctx, final Map<BundleDescriptor, Report> reports) {
-        for(final BundleDescriptor info : ctx.getFeatureDescriptor().getBundleDescriptors()) {
-            if ( info.getImportedPackages() != null ) {
-                for(final PackageInfo i : info.getImportedPackages()) {
-                    if ( i.getVersion() == null && !ignoreImportPackage(i.getName()) ) {
-                        getReport(reports, info).importWithoutVersion.add(i);
-                    }
-                }
-            }
-        }
-    }
-
     @Override
     public void execute(final AnalyserTaskContext ctx) throws Exception {
         boolean ignoreAPIRegions = ctx.getConfiguration().getOrDefault(
                 IGNORE_API_REGIONS_CONFIG_KEY, "false").equalsIgnoreCase("true");
 
-        // basic checks
         final Map<BundleDescriptor, Report> reports = new HashMap<>();
-        checkForVersionOnExportedPackages(ctx, reports);
-        checkForVersionOnImportingPackages(ctx, reports);
 
         final SortedMap<Integer, List<BundleDescriptor>> bundlesMap = new TreeMap<>();
         for(final BundleDescriptor bi : ctx.getFeatureDescriptor().getBundleDescriptors()) {
@@ -257,15 +214,6 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
         boolean errorReported = false;
         for(final Map.Entry<BundleDescriptor, Report> entry : reports.entrySet()) {
             final String key = "Bundle " + entry.getKey().getArtifact().getId().getArtifactId() + ":" + entry.getKey().getArtifact().getId().getVersion();
-
-            if ( !entry.getValue().importWithoutVersion.isEmpty() ) {
-                ctx.reportArtifactWarning(entry.getKey().getArtifact().getId(),
-                        key + " is importing package(s) " + getPackageInfo(entry.getValue().importWithoutVersion, false) + " without specifying a version range.");
-            }
-            if ( !entry.getValue().exportWithoutVersion.isEmpty() ) {
-                ctx.reportArtifactWarning(entry.getKey().getArtifact().getId(),
-                        key + " is exporting package(s) " + getPackageInfo(entry.getValue().importWithoutVersion, false) + " without a version.");
-            }
 
             if ( !entry.getValue().missingExports.isEmpty() ) {
                 ctx.reportArtifactError(entry.getKey().getArtifact().getId(),
