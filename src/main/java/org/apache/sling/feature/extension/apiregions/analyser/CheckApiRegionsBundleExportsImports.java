@@ -18,10 +18,8 @@
  */
 package org.apache.sling.feature.extension.apiregions.analyser;
 
-import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,19 +30,14 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.json.JsonArray;
 
 import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Extensions;
-import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.analyser.task.AnalyserTask;
 import org.apache.sling.feature.analyser.task.AnalyserTaskContext;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegion;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
 import org.apache.sling.feature.scanner.BundleDescriptor;
 import org.apache.sling.feature.scanner.PackageInfo;
-import org.osgi.framework.Version;
 
 public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
 
@@ -77,12 +70,7 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
     }
 
     private Report getReport(final Map<BundleDescriptor, Report> reports, final BundleDescriptor info) {
-        Report report = reports.get(info);
-        if ( report == null ) {
-            report = new Report();
-            reports.put(info, report);
-        }
-        return report;
+        return reports.computeIfAbsent(info, key -> new Report());
     }
 
     @Override
@@ -94,11 +82,7 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
 
         final SortedMap<Integer, List<BundleDescriptor>> bundlesMap = new TreeMap<>();
         for(final BundleDescriptor bi : ctx.getFeatureDescriptor().getBundleDescriptors()) {
-            List<BundleDescriptor> list = bundlesMap.get(bi.getArtifact().getStartOrder());
-            if ( list == null ) {
-                list = new ArrayList<>();
-                bundlesMap.put(bi.getArtifact().getStartOrder(), list);
-            }
+            final List<BundleDescriptor> list = bundlesMap.computeIfAbsent(bi.getArtifact().getStartOrder(), key -> new ArrayList<>());
             list.add(bi);
         }
 
@@ -107,104 +91,97 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
         if ( ctx.getFrameworkDescriptor() != null ) {
             exportingBundles.add(ctx.getFrameworkDescriptor());
         }
-        ApiRegions apiRegions = new ApiRegions(); // Empty API Regions;
-
-        Feature feature = ctx.getFeature();
 
         // extract and check the api-regions
-
-        Extensions extensions = feature.getExtensions();
-        Extension apiRegionsExtension = extensions.getByName(ApiRegions.EXTENSION_NAME);
-        if (apiRegionsExtension != null && apiRegionsExtension.getJSONStructure() != null) {
-            try {
-                apiRegions = ApiRegions.parse((JsonArray) apiRegionsExtension.getJSONStructure());
-            } catch (IOException e) {
-                ctx.reportError("API Regions '" + apiRegionsExtension.getJSON()
-                        + "' does not represent a valid JSON 'api-regions': " + e.getMessage());
-                return;
-            }
+        ApiRegions apiRegions = null;
+        try {
+            apiRegions = ApiRegions.getApiRegions(ctx.getFeature());
+        } catch (final IllegalArgumentException e) {
+            ctx.reportError("API Region does not represent a valid JSON 'api-regions': " + e.getMessage());
+            return;
+        }
+        if ( apiRegions == null ) {
+            apiRegions = new ApiRegions(); // Empty region as default
         }
 
         for(final Map.Entry<Integer, List<BundleDescriptor>> entry : bundlesMap.entrySet()) {
             // first add all exporting bundles
             for(final BundleDescriptor info : entry.getValue()) {
-                if ( info.getExportedPackages() != null ) {
+                if ( !info.getExportedPackages().isEmpty() ) {
                     exportingBundles.add(info);
                 }
             }
             // check importing bundles
             for(final BundleDescriptor info : entry.getValue()) {
-                if ( info.getImportedPackages() != null ) {
-                    for(final PackageInfo pck : info.getImportedPackages() ) {
-                        final Map<BundleDescriptor, Set<String>> candidates =
-                                getCandidates(exportingBundles, pck, info, apiRegions, ignoreAPIRegions);
-                        if ( candidates.isEmpty() ) {
+                for(final PackageInfo pck : info.getImportedPackages() ) {
+                    final Map<BundleDescriptor, Set<String>> candidates =
+                            getCandidates(exportingBundles, pck, info, apiRegions, ignoreAPIRegions);
+                    if ( candidates.isEmpty() ) {
+                        if ( pck.isOptional() ) {
+                            getReport(reports, info).missingExportsForOptional.add(pck);
+                        } else {
+                            getReport(reports, info).missingExports.add(pck);
+                        }
+                    } else {
+                        final List<BundleDescriptor> matchingCandidates = new ArrayList<>();
+
+                        Set<String> exportingRegions = new HashSet<>();
+                        Set<String> importingRegions = new HashSet<>();
+                        for(final Map.Entry<BundleDescriptor, Set<String>> candidate : candidates.entrySet()) {
+                            BundleDescriptor bd = candidate.getKey();
+                            if (bd.isExportingPackage(pck)) {
+                                Set<String> exRegions = candidate.getValue();
+                                if (exRegions.contains(NO_REGION)) {
+                                    // If an export is defined outside of a region, it always matches
+                                    matchingCandidates.add(bd);
+                                    continue;
+                                }
+                                if (exRegions.contains(GLOBAL_REGION)) {
+                                    // Everyone can import from the global regin
+                                    matchingCandidates.add(bd);
+                                    continue;
+                                }
+                                if (exRegions.contains(OWN_FEATURE)) {
+                                    // A feature can always import packages from bundles in itself
+                                    matchingCandidates.add(bd);
+                                    continue;
+                                }
+
+                                // Find out what regions the importing bundle is in
+                                Set<String> imRegions =
+                                        getBundleRegions(info, apiRegions, ignoreAPIRegions);
+
+                                // Record the exporting and importing regions for diagnostics
+                                exportingRegions.addAll(exRegions);
+
+                                Set<String> regions = new HashSet<>();
+                                for (String region : imRegions) {
+                                    for (ApiRegion r = apiRegions.getRegionByName(region); r != null; r = r.getParent()) {
+                                        regions.add(r.getName());
+                                    }
+                                }
+
+                                importingRegions.addAll(regions);
+
+                                // Only keep the regions that also export the package
+                                regions.retainAll(exRegions);
+
+                                if (!regions.isEmpty()) {
+                                    // there is an overlapping region
+                                    matchingCandidates.add(bd);
+                                }
+                            }
+                        }
+
+                        if ( matchingCandidates.isEmpty() ) {
                             if ( pck.isOptional() ) {
                                 getReport(reports, info).missingExportsForOptional.add(pck);
                             } else {
-                                getReport(reports, info).missingExports.add(pck);
+                                getReport(reports, info).missingExportsWithVersion.add(pck);
+                                getReport(reports, info).regionInfo.put(pck, new AbstractMap.SimpleEntry<>(exportingRegions, importingRegions));
                             }
-                        } else {
-                            final List<BundleDescriptor> matchingCandidates = new ArrayList<>();
-
-                            Set<String> exportingRegions = new HashSet<>();
-                            Set<String> importingRegions = new HashSet<>();
-                            for(final Map.Entry<BundleDescriptor, Set<String>> candidate : candidates.entrySet()) {
-                                BundleDescriptor bd = candidate.getKey();
-                                if (bd.isExportingPackage(pck)) {
-                                    Set<String> exRegions = candidate.getValue();
-                                    if (exRegions.contains(NO_REGION)) {
-                                        // If an export is defined outside of a region, it always matches
-                                        matchingCandidates.add(bd);
-                                        continue;
-                                    }
-                                    if (exRegions.contains(GLOBAL_REGION)) {
-                                        // Everyone can import from the global regin
-                                        matchingCandidates.add(bd);
-                                        continue;
-                                    }
-                                    if (exRegions.contains(OWN_FEATURE)) {
-                                        // A feature can always import packages from bundles in itself
-                                        matchingCandidates.add(bd);
-                                        continue;
-                                    }
-
-                                    // Find out what regions the importing bundle is in
-                                    Set<String> imRegions =
-                                            getBundleRegions(info, apiRegions, ignoreAPIRegions);
-
-                                    // Record the exporting and importing regions for diagnostics
-                                    exportingRegions.addAll(exRegions);
-
-                                    Set<String> regions = new HashSet<>();
-                                    for (String region : imRegions) {
-                                        for (ApiRegion r = apiRegions.getRegionByName(region); r != null; r = r.getParent()) {
-                                            regions.add(r.getName());
-                                        }
-                                    }
-
-                                    importingRegions.addAll(regions);
-
-                                    // Only keep the regions that also export the package
-                                    regions.retainAll(exRegions);
-
-                                    if (!regions.isEmpty()) {
-                                        // there is an overlapping region
-                                        matchingCandidates.add(bd);
-                                    }
-                                }
-                            }
-
-                            if ( matchingCandidates.isEmpty() ) {
-                                if ( pck.isOptional() ) {
-                                    getReport(reports, info).missingExportsForOptional.add(pck);
-                                } else {
-                                    getReport(reports, info).missingExportsWithVersion.add(pck);
-                                    getReport(reports, info).regionInfo.put(pck, new AbstractMap.SimpleEntry<>(exportingRegions, importingRegions));
-                                }
-                            } else if ( matchingCandidates.size() > 1 ) {
-                                getReport(reports, info).exportMatchingSeveral.add(pck);
-                            }
+                        } else if ( matchingCandidates.size() > 1 ) {
+                            getReport(reports, info).exportMatchingSeveral.add(pck);
                         }
                     }
                 }
@@ -311,11 +288,7 @@ public class CheckApiRegionsBundleExportsImports implements AnalyserTask {
                                     || apiRegions.getRegionByName(region).getAllExportByName(pck.getName()) == null))
                         continue;
 
-                    Set<String> regions = candidates.get(info);
-                    if (regions == null) {
-                        regions = new HashSet<>();
-                        candidates.put(info, regions);
-                    }
+                    final Set<String> regions = candidates.computeIfAbsent(info, key -> new HashSet<>());
                     regions.add(region);
                 }
             }
