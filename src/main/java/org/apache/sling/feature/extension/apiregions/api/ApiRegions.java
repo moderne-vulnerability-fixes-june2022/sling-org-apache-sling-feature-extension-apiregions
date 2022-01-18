@@ -314,6 +314,9 @@ public class ApiRegions {
         if ( ext.getType() != ExtensionType.JSON ) {
             throw new IllegalArgumentException("Extension " + ext.getName() + " must have JSON type");
         }
+        if ( ext.getJSONStructure() == null ) {
+            return new ApiRegions();
+        }
         try {
             return parse(ext.getJSONStructure().asJsonArray());
         } catch ( final IOException ioe) {

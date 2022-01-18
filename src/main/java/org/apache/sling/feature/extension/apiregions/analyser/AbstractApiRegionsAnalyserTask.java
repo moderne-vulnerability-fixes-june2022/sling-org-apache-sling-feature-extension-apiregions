@@ -16,12 +16,6 @@
  */
 package org.apache.sling.feature.extension.apiregions.analyser;
 
-import java.io.IOException;
-import javax.json.JsonArray;
-
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Extensions;
-import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.analyser.task.AnalyserTask;
 import org.apache.sling.feature.analyser.task.AnalyserTaskContext;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
@@ -30,41 +24,19 @@ public abstract class AbstractApiRegionsAnalyserTask implements AnalyserTask {
 
     @Override
     public final void execute(AnalyserTaskContext ctx) throws Exception {
-        Feature feature = ctx.getFeature();
-
-        // extract and check the api-regions
-
-        Extensions extensions = feature.getExtensions();
-        Extension apiRegionsExtension = extensions.getByName(ApiRegions.EXTENSION_NAME);
-        if (apiRegionsExtension == null) {
-            // no need to be analyzed
-            return;
-        }
-
-        if (apiRegionsExtension.getJSON() == null || apiRegionsExtension.getJSON().isEmpty()) {
-            // no need to be analyzed
-            return;
-        }
-
-        if (apiRegionsExtension.getJSONStructure() == null) {
-            ctx.reportError("API Regions '" + apiRegionsExtension.getJSON()
-                    + "' does not represent a valid JSON 'api-regions'");
-            return;
-        }
-
-        // read the api-regions and create a Sieve data structure for checks
-
+        // read the api-regions
         ApiRegions apiRegions;
         try {
-            apiRegions = ApiRegions.parse((JsonArray) apiRegionsExtension.getJSONStructure());
-        } catch (IOException e) {
-            ctx.reportError("API Regions '"
-                    + apiRegionsExtension.getJSON()
-                    + "' does not represent a valid JSON 'api-regions': "
+            apiRegions = ApiRegions.getApiRegions(ctx.getFeature());
+        } catch (final IllegalArgumentException e) {
+            ctx.reportError("API Regions does not represent a valid JSON 'api-regions': "
                     + e.getMessage());
             return;
         }
-
+        if ( apiRegions == null ) {
+            // no need to be analysed
+            return;
+        }
         execute(apiRegions, ctx);
     }
 

@@ -16,20 +16,14 @@
  */
 package org.apache.sling.feature.extension.apiregions.analyser;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.json.JsonArray;
 
-import org.apache.sling.feature.Extension;
-import org.apache.sling.feature.Extensions;
-import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.analyser.task.AnalyserTask;
 import org.apache.sling.feature.analyser.task.AnalyserTaskContext;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegion;
 import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
 
-public class CheckApiRegionsOrder implements AnalyserTask {
+public class CheckApiRegionsOrder extends AbstractApiRegionsAnalyserTask {
 
     @Override
     public String getId() {
@@ -42,21 +36,15 @@ public class CheckApiRegionsOrder implements AnalyserTask {
     }
 
     @Override
-    public final void execute(AnalyserTaskContext ctx) throws Exception {
-        String order = ctx.getConfiguration().get("order");
-        Feature feature = ctx.getFeature();
-        if (feature == null) {
-            reportError(ctx, "No feature found. Illegal Analyser State.");
-            return;
-        }
-
+    public final void execute(final ApiRegions apiRegions, final AnalyserTaskContext ctx) throws Exception {
+        final String order = ctx.getConfiguration().get("order");
         if (order == null) {
-            reportError(ctx, "This analyser task must be configured: " + getId() + " for feature " + feature.getId());
+            reportError(ctx, "This analyser task must be configured: " + getId() + " for feature " + ctx.getFeature().getId());
             reportError(ctx, "Must specify configuration key 'order'.");
             return;
         }
 
-        String[] sl = order.split("[,]");
+        final String[] sl = order.split("[,]");
         List<String> prescribedOrder = new ArrayList<>();
         for (String s : sl) {
             s = s.trim();
@@ -68,39 +56,20 @@ public class CheckApiRegionsOrder implements AnalyserTask {
             return;
         }
 
-        // extract and check the api-regions
-        Extensions extensions = feature.getExtensions();
-        Extension apiRegionsExtension = extensions.getByName(ApiRegions.EXTENSION_NAME);
-        if (apiRegionsExtension == null) {
-            // no need to be analyzed
-            return;
-        }
-
-        String jsonRepresentation = apiRegionsExtension.getJSON();
-        if (jsonRepresentation == null || jsonRepresentation.isEmpty()) {
-            // no need to be analyzed
-            return;
-        }
-
-        try {
-            int regionIdx = 0;
-            ApiRegions apiRegions = ApiRegions.parse((JsonArray) apiRegionsExtension.getJSONStructure());
-            for (final ApiRegion region : apiRegions.listRegions()) {
-                String name = region.getName();
-                if (!prescribedOrder.contains(name)) {
-                    reportError(ctx, "Region found with undeclared name: " + name);
-                    return;
-                }
-                int prevIdx = regionIdx;
-                regionIdx = validateRegion(regionIdx, prescribedOrder, name);
-                if (regionIdx < 0) {
-                    reportError(ctx, "Region '" + name + "' appears in the wrong order. It appears after '"
-                            + prescribedOrder.get(prevIdx) + "'. Order of regions should be " + prescribedOrder);
-                    return;
-                }
+        int regionIdx = 0;
+        for (final ApiRegion region : apiRegions.listRegions()) {
+            String name = region.getName();
+            if (!prescribedOrder.contains(name)) {
+                reportError(ctx, "Region found with undeclared name: " + name);
+                return;
             }
-        } catch (final IOException e) {
-            ctx.reportError("Invalid api regions");
+            int prevIdx = regionIdx;
+            regionIdx = validateRegion(regionIdx, prescribedOrder, name);
+            if (regionIdx < 0) {
+                reportError(ctx, "Region '" + name + "' appears in the wrong order. It appears after '"
+                        + prescribedOrder.get(prevIdx) + "'. Order of regions should be " + prescribedOrder);
+                return;
+            }
         }
     }
 

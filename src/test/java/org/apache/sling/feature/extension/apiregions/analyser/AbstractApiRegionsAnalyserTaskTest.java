@@ -32,10 +32,12 @@ import org.apache.johnzon.core.JsonReaderImpl.NothingToRead;
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Extensions;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.analyser.task.AnalyserTask;
 import org.apache.sling.feature.analyser.task.AnalyserTaskContext;
+import org.apache.sling.feature.extension.apiregions.api.ApiRegions;
 import org.apache.sling.feature.scanner.BundleDescriptor;
 import org.apache.sling.feature.scanner.FeatureDescriptor;
 import org.apache.sling.feature.scanner.PackageInfo;
@@ -89,22 +91,17 @@ public abstract class AbstractApiRegionsAnalyserTaskTest<T extends AbstractApiRe
         assertTrue(errors.isEmpty());
     }
 
-    @Test
-    public void testApiRegionsIsNotJSON() throws Exception {
-        List<String> errors = execute("this is not a JSON string");
-
-        assertFalse(errors.isEmpty());
-        assertTrue(errors.iterator().next().contains("does not represent a valid JSON 'api-regions'"));
-    }
-
     protected final List<String> execute(String apiRegionJSON) throws Exception {
         Extension extension = mock(Extension.class);
+        when(extension.getName()).thenReturn(ApiRegions.EXTENSION_NAME);
         when(extension.getJSON()).thenReturn(apiRegionJSON);
+        when(extension.getType()).thenReturn(ExtensionType.JSON);
         if (apiRegionJSON != null) {
             JsonReader reader = Json.createReader(new StringReader(apiRegionJSON));
             JsonArray array = null;
             try {
                 array = reader.readArray();
+                when(extension.getType()).thenReturn(ExtensionType.JSON);
             } catch (final JsonParsingException | NothingToRead ignore) {
                 // ignored
             }

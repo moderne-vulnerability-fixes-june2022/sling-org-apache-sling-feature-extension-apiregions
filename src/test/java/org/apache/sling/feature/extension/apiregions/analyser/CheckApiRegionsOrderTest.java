@@ -77,7 +77,7 @@ public class CheckApiRegionsOrderTest  {
         Mockito.when(ctx.getFeature()).thenReturn(f);
 
         caro.execute(ctx);
-        Mockito.verify(ctx).reportError(Mockito.contains("Invalid api regions"));
+        Mockito.verify(ctx).reportError(Mockito.contains("API Regions does not represent a valid JSON"));
     }
 
     @Test
@@ -118,6 +118,12 @@ public class CheckApiRegionsOrderTest  {
 
     @Test
     public void testEmptyOrder() throws Exception {
+        Extension e = new Extension(ExtensionType.JSON, "api-regions", ExtensionState.OPTIONAL);
+        e.setJSON("[{\"name\":\"foo\"}]");
+
+        Feature f = new Feature(ArtifactId.fromMvnId("a:b:1"));
+        f.getExtensions().add(e);
+
         CheckApiRegionsOrder caro = new CheckApiRegionsOrder();
 
         Map<String, String> cfgMap = new HashMap<>();
@@ -125,30 +131,25 @@ public class CheckApiRegionsOrderTest  {
 
         AnalyserTaskContext ctx = Mockito.mock(AnalyserTaskContext.class);
         Mockito.when(ctx.getConfiguration()).thenReturn(cfgMap);
-        Mockito.when(ctx.getFeature()).thenReturn(new Feature(ArtifactId.fromMvnId("a:b:1")));
+        Mockito.when(ctx.getFeature()).thenReturn(f);
 
         caro.execute(ctx);
         Mockito.verify(ctx).reportError(Mockito.contains("No regions"));
     }
 
     @Test
-    public void testNoFeature() throws Exception {
-        CheckApiRegionsOrder caro = new CheckApiRegionsOrder();
-
-        AnalyserTaskContext ctx = Mockito.mock(AnalyserTaskContext.class);
-        Mockito.when(ctx.getConfiguration()).thenReturn(new HashMap<>());
-
-        caro.execute(ctx);
-        Mockito.verify(ctx).reportError(Mockito.contains("No feature"));
-    }
-
-    @Test
     public void testNoOrderConfig() throws Exception {
+        Extension e = new Extension(ExtensionType.JSON, "api-regions", ExtensionState.OPTIONAL);
+        e.setJSON("[{\"name\":\"foo\"}]");
+
+        Feature f = new Feature(ArtifactId.fromMvnId("a:b:1"));
+        f.getExtensions().add(e);
+
         CheckApiRegionsOrder caro = new CheckApiRegionsOrder();
 
         AnalyserTaskContext ctx = Mockito.mock(AnalyserTaskContext.class);
         Mockito.when(ctx.getConfiguration()).thenReturn(new HashMap<>());
-        Mockito.when(ctx.getFeature()).thenReturn(new Feature(ArtifactId.fromMvnId("a:b:1")));
+        Mockito.when(ctx.getFeature()).thenReturn(f);
 
         caro.execute(ctx);
         Mockito.verify(ctx).reportError(Mockito.contains("'order'"));
