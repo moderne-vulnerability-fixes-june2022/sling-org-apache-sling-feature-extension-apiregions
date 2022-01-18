@@ -18,7 +18,7 @@
     </parent>
 
     <artifactId>org.apache.sling.feature.extension.apiregions</artifactId>
-    <version>1.4.5-SNAPSHOT</version>
+    <version>1.5.0-SNAPSHOT</version>
     <name>Sling Featuremodel - API Regions Exension</name>
 
     <scm>
