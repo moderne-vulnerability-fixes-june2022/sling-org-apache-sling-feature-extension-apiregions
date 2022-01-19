@@ -60,6 +60,10 @@ public class LauncherProperties
                         Attributes manifest = jarFile.getManifest().getMainAttributes();
                         bsn = manifest.getValue(Constants.BUNDLE_SYMBOLICNAME);
                         if (bsn != null) {
+                            final int idx = bsn.indexOf(';');
+                            if (idx != -1) {
+                                bsn = bsn.substring(0, idx);
+                            }
                             version = manifest.getValue(Constants.BUNDLE_VERSION);
                         }
                     } catch (IOException ex) {
