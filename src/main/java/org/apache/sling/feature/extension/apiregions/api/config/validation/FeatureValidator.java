@@ -215,6 +215,7 @@ public class FeatureValidator {
                     final List<String> keys = new ArrayList<>(Collections.list(cfg.getConfigurationProperties().keys()));
                     for(final String k : keys ) {
                         cfg.getProperties().remove(k);
+                        changed = true;
                     }
                 }
             }
