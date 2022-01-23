@@ -212,9 +212,19 @@ public class FeatureValidator {
             if ( entry.getValue().isUseDefaultValue() ) {
                 final Configuration cfg = feature.getConfigurations().getConfiguration(entry.getKey());
                 if ( cfg != null ) {
+                    boolean hasPrivateProperty = false;
                     final List<String> keys = new ArrayList<>(Collections.list(cfg.getConfigurationProperties().keys()));
                     for(final String k : keys ) {
-                        cfg.getProperties().remove(k);
+                        final PropertyValidationResult pvr = entry.getValue().getPropertyResults().get(k);
+                        if ( pvr != null && pvr.isUseDefaultValue() ) {
+                            cfg.getProperties().remove(k);
+                            changed = true;    
+                        } else {
+                            hasPrivateProperty = true;
+                        }
+                    }
+                    if ( !hasPrivateProperty ) {
+                        feature.getConfigurations().remove(cfg);
                         changed = true;
                     }
                 }

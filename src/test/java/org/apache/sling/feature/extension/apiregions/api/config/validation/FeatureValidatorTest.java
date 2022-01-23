@@ -827,7 +827,7 @@ public class FeatureValidatorTest {
         result = validator.validate(f1, api);
         assertTrue(result.isValid());
         validator.applyDefaultValues(f1, result);
-        assertEquals(0, f1.getConfigurations().getConfiguration(PID).getConfigurationProperties().size());
+        assertNull(f1.getConfigurations().getConfiguration(PID));
 
         // global -> invalid, but mode LENIENT
         f1 = createFeature("g:a:1");
@@ -862,8 +862,8 @@ public class FeatureValidatorTest {
         api.setMode(Mode.SILENT_DEFINITIVE);
         result = validator.validate(f1, api);
         assertTrue(result.isValid());
-        validator.applyDefaultValues(f1, result);
-        assertEquals(0, f1.getConfigurations().getConfiguration(PID).getConfigurationProperties().size());
+        assertTrue(validator.applyDefaultValues(f1, result));
+        assertNull(f1.getConfigurations().getConfiguration(PID));
     }
 
     @Test public void testInternalFactoryConfigurationNoPropertyDescriptions() {
@@ -898,7 +898,7 @@ public class FeatureValidatorTest {
         result = validator.validate(f1, api);
         assertTrue(result.isValid());
         validator.applyDefaultValues(f1, result);
-        assertEquals(0, f1.getConfigurations().getConfiguration(FACTORY_PID.concat("~print")).getConfigurationProperties().size());
+        assertNull(f1.getConfigurations().getConfiguration(FACTORY_PID.concat("~print")));
 
         // global -> invalid, but mode LENIENT
         f1 = createFeature("g:a:1");
@@ -934,7 +934,7 @@ public class FeatureValidatorTest {
         result = validator.validate(f1, api);
         assertTrue(result.isValid());
         validator.applyDefaultValues(f1, result);
-        assertEquals(0, f1.getConfigurations().getConfiguration(FACTORY_PID.concat("~print")).getConfigurationProperties().size());
+        assertNull(f1.getConfigurations().getConfiguration(FACTORY_PID.concat("~print")));
     }
 
     @Test public void testInternalConfigurationNoPropertyDescriptionsButAllowAdditional() {

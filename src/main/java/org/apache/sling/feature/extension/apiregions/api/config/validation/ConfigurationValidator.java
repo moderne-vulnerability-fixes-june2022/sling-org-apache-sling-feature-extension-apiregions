@@ -16,7 +16,9 @@
  */
 package org.apache.sling.feature.extension.apiregions.api.config.validation;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -108,10 +110,12 @@ public class ConfigurationValidator {
                 if ( desc.getPropertyDescriptions().isEmpty()) {
                     if ( region == Region.GLOBAL && !desc.isAllowAdditionalProperties() ) {
                         setResult(result, validationMode, desc, "Factory configuration is not allowed");
+                        markGlobalProperties(config, result, region);
                     }
                 } else {
                     if ( region == Region.GLOBAL && desc.getRegion() == Region.INTERNAL ) {
                         setResult(result, validationMode, desc, "Factory configuration is not allowed");
+                        markGlobalProperties(config, result, region);
                     } else {
                         validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
                     }
@@ -124,10 +128,12 @@ public class ConfigurationValidator {
                 if ( desc.getPropertyDescriptions().isEmpty()) {
                     if ( region == Region.GLOBAL && !desc.isAllowAdditionalProperties() ) {
                         setResult(result, validationMode, desc, "Configuration is not allowed");
+                        markGlobalProperties(config, result, region);
                     }
                 } else {
                     if ( region == Region.GLOBAL && desc.getRegion() == Region.INTERNAL ) {
                         setResult(result, validationMode, desc, "Configuration is not allowed");
+                        markGlobalProperties(config, result, region);
                     } else {
                         validateProperties(config, desc, result.getPropertyResults(), region, validationMode);
                     }
@@ -140,6 +146,29 @@ public class ConfigurationValidator {
         }
 
         return result;
+    }
+
+    /**
+     * Set all global properties to use default value if mode is definitive
+     * @param configuration The OSGi configuration
+     * @param result The result for the configuration
+     * @param region The configuration region
+     */
+    void markGlobalProperties(final Configuration configuration,
+            final ConfigurationValidationResult result,
+            final Region region) {
+        if ( result.isUseDefaultValue() ) {
+            final List<String> names = new ArrayList<>(Collections.list(configuration.getConfigurationProperties().keys()));
+            for(final String propName : names) {
+                 // detect the region
+                final Region propRegion = FeatureValidator.getRegionInfo(region, configuration, propName, this.cache);
+                if ( propRegion == Region.GLOBAL ) {
+                    final PropertyValidationResult pvr = new PropertyValidationResult();
+                    pvr.setUseDefaultValue(true);
+                    result.getPropertyResults().put(propName, pvr);
+                }
+            }    
+        }
     }
 
     /**

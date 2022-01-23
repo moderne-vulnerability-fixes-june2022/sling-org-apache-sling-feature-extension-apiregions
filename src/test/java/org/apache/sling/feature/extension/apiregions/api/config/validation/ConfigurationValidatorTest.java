@@ -197,7 +197,7 @@ public class ConfigurationValidatorTest {
         assertTrue(result.isValid());
         assertTrue(result.isUseDefaultValue());
         assertEquals(1, result.getWarnings().size());
-        assertTrue(result.getPropertyResults().isEmpty());
+        assertEquals(2, result.getPropertyResults().size());
         assertTrue(result.getErrors().isEmpty());
 
         // global -> invalid, but mode LENIENT
@@ -224,7 +224,7 @@ public class ConfigurationValidatorTest {
         assertTrue(result.isValid());
         assertTrue(result.isUseDefaultValue());
         assertTrue(result.getWarnings().isEmpty());
-        assertTrue(result.getPropertyResults().isEmpty());
+        assertEquals(2, result.getPropertyResults().size());
         assertTrue(result.getErrors().isEmpty());
     }
 
@@ -257,7 +257,7 @@ public class ConfigurationValidatorTest {
         assertTrue(result.isValid());
         assertTrue(result.isUseDefaultValue());
         assertEquals(1, result.getWarnings().size());
-        assertTrue(result.getPropertyResults().isEmpty());
+        assertEquals(2, result.getPropertyResults().size());
         assertTrue(result.getErrors().isEmpty());
 
         // global -> invalid, but mode LENIENT
@@ -284,7 +284,7 @@ public class ConfigurationValidatorTest {
         assertTrue(result.isValid());
         assertTrue(result.isUseDefaultValue());
         assertTrue(result.getWarnings().isEmpty());
-        assertTrue(result.getPropertyResults().isEmpty());
+        assertEquals(2, result.getPropertyResults().size());
         assertTrue(result.getErrors().isEmpty());
     }
 
