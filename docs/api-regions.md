@@ -181,8 +181,8 @@ The validation mode defines the behaviour of the validation in case of an invali
 * `STRICT` : This is the default mode. If the validation fails, issue an error.
 * `LENIENT` : If validation fails, issue a warning. The invalid value is used.
 * `SILENT` : If validation fails, do not report it. The invalid value is used.
-* `DEFINITIVE` : If validation fails, issue a warning and use the default value instead. If no default value is provided, the property is removed from the configuration.
-* `SILENT_DEFINITIVE` : If validation fails, do not report it and use the default value instead. If no default value is provided, the property is removed from the configuration.
+* `DEFINITIVE` : If validation fails, issue a warning. If a default value is provided, use the default value instead. If no default value is provided and the value is an array or a collection and includes or excludes are provided, these will be applied. Otherwise, the property is removed from the configuration.
+* `SILENT_DEFINITIVE` : If validation fails, do not report it. If a default value is provided, use the default value instead. If no default value is provided and the value is an array or a collection and includes or excludes are provided, these will be applied. Otherwise, the property is removed from the configuration.
 
 ``` json
 "configuration-api:JSON" : {
