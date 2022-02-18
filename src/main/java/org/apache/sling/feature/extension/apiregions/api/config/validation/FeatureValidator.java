@@ -16,11 +16,18 @@
  */
 package org.apache.sling.feature.extension.apiregions.api.config.validation;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Configuration;
@@ -32,6 +39,8 @@ import org.apache.sling.feature.extension.apiregions.api.config.FactoryConfigura
 import org.apache.sling.feature.extension.apiregions.api.config.FrameworkPropertyDescription;
 import org.apache.sling.feature.extension.apiregions.api.config.Operation;
 import org.apache.sling.feature.extension.apiregions.api.config.Region;
+import org.osgi.util.converter.Converter;
+import org.osgi.util.converter.Converters;
 
 /**
  * Validator to validate a feature
@@ -234,7 +243,82 @@ public class FeatureValidator {
                     final Configuration cfg = feature.getConfigurations().getConfiguration(entry.getKey());
                     if ( cfg != null ) {
                         if ( propEntry.getValue().getDefaultValue() == null ) {
-                            cfg.getProperties().remove(propEntry.getKey());
+                            if ( propEntry.getValue().getUseExcludes() != null || propEntry.getValue().getUseIncludes() != null ) {
+                                final List<String> includes = new ArrayList<>();
+                                final Set<String> excludes = new LinkedHashSet<>();
+                                if ( propEntry.getValue().getUseIncludes() != null ) {
+                                    for(final String v : propEntry.getValue().getUseIncludes()) {
+                                        includes.add(0, v);
+                                    }
+                                }
+                                if ( propEntry.getValue().getUseExcludes() != null ) {
+                                    for(final String v : propEntry.getValue().getUseExcludes()) {
+                                        excludes.add(v);
+                                    }
+                                }
+
+                                Object value = cfg.getProperties().get(propEntry.getKey());
+                                if ( value.getClass().isArray() ) {
+                                    // array
+                                    int l = Array.getLength(value);
+                                    int i = 0;
+                                    while ( i < l ) {
+                                        final String val = Array.get(value, i).toString();
+                                        if ( excludes.contains(val) ) {
+                                            final Object newArray = Array.newInstance(value.getClass().getComponentType(), l - 1);
+                                            int newIndex = 0;
+                                            for(int oldIndex = 0; oldIndex < l; oldIndex++) {
+                                                if ( oldIndex != i ) {
+                                                    Array.set(newArray, newIndex, Array.get(value, oldIndex));
+                                                    newIndex++;
+                                                }
+                                            }
+                                            value = newArray;
+                                            i--;
+                                            l--;
+                                            changed = true;
+                                            cfg.getProperties().put(propEntry.getKey(), value);
+                                        } else if ( includes.contains(val) ) {
+                                            includes.remove(val);
+                                        }
+                                        i++;
+                                    }
+                                    for(final String val : includes) {
+                                        final Object newArray = Array.newInstance(value.getClass().getComponentType(), Array.getLength(value) + 1);
+                                        System.arraycopy(value, 0, newArray, 1, Array.getLength(value));
+                                        Array.set(newArray, 0, 
+                                            Converters.standardConverter().convert(val).to(value.getClass().getComponentType()));
+                                        value = newArray;
+                                        cfg.getProperties().put(propEntry.getKey(), value);
+                                        changed = true;
+                                    }
+                                } else if ( value instanceof Collection ) { 
+                                    // collection
+                                    final Collection c = (Collection)value;
+                                    final Class collectionType = c.isEmpty() ? String.class : c.iterator().next().getClass();
+                                    final Iterator<?> i = c.iterator();
+                                    while ( i.hasNext() ) {
+                                        final String val = i.next().toString();
+                                        if ( excludes.contains(val) ) {
+                                            i.remove();
+                                            changed = true;
+                                        } else if ( includes.contains(val) ) {
+                                            includes.remove(val);
+                                        }
+                                    }
+                                    for(final String val : includes) {
+                                        final Object newValue = Converters.standardConverter().convert(val).to(collectionType);
+                                        if ( c instanceof List ) {
+                                            ((List)c).add(0, newValue);
+                                        } else {
+                                            c.add(newValue);
+                                        }
+                                        changed = true;
+                                    }
+                                }                    
+                            } else {
+                                cfg.getProperties().remove(propEntry.getKey());
+                            }
                         } else {
                             cfg.getProperties().put(propEntry.getKey(), propEntry.getValue().getDefaultValue());
                         }

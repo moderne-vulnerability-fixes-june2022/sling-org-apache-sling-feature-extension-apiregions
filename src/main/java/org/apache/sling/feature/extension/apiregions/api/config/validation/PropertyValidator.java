@@ -168,7 +168,10 @@ public class PropertyValidator {
                 }
                 if ( !found ) {
                     setResult(context, desc, "Required included value " + inc + " not found");
-                }
+                    if ( context.result.isUseDefaultValue() ) {
+                        context.result.setUseIncludesAndExcludes(context.description.getIncludes(), context.description.getExcludes());
+                    }
+                 }
             }
         }
         if ( context.description.getExcludes() != null ) {
@@ -182,6 +185,9 @@ public class PropertyValidator {
                 }
                 if ( found ) {
                     setResult(context, desc, "Not allowed excluded value " + exc + " found");
+                    if ( context.result.isUseDefaultValue() ) {
+                        context.result.setUseIncludesAndExcludes(context.description.getIncludes(), context.description.getExcludes());
+                    }
                 }
             }
         }

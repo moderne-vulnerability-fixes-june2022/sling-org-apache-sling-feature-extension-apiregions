@@ -31,6 +31,18 @@ public class PropertyValidationResult {
 
     private boolean skipped = false;
 
+    /**
+     * Should excludes/includes be used?
+     * @since 1.6
+     */
+    private String[] includes;
+
+    /**
+     * Should excludes/includes be used?
+     * @since 1.6
+     */
+    private String[] excludes;
+
     /** 
      * Should the default be used?
      * @since 1.2
@@ -120,5 +132,33 @@ public class PropertyValidationResult {
 	public void setDefaultValue(final Object defaultValue) {
 		this.defaultValue = defaultValue;
 	}
-    
+
+    /**
+     * Get the excludes to be used
+	 * @return The excludes or {@code null}
+     * @since 1.6
+	 */
+	public String[] getUseExcludes() {
+		return this.excludes;
+	}
+
+    /**
+     * Get the includes to be used
+	 * @return The includes or {@code null}
+     * @since 1.6
+	 */
+	public String[] getUseIncludes() {
+		return this.includes;
+	}
+
+    /**
+     * Set whether the excludes and includes should be used. At least one of it should not be {@code null}
+	 * @param includes The includes to use
+     * @param excludes The excludes to use
+     * @since 1.6
+	 */
+	public void setUseIncludesAndExcludes(final String[] includes, final String[] excludes) {
+		this.includes = includes;
+        this.excludes = excludes;
+	}
 }

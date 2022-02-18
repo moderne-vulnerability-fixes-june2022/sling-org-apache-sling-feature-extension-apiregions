@@ -16,11 +16,13 @@
  */
 package org.apache.sling.feature.extension.apiregions.api.config.validation;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -723,6 +725,15 @@ public class FeatureValidatorTest {
             cfg.getProperties().put("a", 1);
             cfg.getProperties().put("b", 1);
             cfg.getProperties().put("c", 1);
+            if ( i == 0 ) {
+                cfg.getProperties().put("d", new String[] {"a", "b", "c"});
+                cfg.getProperties().put("e", new Integer[] {1, 2, 3});    
+                cfg.getProperties().put("f", new int[] {1,2,3});
+            } else {
+                cfg.getProperties().put("d", new ArrayList<>(Arrays.asList("a", "b", "c")));
+                cfg.getProperties().put("e", new ArrayList<>(Arrays.asList(1,2,3)));
+                cfg.getProperties().put("f", new String[] {"1", "2", "3"});
+            }
             f.getConfigurations().add(cfg);
 
             final ConfigurationApi api = new ConfigurationApi();
@@ -739,9 +750,27 @@ public class FeatureValidatorTest {
             pdc.setRange(new Range());
             pdc.getRange().setMin(2);
             pdc.setDefaultValue(4);
+            final PropertyDescription pdd = new PropertyDescription();
+            pdd.setIncludes(new String[] {"a", "d"});
+            pdd.setExcludes(new String[] {"b", "e"});
+            final PropertyDescription pde = new PropertyDescription();
+            pde.setType(PropertyType.INTEGER);
+            pde.setIncludes(new String[] {"1", "4"});
+            pde.setExcludes(new String[] {"2", "5"});
+            final PropertyDescription pdf = new PropertyDescription();
+            pdf.setIncludes(new String[] {"1", "4"});
+            pdf.setExcludes(new String[] {"2", "5"});    
+            if ( i == 0 ) {
+                pdf.setType(PropertyType.INTEGER);
+            } else {
+                pdf.setDefaultValue(new String[] {"1", "4"});
+            }
             desc.getPropertyDescriptions().put("a", pda);
             desc.getPropertyDescriptions().put("b", pdb);
             desc.getPropertyDescriptions().put("c", pdc);
+            desc.getPropertyDescriptions().put("d", pdd);
+            desc.getPropertyDescriptions().put("e", pde);
+            desc.getPropertyDescriptions().put("f", pdf);
             api.getConfigurationDescriptions().put("org.apache.sling", desc);
 
             final FeatureValidationResult result = this.validator.validate(f, api);
@@ -751,12 +780,30 @@ public class FeatureValidatorTest {
             assertEquals(1, cfg.getConfigurationProperties().get("a"));
             assertEquals(1, cfg.getConfigurationProperties().get("b"));
             assertEquals(1, cfg.getConfigurationProperties().get("c"));
+            if ( i == 0 ) {
+                assertArrayEquals(new String[] {"a", "b", "c"}, (String[])cfg.getConfigurationProperties().get("d"));
+                assertArrayEquals(new Integer[] {1,2,3}, (Integer[])cfg.getConfigurationProperties().get("e"));    
+                assertArrayEquals(new int[] {1,2,3}, (int[])cfg.getConfigurationProperties().get("f"));    
+            } else {
+                assertEquals(Arrays.asList("a", "b", "c"), cfg.getConfigurationProperties().get("d"));
+                assertEquals(Arrays.asList(1,2,3), cfg.getConfigurationProperties().get("e"));    
+                assertArrayEquals(new String[] {"1", "2", "3"}, (String[])cfg.getConfigurationProperties().get("f"));
+            }
 
             // apply changes
             this.validator.applyDefaultValues(f, result);
             assertEquals(1, cfg.getConfigurationProperties().get("a"));
             assertNull(cfg.getConfigurationProperties().get("b"));
             assertEquals(4, cfg.getConfigurationProperties().get("c"));
+            if ( i == 0 ) {
+                assertArrayEquals(new String[] {"d", "a", "c"}, (String[])cfg.getConfigurationProperties().get("d"));
+                assertArrayEquals(new Integer[] {4,1,3}, (Integer[])cfg.getConfigurationProperties().get("e"));    
+                assertArrayEquals(new int[] {4,1,3}, (int[])cfg.getConfigurationProperties().get("f"));    
+            } else {
+                assertEquals(Arrays.asList("d", "a", "c"), cfg.getConfigurationProperties().get("d"));
+                assertEquals(Arrays.asList(4,1,3), cfg.getConfigurationProperties().get("e"));    
+                assertArrayEquals(new String[] {"1", "4"}, (String[])cfg.getConfigurationProperties().get("f"));
+            }
         }
     }
 
