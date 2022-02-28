@@ -101,6 +101,7 @@ public class ConfigurationApiMergeHandler implements MergeHandler {
             // update cache
             if ( !context.isPrototypeMerge() ) {
                 targetApi.getFeatureToRegionCache().put(sourceFeature.getId(), sourceApi.detectRegion());
+                targetApi.getFeatureToRegionCache().putAll(sourceApi.getFeatureToRegionCache());
             }
             
             ConfigurationApi.setConfigurationApi(targetFeature, targetApi);
