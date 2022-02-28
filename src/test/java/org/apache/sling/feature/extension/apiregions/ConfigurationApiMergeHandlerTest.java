@@ -382,4 +382,45 @@ public class ConfigurationApiMergeHandlerTest {
         assertTrue(api.getInternalFrameworkProperties().contains("pb"));
         assertTrue(api.getInternalFrameworkProperties().contains("pc"));
     }
+
+    @Test public void testConfigurationApiMergeRegionCache() {
+        final BuilderContext context = new BuilderContext(id -> null);
+        context.addMergeExtensions(new ConfigurationApiMergeHandler());
+
+        final Feature featureA = new Feature(ArtifactId.parse("g:a:1"));
+        final ConfigurationApi apiA = new ConfigurationApi();
+        apiA.setRegion(Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(featureA, apiA);
+
+        final Feature featureB = new Feature(ArtifactId.parse("g:b:1"));
+        final ConfigurationApi apiB = new ConfigurationApi();
+        apiB.setRegion(Region.GLOBAL);
+        ConfigurationApi.setConfigurationApi(featureB, apiB);
+
+
+        final Feature featureC = new Feature(ArtifactId.parse("g:c:1"));
+        final ConfigurationApi apiC = new ConfigurationApi();
+        apiC.setRegion(Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(featureC, apiC);
+
+        final Feature featureD = new Feature(ArtifactId.parse("g:d:1"));
+        final ConfigurationApi apiD = new ConfigurationApi();
+        apiD.setRegion(Region.INTERNAL);
+        ConfigurationApi.setConfigurationApi(featureD, apiD);
+
+        final ArtifactId idIntermediate = ArtifactId.parse("g:i:1");
+        Feature intermediate = FeatureBuilder.assemble(idIntermediate, context, featureA, featureB);
+        final ArtifactId id = ArtifactId.parse("g:m:1");
+        Feature result = FeatureBuilder.assemble(id, context, featureC, featureD, intermediate);
+        ConfigurationApi api = ConfigurationApi.getConfigurationApi(result);
+        assertNotNull(api);
+
+
+        assertEquals(5, api.getFeatureToRegionCache().size());
+        assertEquals(Region.INTERNAL, api.getFeatureToRegionCache().get(featureA.getId()));
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(featureB.getId()));
+        assertEquals(Region.INTERNAL, api.getFeatureToRegionCache().get(featureC.getId()));
+        assertEquals(Region.INTERNAL, api.getFeatureToRegionCache().get(featureD.getId()));
+        assertEquals(Region.GLOBAL, api.getFeatureToRegionCache().get(idIntermediate));
+    }
 }
