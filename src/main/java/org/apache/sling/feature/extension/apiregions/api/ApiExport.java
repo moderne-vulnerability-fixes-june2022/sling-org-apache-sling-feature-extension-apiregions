@@ -32,7 +32,7 @@ import org.apache.sling.feature.ArtifactId;
 
 /**
  * Describes an exported package.
- * 
+ *
  * This class is not thread safe.
  */
 public class ApiExport implements Comparable<ApiExport> {
@@ -66,7 +66,11 @@ public class ApiExport implements Comparable<ApiExport> {
     /** If the package is behind a toggle, this is the previous artifact containing the package not behind a toggle */
     private ArtifactId previousArtifactId;
 
-    /** If the package is behind a toggle, this is the previous version of the package not behind a toggle */
+    /**
+     * If the package is behind a toggle, this is the previous version of the package not behind a toggle
+     * @deprecated
+     */
+    @Deprecated
     private String previousPackageVersion;
 
     private final Map<String, String> properties = new HashMap<>();
@@ -116,16 +120,20 @@ public class ApiExport implements Comparable<ApiExport> {
      * Get the previous version of this package
      * @return The previous version of this package or {@code null}
      * @since 1.2.0
+     * @deprecated Use {@link #getPreviousArtifactId()}
      */
+    @Deprecated
     public String getPreviousPackageVersion() {
         return this.previousPackageVersion;
     }
 
     /**
      * Set the previous version of this package
-     * @param version The previous version of this package 
+     * @param version The previous version of this package
      * @since 1.2.0
+     * @deprecated Use {@link #getPreviousArtifactId()}
      */
+    @Deprecated
     public void setPreviousPackageVersion(final String version) {
         this.previousPackageVersion = version;
     }
@@ -156,6 +164,7 @@ public class ApiExport implements Comparable<ApiExport> {
      * @return The previous version or {@code null}
      * @deprecated Use {@link #getPreviousArtifactId()}
      */
+    @Deprecated
     public ArtifactId getPrevious() {
         return this.getPreviousArtifactId();
     }
@@ -163,9 +172,10 @@ public class ApiExport implements Comparable<ApiExport> {
     /**
      * Set the previous version
      *
-     * @param previous Previus version
+     * @param previous Previous version
      * @deprecated Use {@link #setPreviousArtifactId(ArtifactId)}
      */
+    @Deprecated
     public void setPrevious(final ArtifactId previous) {
         this.setPreviousArtifactId(previous);
     }
@@ -320,10 +330,10 @@ public class ApiExport implements Comparable<ApiExport> {
 
     JsonValue toJSONValue() {
         final JsonValue depValue = this.deprecationToJSON();
-        if (this.getToggle() == null 
-            && this.getPreviousPackageVersion() == null 
+        if (this.getToggle() == null
+            && this.getPreviousPackageVersion() == null
             && this.getPreviousArtifactId() == null
-            && this.getProperties().isEmpty() 
+            && this.getProperties().isEmpty()
             && depValue == null ) {
            return Json.createValue(this.getName());
         }

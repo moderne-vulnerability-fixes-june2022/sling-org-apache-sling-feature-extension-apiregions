@@ -96,7 +96,6 @@ While the above example enables a complete package based on a toggle, it is also
                 {
                     "name" : "org.apache.sling.api",
                     "toggle" : "NEW_SLING_API",
-                    "previous-package-version" : "1.0.3",
                     "previous-artifact-id" : "org.apache.sling:org.apache.sling.api:1.1"
                 }
             ]
@@ -104,7 +103,7 @@ While the above example enables a complete package based on a toggle, it is also
     ]
 ```
 
-In the above example, if the toggle *NEW_SLING_API* is enabled, the package *org.apache.sling.api* is available based on the artifact in the feature model providing this package. If the toggle *NEW_SLING_API* is not enabled, the package *org.apache.sling.api* is available based on the artifact mentioned in the `previous` property. Usually that points to an older version of the API.
+In the above example, if the toggle *NEW_SLING_API* is enabled, the package *org.apache.sling.api* is available based on the artifact in the feature model providing this package. If the toggle *NEW_SLING_API* is not enabled, the package *org.apache.sling.api* is available based on the artifact mentioned in the `previous-artifact-id` property. Usually that points to an older version of the API.
 
 ## Deprecation of Java API
 
