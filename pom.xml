@@ -19,7 +19,7 @@
 
     <artifactId>org.apache.sling.feature.extension.apiregions</artifactId>
     <version>1.5.1-SNAPSHOT</version>
-    <name>Sling Featuremodel - API Regions Exension</name>
+    <name>Apache Sling Feature Model - API Regions Extension</name>
 
     <scm>
         <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-feature-extension-apiregions.git</connection>

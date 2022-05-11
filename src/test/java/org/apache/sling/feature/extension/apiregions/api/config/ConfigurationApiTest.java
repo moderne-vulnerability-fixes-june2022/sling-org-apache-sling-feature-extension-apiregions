@@ -17,6 +17,7 @@
 package org.apache.sling.feature.extension.apiregions.api.config;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -157,5 +158,80 @@ public class ConfigurationApiTest {
         assertEquals(Region.GLOBAL, entity.detectRegion());
         entity.setRegion(Region.INTERNAL);
         assertEquals(Region.INTERNAL, entity.detectRegion());
+    }
+
+    @Test public void testIsInternalConfiguration() {
+        final String PID = "org.apache.sling.configuration";
+        final ConfigurationApi api = new ConfigurationApi();
+        // ootb nothing is internal
+        assertFalse(api.isInternalConfiguration(PID));
+
+        // adding a normal description with a property does not change this
+        final ConfigurationDescription desc = new ConfigurationDescription();
+        final PropertyDescription propDesc = new PropertyDescription();
+        desc.getPropertyDescriptions().put("foo", propDesc);
+        api.getConfigurationDescriptions().put(PID, desc);
+        assertFalse(api.isInternalConfiguration(PID));
+
+        // a description without properties makes it internal
+        desc.getPropertyDescriptions().clear();
+        assertTrue(api.isInternalConfiguration(PID));
+
+        // and deprecated variant
+        api.getConfigurationDescriptions().clear();
+        api.getInternalConfigurations().add(PID);
+        assertTrue(api.isInternalConfiguration(PID));
+    }
+
+    @Test public void testIsInternalFactoryConfigurationNoName() {
+        final String FACTORYPID = "org.apache.sling.configuration";
+        final ConfigurationApi api = new ConfigurationApi();
+        // ootb nothing is internal
+        assertFalse(api.isInternalFactoryConfiguration(FACTORYPID, null));
+
+        // adding a normal description with a property does not change this
+        final FactoryConfigurationDescription desc = new FactoryConfigurationDescription();
+        final PropertyDescription propDesc = new PropertyDescription();
+        desc.getPropertyDescriptions().put("foo", propDesc);
+        api.getFactoryConfigurationDescriptions().put(FACTORYPID, desc);
+        assertFalse(api.isInternalFactoryConfiguration(FACTORYPID, null));
+
+        // a description without properties makes it internal
+        desc.getPropertyDescriptions().clear();
+        assertTrue(api.isInternalFactoryConfiguration(FACTORYPID, null));
+
+        // and deprecated variant
+        api.getFactoryConfigurationDescriptions().clear();
+        api.getInternalFactoryConfigurations().add(FACTORYPID);
+        assertTrue(api.isInternalFactoryConfiguration(FACTORYPID, null));
+    }
+
+    @Test public void testIsInternalFactoryConfigurationWithName() {
+        final String FACTORYPID = "org.apache.sling.configuration";
+        final String NAME = "bar";
+        final ConfigurationApi api = new ConfigurationApi();
+        // ootb nothing is internal
+        assertFalse(api.isInternalFactoryConfiguration(FACTORYPID, NAME));
+
+        // adding a normal description with a property does not change this
+        final FactoryConfigurationDescription desc = new FactoryConfigurationDescription();
+        final PropertyDescription propDesc = new PropertyDescription();
+        desc.getPropertyDescriptions().put("foo", propDesc);
+        api.getFactoryConfigurationDescriptions().put(FACTORYPID, desc);
+        assertFalse(api.isInternalFactoryConfiguration(FACTORYPID, NAME));
+
+        // name can be added to internal names
+        desc.getInternalNames().add(NAME);
+        assertTrue(api.isInternalFactoryConfiguration(FACTORYPID, NAME));
+
+        // a description without properties makes it internal
+        desc.getInternalNames().clear();
+        desc.getPropertyDescriptions().clear();
+        assertTrue(api.isInternalFactoryConfiguration(FACTORYPID, NAME));
+
+        // and deprecated variant
+        api.getFactoryConfigurationDescriptions().clear();
+        api.getInternalFactoryConfigurations().add(FACTORYPID);
+        assertTrue(api.isInternalFactoryConfiguration(FACTORYPID, NAME));
     }
 }

@@ -292,7 +292,45 @@ public class ConfigurationApi extends AttributeableEntity {
 		return internalFactories;
 	}
 
-	/**
+    /**
+     * Check if the configuration is an internal configuration
+     * @param pid The pid
+     * @return {@code true} if it is an internal configuration
+     * @since 1.7.0
+     */
+    public boolean isInternalConfiguration(final String pid) {
+        boolean result = this.internalConfigurations.contains(pid);
+        if ( !result ) {
+            final ConfigurationDescription desc = this.configurations.get(pid);
+            if ( desc != null ) {
+                result = desc.getPropertyDescriptions().isEmpty();
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Check if the factory configuration is an internal configuration
+     * @param factoryPid The factory pid
+     * @param name Optional name of the configuration
+     * @return {@code true} if it is an internal factory configuration
+     * @since 1.7.0
+     */
+    public boolean isInternalFactoryConfiguration(final String factoryPid, final String name) {
+        boolean result = this.internalFactories.contains(factoryPid);
+        if ( !result ) {
+            final FactoryConfigurationDescription desc = this.factories.get(factoryPid);
+            if ( desc != null ) {
+                result = desc.getPropertyDescriptions().isEmpty();
+                if ( !result && name != null ) {
+                    result = desc.getInternalNames().contains(name);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
      * Get the internal framework property names
 	 * @return Mutable set of internal framework property names
 	 */
