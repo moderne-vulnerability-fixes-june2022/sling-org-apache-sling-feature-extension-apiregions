@@ -302,7 +302,7 @@ OSGi factory configurations are similarly described in the configuration API. If
             "properties" : {
 
             },
-            "internal-names" : "main",
+            "internal-names" : ["main"],
             "operations" : ["CREATE"]
         }
     }
